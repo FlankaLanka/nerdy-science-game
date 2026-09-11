@@ -1,0 +1,82 @@
+[
+  {
+    "file": "ground-color.webp",
+    "bytes": 260132
+  },
+  {
+    "file": "ground-normal.webp",
+    "bytes": 378806
+  },
+  {
+    "file": "ground-roughness.webp",
+    "bytes": 160042
+  },
+  {
+    "file": "metal-color.webp",
+    "bytes": 33400
+  },
+  {
+    "file": "metal-normal.webp",
+    "bytes": 17242
+  },
+  {
+    "file": "metal-roughness.webp",
+    "bytes": 19310
+  },
+  {
+    "file": "pine-alpha.webp",
+    "bytes": 57600
+  },
+  {
+    "file": "pine-color.webp",
+    "bytes": 252140
+  },
+  {
+    "file": "pip-v2.webp",
+    "bytes": 261380
+  },
+  {
+    "file": "plaster-color.webp",
+    "bytes": 382248
+  },
+  {
+    "file": "plaster-normal.webp",
+    "bytes": 104922
+  },
+  {
+    "file": "plaster-roughness.webp",
+    "bytes": 405140
+  },
+  {
+    "file": "rock-color.webp",
+    "bytes": 58746
+  },
+  {
+    "file": "rock-normal.webp",
+    "bytes": 344388
+  },
+  {
+    "file": "rock-roughness.webp",
+    "bytes": 129254
+  },
+  {
+    "file": "water-normal.webp",
+    "bytes": 176552
+  },
+  {
+    "file": "wood-color.webp",
+    "bytes": 89264
+  },
+  {
+    "file": "wood-normal.webp",
+    "bytes": 155626
+  },
+  {
+    "file": "wood-roughness.webp",
+    "bytes": 6020
+  },
+  {
+    "file": "keepers-map.webp",
+    "bytes": 524694
+  }
+]

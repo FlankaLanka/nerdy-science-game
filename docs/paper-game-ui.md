@@ -1,0 +1,24 @@
+# The keeper’s electrical notebook
+
+The active interface is a first-person game with a fixed 16:9 composition. Its menus borrow the tactile materials of an early twentieth-century electrical notebook: ivory rag paper, torn fibers, dark printed type, copper details, and pencil/crayon circuit annotations. The island stays visible behind the paper. The game uses original art; it does not copy Spider-Man’s graphics.
+
+Every screen is authored at 1280 × 720 and scales uniformly to the available display. Other aspect ratios receive letterboxing. Dialogs occupy the same game frame. There are no scrolling menus, pages, or repair panels. Field notes use three indexed discoveries; longer radio replies turn into pages. Fullscreen is available on the title screen, in the pause menu, in Settings, and with F. Touch controls also scale with the frame; landscape is the useful phone orientation.
+
+The electrical instrument occupies the left side of a repair screen. One torn instruction sheet on the right holds Pip’s current instruction and the controls for that step. The first repair teaches one action at a time. The map and field notes use a wider sheet, inked headings, and fixed content positions. Exploration keeps only a small objective scrap and contextual HUD.
+
+## Paper asset
+
+- Generation mode: **built-in imagegen**, September 11, 2026. No external image API/CLI was used.
+- Original in this workspace: [`art-source/keepers-paper.png`](../art-source/keepers-paper.png), 1024 × 1536 RGBA.
+- Runtime asset: [`public/art/keepers-paper.webp`](../public/art/keepers-paper.webp), 359,654 bytes, WebP quality 85 with lossless alpha.
+- Generated original retained at `/Users/frankyang/.codex/generated_images/01a09190-aeee-7d42-8e75-4ebcbb8dfc2c/exec-0e31aecc-fdcb-47d3-9017-5adfad93bd31.png`.
+
+The alpha channel was inspected: pixels outside the irregular silhouette are transparent. The original was copied into the workspace and converted with `cwebp -q 85 -alpha_q 100`. No image content was repainted. The short HUD scraps use the original alpha as a CSS mask with a proportional paper fill to preserve the visible grain. Text and circuit symbols are rendered by the game, not baked into the bitmap.
+
+Final generation prompt:
+
+> Use case: historical-scene. Asset type: blank paper material for a premium first-person electricity puzzle game's 1900s electrical repair journal. Create a single flat sheet of authentic old ivory rag paper, scanned perfectly straight on from above, portrait orientation 2:3. Entire sheet visible with irregular naturally torn deckled edges on all four sides, delicate exposed fibers and one small missing corner, physically convincing paper thickness. Genuine transparent background outside the paper, no surrounding surface. Warm gray-beige ivory paper, fine tactile grain, flecks of fiber, subtle old foxing concentrated near the edges, faint folds from years of use. Center must be mostly clean and evenly light, providing high contrast for dark printed game text placed later by code. Photorealistic museum conservation scan, soft even lighting, restrained age and patina. NO writing, NO text, NO symbols, NO drawings, NO decorative border, NO objects, NO burnt edges, NO black stains, NO yellow fantasy parchment, NO perspective tilt. It is an early twentieth century engineering notebook sheet, quiet, tactile, and believable. High resolution raster with actual alpha transparency surrounding the torn silhouette.
+
+## Review references
+
+The browser checks capture the [pause menu](screenshots/paper-pause.png), [map](screenshots/paper-island-map.png), [field notes](screenshots/paper-notebook.png), [settings](screenshots/paper-settings.png), [controls](screenshots/paper-controls.png), [conductor choice](screenshots/paper-conductor.png), [prediction](screenshots/paper-predict.png), and [reflection](screenshots/paper-reflect.png). The current complete verification is recorded in [verification.md](verification.md).

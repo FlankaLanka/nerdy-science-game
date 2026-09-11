@@ -1,0 +1,36 @@
+{
+  "date": "2026-09-11T20:21:43.972Z",
+  "assets": [
+    {
+      "path": "/assets/index-Bhs32I8K.js",
+      "status": 200
+    },
+    {
+      "path": "/assets/world-CbNtROM2.js",
+      "status": 200
+    },
+    {
+      "path": "/assets/index-Bi1dso9-.css",
+      "status": 200
+    },
+    {
+      "path": "/art/keepers-paper.webp",
+      "status": 200
+    },
+    {
+      "path": "/art/keepers-map.webp",
+      "status": 200
+    }
+  ],
+  "settings": "Sound toggle and keyboard sensitivity adjustment passed",
+  "fullscreen": {
+    "ratio": 1.7777777777777777,
+    "aligned": true,
+    "noScroll": true,
+    "controlsVisibleAndClickable": true,
+    "existingDialogPreserved": true
+  },
+  "circuit": "Physical workshop panel rendered from the production bundle",
+  "radio": "Keyless production field guide opened through actual clicks in and after fullscreen",
+  "errors": []
+}

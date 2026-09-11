@@ -1,0 +1,125 @@
+[
+  {
+    "file": "rock-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dark_rock/dark_rock_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/dark_rock",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dark_rock/dark_rock_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/dark_rock",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dark_rock/dark_rock_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/dark_rock",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "ground-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_grass_rock/aerial_grass_rock_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/aerial_grass_rock",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "ground-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_grass_rock/aerial_grass_rock_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/aerial_grass_rock",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "ground-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_grass_rock/aerial_grass_rock_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/aerial_grass_rock",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "wood-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/weathered_planks/weathered_planks_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/weathered_planks",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "wood-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/weathered_planks/weathered_planks_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/weathered_planks",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "wood-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/weathered_planks/weathered_planks_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/weathered_planks",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "plaster-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_plaster/grey_plaster_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/grey_plaster",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "plaster-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_plaster/grey_plaster_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/grey_plaster",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "plaster-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_plaster/grey_plaster_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/grey_plaster",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "metal-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/green_metal_rust/green_metal_rust_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/green_metal_rust",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "metal-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/green_metal_rust/green_metal_rust_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/green_metal_rust",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "metal-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/green_metal_rust/green_metal_rust_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/green_metal_rust",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "coastal-sunset.hdr",
+    "source": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/belfast_sunset_puresky_1k.hdr",
+    "asset": "https://polyhaven.com/a/belfast_sunset_puresky",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "water-normal.jpg",
+    "source": "https://github.com/mrdoob/three.js/blob/dev/examples/textures/waternormals.jpg",
+    "license": "MIT (Three.js examples)"
+  },
+  {
+    "file": "pine-color.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/png/1k/pine_sapling_medium/pine_sapling_medium_twig_diff_1k.png",
+    "asset": "https://polyhaven.com/a/pine_sapling_medium",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "pine-alpha.webp",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/png/1k/pine_sapling_medium/pine_sapling_medium_twig_alpha_1k.png",
+    "asset": "https://polyhaven.com/a/pine_sapling_medium",
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "keepers-map.webp",
+    "source": "Original illustration generated for SIGNAL with the built-in imagegen tool. Prompt and provenance: docs/journal-art.md.",
+    "original": "art-source/keepers-map.png"
+  },
+  {
+    "file": "keepers-paper.webp",
+    "source": "Original torn rag-paper texture generated for SIGNAL with the built-in imagegen tool. Prompt and provenance: docs/paper-game-ui.md.",
+    "original": "art-source/keepers-paper.png"
+  }
+]
