@@ -62,9 +62,12 @@ test("pre-first-person saves keep their repairs and start safely on the path", a
   await restored
     .getByRole("button", { name: "Continue", exact: true })
     .click({ timeout: 60000 });
+  await restored.keyboard.press("m");
   await expect(
-    restored.getByText("Bring the harbor lights online", { exact: true }),
-  ).toBeVisible();
+    restored.locator('.map-stops [aria-current="step"]'),
+  ).toContainText("Harbor relay");
+  await restored.keyboard.press("Escape");
+  await restored.getByRole("button", { name: "Resume", exact: true }).click();
   const p = await position(restored);
   expect(p.x).toBe(-3);
   expect(p.z).toBe(15.5);
@@ -112,7 +115,7 @@ test("abandoned coaching requests do not reappear and authored hints survive net
   await page.route("**/api/coach", (route) => route.abort());
   await page.getByRole("button", { name: "Hint", exact: true }).click();
   await expect(
-    page.getByText("PIP · FIELD GUIDE", { exact: true }),
+    page.getByRole("heading", { name: "Pip’s field guide", exact: true }),
   ).toBeVisible();
 });
 

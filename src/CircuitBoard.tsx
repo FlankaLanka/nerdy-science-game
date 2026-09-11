@@ -106,7 +106,6 @@ export function CircuitBoard({
   return (
     <div className={`circuit-area tutorial-${lesson}`}>
       <div className="board-topline">
-        <span>LOW VOLTAGE · 6 V</span>
         <div className="board-tools" hidden={lesson === 0}>
           <button
             onClick={() => {
@@ -648,15 +647,9 @@ export function CircuitBoard({
       <div className="board-bottomline" aria-live="polite">
         <span>
           {notice ||
-            (lesson === 0
-              ? "Take a look. Pip will help you make your first connection."
-              : editable
-                ? selected
-                  ? `${terminal(selected).label} selected. Choose another socket.`
-                  : "Tap two sockets to connect. Tap a wire to remove it."
-                : removed
-                  ? "Lamp A is disconnected. Follow the remaining path."
-                  : "Your circuit is connected. Watch what happens next.")}
+            (selected
+              ? `${terminal(selected).label} selected. Choose another socket.`
+              : "")}
         </span>
         {selected && (
           <button

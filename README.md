@@ -33,7 +33,7 @@ On touch screens, use the left thumbstick to walk, drag the world to look, and t
 
 The game uses a fixed **16:9 frame**, authored at 1280 × 720 and scaled to fit the display, with letterboxing on other aspect ratios. Every menu fits that frame with **no scrollbars**. Fullscreen is available before entering the island and throughout play. Paper menus have scanned grain, irregular torn edges, dark ink, and circuit annotations inspired by an early electrical notebook. Longer radio replies use page controls.
 
-A single objective, small compass, reticle, and contextual interaction prompt are the HUD. The map and notebook appear only when opened. The workshop teaches the first connection, bridge material, prediction, and test one action at a time; guidance can be skipped.
+A compass, reticle, next-repair marker, and contextual interaction prompt guide exploration. The map and notebook appear only when opened. Menus use clear headings and controls without decorative captions, chapter labels, or persistent objective text. The workshop teaches the first connection, bridge material, prediction, and test one action at a time; guidance can be skipped.
 
 ## The adventure
 

@@ -63,7 +63,9 @@ test("walk the island, restore all three physical stations, and retain discoveri
   await page
     .getByRole("button", { name: "Light the workshop", exact: true })
     .click();
-  await expect(page.getByLabel("1 of 3 places restored")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Inspect Keeper’s workshop", exact: true }),
+  ).toBeVisible();
   await walkTo(page, -3, 8.5);
   await walkTo(page, 21, 8.5);
   await aimAt(page, 21, 12);
@@ -95,7 +97,9 @@ test("walk the island, restore all three physical stations, and retain discoveri
   await page
     .getByRole("button", { name: "Restore the harbor", exact: true })
     .click();
-  await expect(page.getByLabel("2 of 3 places restored")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Inspect Harbor relay", exact: true }),
+  ).toBeVisible();
   await walkTo(page, 11, 8);
   await walkTo(page, 11, -13.7);
   await aimAt(page, 11, -16.3);
@@ -171,15 +175,23 @@ test("walk the island, restore all three physical stations, and retain discoveri
   await page
     .getByRole("button", { name: "Continue", exact: true })
     .click({ timeout: 60000 });
-  await expect(page.getByLabel("3 of 3 places restored")).toBeVisible();
   await page.keyboard.press("j");
+  await expect(page.locator(".archive-tabs svg")).toHaveCount(3);
   await expect(
     page.getByLabel("A note to yourself", { exact: false }),
   ).toHaveValue("Each lamp can have its own path.");
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await page.keyboard.press("e");
-  await expect(page.getByText("FREE CIRCUIT", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("dialog", { name: "Lighthouse control circuit", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /^Remove wire from/ }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Test circuit", exact: true }),
+  ).toBeDisabled();
   expect(errors).toEqual([]);
 });
 
@@ -318,14 +330,15 @@ test("coaching API validates requests and labels authored answers", async ({
   expect((await answer.json()).source).toBe("field-guide");
 });
 
-test("first repair restores the environment and unlocks the harbor objective", async ({
+test("first repair restores the environment and marks the harbor on the map", async ({
   page,
 }) => {
   await openWorkshop(page);
   await workshopRepair(page);
+  await page.keyboard.press("m");
   await expect(
-    page.getByText("Bring the harbor lights online", { exact: true }),
-  ).toBeVisible();
+    page.locator('.map-stops [aria-current="step"]'),
+  ).toContainText("Harbor relay");
   const completed = await page.evaluate(
     () => JSON.parse(localStorage.getItem("signal.lighthouse.v1")!).completed,
   );

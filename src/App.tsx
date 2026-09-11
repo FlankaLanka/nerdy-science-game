@@ -1,14 +1,10 @@
 import { lazy, Suspense, useEffect, useReducer, useRef, useState } from "react";
 import {
-  ArrowLeft,
   ArrowRight,
-  BookOpen,
   Check,
-  Map,
   Maximize,
   Pause,
   Radio,
-  Settings2,
   Volume2,
 } from "lucide-react";
 import {
@@ -244,11 +240,9 @@ export default function App() {
         {!entered && (
           <main className="title-overlay">
             <div className="title-content">
-              <span className="overline">A BRAMBLE ISLAND STORY</span>
               <h1>
                 SIGNAL<span>THE LAST LIGHTHOUSE</span>
               </h1>
-              <p>A silent island. One last light.</p>
               <button className="title-play" disabled={!ready} onClick={begin}>
                 {!ready
                   ? "Arriving on the island…"
@@ -267,27 +261,13 @@ export default function App() {
                 <Maximize size={17} />
                 {fullscreen ? "Exit fullscreen" : "Fullscreen"}
               </button>
-              {failed ? (
+              {failed && (
                 <p className="graphics-notice">
                   3D graphics are unavailable in this browser. Circuit puzzles
                   still work.
                 </p>
-              ) : (
-                <span className="title-controls">
-                  <span className="desktop-controls">
-                    WASD to move · Mouse to look · E to interact
-                  </span>
-                  <span className="touch-controls">
-                    Touch to move, look, and interact
-                  </span>
-                </span>
               )}
             </div>
-            <span className="title-corner">FIRST-PERSON PUZZLE ADVENTURE</span>
-            <span className="title-coordinate">
-              BRAMBLE ISLAND
-              <br />N 50° 07′ · W 05° 32′
-            </span>
             {displayNotice && (
               <p className="display-notice" role="status">
                 {displayNotice}
@@ -297,19 +277,6 @@ export default function App() {
         )}
         {entered && !active && !menu && (
           <>
-            <div className="objective-hud">
-              <span className="overline">
-                {allDone
-                  ? "SIGNAL RESTORED"
-                  : `CHAPTER ${MISSIONS.find((m) => m.id === next)!.number}`}
-              </span>
-              <p>
-                <i />
-                {allDone
-                  ? "Take a breath. You brought the light back."
-                  : SITES[next].task}
-              </p>
-            </div>
             <button
               className="pause-trigger"
               aria-label="Pause game"
@@ -318,22 +285,10 @@ export default function App() {
               <Pause size={16} />
               <kbd>Esc</kbd>
             </button>
-            <div className="location-hud">
-              <span>BRAMBLE ISLAND</span>
-              <i />
-              <span
-                aria-label={`${state.completed.length} of 3 places restored`}
-              >
-                {state.completed.length} / 3 powered
-              </span>
-            </div>
             {subtitle && (
               <div className="radio-subtitle" role="status">
                 <Radio size={17} />
-                <span>
-                  <small>PIP</small>
-                  {subtitle}
-                </span>
+                <span>{subtitle}</span>
               </div>
             )}
             {failed && (
@@ -376,37 +331,32 @@ export default function App() {
         )}
         {menu === "pause" && (
           <Dialog title="Paused" className="pause-dialog" onClose={resume}>
-            <span className="overline">SIGNAL · THE LAST LIGHTHOUSE</span>
             <h2>Paused</h2>
-            <p className="pause-objective">
-              {allDone ? "The island is yours to explore." : SITES[next].task}
-            </p>
             <nav className="pause-menu" aria-label="Pause menu">
               <button className="selected" onClick={resume}>
                 Resume
                 <ArrowRight size={18} />
               </button>
               <button onClick={() => setMenu("map")}>
-                <Map size={17} /> Island map <kbd>M</kbd>
+                Island map <kbd>M</kbd>
               </button>
               <button onClick={() => setMenu("journal")}>
-                <BookOpen size={17} /> Field notes <kbd>J</kbd>
+                Field notes <kbd>J</kbd>
               </button>
               <button onClick={() => setMenu("settings")}>
-                <Settings2 size={17} /> Settings
+                Settings
               </button>
               <button onClick={() => setMenu("controls")}>Controls</button>
               <button onClick={() => void toggleFullscreen()}>
-                <Maximize size={17} />
                 {fullscreen ? "Exit fullscreen" : "Fullscreen"}
                 <kbd>F</kbd>
               </button>
             </nav>
-            <span className="save-status">
-              {saved
-                ? "Your progress is saved automatically."
-                : "Saving unavailable. Progress stays in this tab."}
-            </span>
+            {!saved && (
+              <p className="save-status" role="status">
+                Saving unavailable. Progress stays in this tab.
+              </p>
+            )}
             {displayNotice && (
               <p className="display-notice" role="status">
                 {displayNotice}
@@ -417,7 +367,6 @@ export default function App() {
         {menu === "map" && (
           <Dialog title="Island map" className="map-dialog" onClose={back}>
             <header className="screen-heading">
-              <span className="overline">EXPLORATION / BRAMBLE ISLAND</span>
               <h2>ISLAND MAP</h2>
             </header>
             <div className="paper-map">
@@ -431,6 +380,7 @@ export default function App() {
                 {MISSIONS.map((m) => (
                   <li
                     key={m.id}
+                    aria-current={m.id === next && !allDone ? "step" : undefined}
                     className={
                       state.completed.includes(m.id)
                         ? "done"
@@ -464,7 +414,6 @@ export default function App() {
         )}
         {menu === "settings" && (
           <Dialog title="Settings" onClose={back} className="settings-dialog">
-            <span className="overline">MAKE YOURSELF AT HOME</span>
             <h2>Settings</h2>
             <label className="setting">
               <span>
@@ -515,14 +464,10 @@ export default function App() {
             <button className="text-button" onClick={() => setMenu("reset")}>
               Start a new adventure
             </button>
-            <button className="text-button" onClick={back}>
-              <ArrowLeft size={16} /> Back
-            </button>
           </Dialog>
         )}
         {menu === "controls" && (
           <Dialog title="Controls" onClose={back} className="controls-dialog">
-            <span className="overline">EXPLORE. REPAIR. RESTORE.</span>
             <h2>Controls</h2>
             <dl className="control-list">
               <div>
@@ -555,17 +500,12 @@ export default function App() {
               </div>
             </dl>
             <p className="control-note">
-              No mouse capture? Hold and drag to look. On touch screens, move
-              with the left thumbstick and drag the world to look.
+              Drag to look if the mouse is unlocked. On touch screens, use the
+              left thumbstick to move.
             </p>
             <p className="control-note">
-              At a circuit: select two sockets to connect them. Select a wire to
-              remove it. Follow Pip’s short instructions; ask for a hint
-              whenever you need one.
+              Select two sockets to wire them. Select a wire to remove it.
             </p>
-            <button className="text-button" onClick={back}>
-              <ArrowLeft size={16} /> Back
-            </button>
           </Dialog>
         )}
         {menu === "reset" && (
@@ -604,7 +544,6 @@ export default function App() {
             className="ending-dialog"
             onClose={resume}
           >
-            <span className="overline">THREE REPAIRS. ONE WAY HOME.</span>
             <h2>
               Someone out there
               <br />

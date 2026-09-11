@@ -1,5 +1,11 @@
 # Verification record
 
+## Menu spacing and text cleanup — September 11, 2026
+
+The production TypeScript/Vite build and all **18 browser tests** passed after removing decorative menu captions and persistent objective text. Existing progression checks now verify restored cabinets, the map’s next location, and saved discoveries. The full island playthrough, touch repair at three phone sizes, keyboard controls, fullscreen, accessibility checks, and long radio pagination all passed.
+
+Reviewed the title, pause menu, map, notebook, controls, settings, reset confirmation, repair controls, radio, and ending screens. Paper menus share consistent inner margins; the map illustration stays in its grid, and back buttons and notebook footer controls sit above the torn lower edge. Current captures are in `docs/screenshots/paper-*` and `docs/screenshots/fps-*`.
+
 ## First-person paper interface — September 11, 2026
 
 Verified with Node.js 24.18.0 and Playwright Chromium. The production TypeScript/Vite build passed, all **29 unit tests** passed, and the full **18-test browser suite** passed. The three viewport/fullscreen/radio checks were rerun successfully after correcting fullscreen top-layer ordering. Production checks also exercised the final custom settings controls and clicked radio controls through an already-open fullscreen repair panel.

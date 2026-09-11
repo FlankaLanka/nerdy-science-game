@@ -116,11 +116,10 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
             >
               <kbd>E</kbd>
               <span>
-                <small>{SITES[focus].name}</small>
                 {complete
-                  ? "Power restored · inspect"
+                  ? `Inspect ${SITES[focus].name}`
                   : available
-                    ? "Open circuit panel"
+                    ? `Repair ${SITES[focus].name}`
                     : "No incoming power"}
               </span>
             </button>

@@ -114,11 +114,6 @@ kbd {
   white-space: nowrap;
   border: 0;
 }
-.overline,
-.eyebrow {
-  font: 10px var(--mono);
-  letter-spacing: 0.15em;
-}
 .world {
   position: absolute;
   inset: 0;
@@ -203,45 +198,6 @@ kbd {
   font: 11px var(--mono);
   color: #ffe7b7;
 }
-.objective-hud {
-  position: absolute;
-  top: 28px;
-  left: 30px;
-  width: 306px;
-  min-height: 85px;
-  padding: 19px 24px 17px;
-  color: var(--ink);
-  pointer-events: none;
-  filter: drop-shadow(0 3px 5px #0003);
-}
-.objective-hud::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--paper-image) center / cover;
-  mask: var(--paper-image) center / 100% 100% no-repeat;
-}
-.objective-hud .overline {
-  font-size: 8px;
-  color: var(--rust);
-}
-.objective-hud p {
-  font:
-    500 15px/1.35 "DM Sans",
-    sans-serif;
-  margin-top: 7px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.objective-hud i {
-  flex-shrink: 0;
-  width: 5px;
-  height: 5px;
-  border: 1px solid var(--rust);
-  transform: rotate(45deg);
-}
 .pause-trigger {
   position: absolute;
   right: 40px;
@@ -256,27 +212,6 @@ kbd {
   font-size: 9px;
   height: 22px;
   opacity: 0.8;
-}
-.location-hud {
-  position: absolute;
-  bottom: 28px;
-  left: 42px;
-  display: flex;
-  gap: 13px;
-  align-items: center;
-  font: 8px var(--mono);
-  letter-spacing: 0.1em;
-  color: #f0e4c9;
-  text-shadow: 0 2px 6px #000;
-  pointer-events: none;
-}
-.location-hud i {
-  height: 10px;
-  border-left: 1px solid #e0d9bd70;
-}
-.location-hud span:last-child {
-  font-size: 8px;
-  text-transform: uppercase;
 }
 .interact-prompt {
   position: absolute;
@@ -304,14 +239,6 @@ kbd {
   height: 36px;
   font-size: 16px;
   box-shadow: inset 0 0 0 3px #f4e5c91c;
-}
-.interact-prompt small {
-  display: block;
-  font: 9px var(--mono);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin-bottom: 6px;
-  color: #d6c39e;
 }
 .interact-prompt span {
   font-size: 16px;
@@ -361,13 +288,6 @@ kbd {
   );
   pointer-events: none;
 }
-.radio-subtitle small {
-  display: block;
-  font: 9px var(--mono);
-  letter-spacing: 0.17em;
-  color: #e8c690;
-  margin-bottom: 3px;
-}
 .radio-subtitle svg {
   flex-shrink: 0;
   margin-top: 3px;
@@ -389,19 +309,14 @@ kbd {
 }
 .title-content {
   position: absolute;
-  left: 85px;
-  top: 140px;
+  left: 100px;
+  top: 185px;
   width: 470px;
-}
-.title-content > .overline {
-  font-size: 9px;
-  letter-spacing: 0.25em;
-  color: #d1c09a;
 }
 .title-content h1 {
   font: 600 120px/0.92 var(--display);
   letter-spacing: 0.065em;
-  margin: 20px 0;
+  margin: 0 0 52px;
   color: #eae0c6;
   text-shadow:
     1px 0 #bba98b,
@@ -409,20 +324,14 @@ kbd {
 }
 .title-content h1 span {
   display: block;
-  font: 11px var(--mono);
-  letter-spacing: 0.4em;
-  margin-top: 17px;
+  font: 500 25px var(--display);
+  letter-spacing: 0.18em;
+  margin-top: 20px;
   color: #e7dac0;
-}
-.title-content > p {
-  font: italic 26px var(--serif);
-  color: #ded5bd;
-  margin-top: 27px;
 }
 .title-play {
   position: relative;
   isolation: isolate;
-  margin-top: 38px;
   min-width: 310px;
   height: 58px;
   padding: 0 26px;
@@ -449,7 +358,7 @@ kbd {
   gap: 10px;
   height: 46px;
   margin: 4px 0 0 22px;
-  font: 11px var(--mono);
+  font: 500 21px var(--display);
   text-transform: uppercase;
   color: #e4d7b9;
 }
@@ -459,27 +368,6 @@ kbd {
 }
 .title-fullscreen svg {
   display: none;
-}
-.title-controls {
-  display: block;
-  font-size: 9px;
-  color: #c7c9b3;
-  margin-top: 16px;
-}
-.title-corner,
-.title-coordinate {
-  position: absolute;
-  bottom: 31px;
-  font: 8px/1.8 var(--mono);
-  letter-spacing: 0.16em;
-  color: #dad4be;
-}
-.title-corner {
-  left: 85px;
-}
-.title-coordinate {
-  right: 42px;
-  text-align: right;
 }
 .title-content .graphics-notice {
   font:
@@ -499,6 +387,16 @@ kbd {
 
 /* Full-frame game screens: fixed composition, physical paper, no document scrolling. */
 .dialog {
+  --sheet-left: 32px;
+  --sheet-top: 24px;
+  --sheet-width: 560px;
+  --sheet-height: 672px;
+  --sheet-inset: 76px;
+  --content-left: calc(var(--sheet-left) + var(--sheet-inset));
+  --content-top: calc(var(--sheet-top) + 64px);
+  --content-right: calc(var(--sheet-left) + var(--sheet-width) - var(--sheet-inset));
+  --content-width: calc(var(--sheet-width) - 2 * var(--sheet-inset));
+  --footer-bottom: calc(720px - var(--sheet-top) - var(--sheet-height) + 60px);
   position: fixed;
   left: 50%;
   top: 50%;
@@ -524,17 +422,18 @@ kbd {
   isolation: isolate;
   width: 1280px;
   height: 720px;
-  padding: 68px 85px;
+  padding: var(--content-top) calc(1280px - var(--content-right))
+    calc(var(--footer-bottom) + 68px) var(--content-left);
   overflow: hidden;
 }
 .screen-content::before {
   content: "";
   position: absolute;
   z-index: -1;
-  left: 32px;
-  top: 20px;
-  width: 545px;
-  height: 670px;
+  left: var(--sheet-left);
+  top: var(--sheet-top);
+  width: var(--sheet-width);
+  height: var(--sheet-height);
   background: var(--paper-image) center / 100% 100%;
   filter: drop-shadow(5px 8px 10px #0005);
   pointer-events: none;
@@ -543,7 +442,7 @@ kbd {
   font: 600 58px/0.95 var(--display);
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  margin: 18px 0 25px;
+  margin: 0 0 28px;
 }
 .dialog > p,
 .screen-content > p {
@@ -553,26 +452,23 @@ kbd {
 }
 .dialog-close {
   position: absolute;
-  bottom: 50px;
-  left: 82px;
+  bottom: var(--footer-bottom);
+  left: var(--content-left);
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 9px;
-  height: 36px;
-  width: 116px;
-  font: 11px var(--mono);
-  letter-spacing: 0.08em;
+  height: 40px;
+  width: 120px;
+  font: 600 22px var(--display);
+  letter-spacing: 0.04em;
   color: var(--ink);
 }
 .dialog-close kbd {
   width: 36px;
-  height: 25px;
-  font-size: 9px;
-}
-.dialog-close span {
-  font-size: 10px;
+  height: 28px;
+  font-size: 11px;
 }
 .icon-button {
   display: inline-flex;
@@ -581,25 +477,16 @@ kbd {
   width: 40px;
   height: 40px;
 }
-.pause-dialog .overline {
-  font-size: 8px;
-  color: #66533c;
-}
 .pause-dialog h2 {
   font-size: 67px;
-  margin: 18px 0 12px;
-}
-.pause-objective {
-  width: 355px;
-  color: #5d503c;
-  font-size: 12px !important;
+  margin: 0;
 }
 .pause-menu {
   display: flex;
   flex-direction: column;
-  width: 360px;
-  margin-top: 26px;
-  gap: 4px;
+  width: 100%;
+  margin-top: 34px;
+  gap: 8px;
 }
 .pause-menu button {
   position: relative;
@@ -607,10 +494,10 @@ kbd {
   align-items: center;
   text-align: left;
   gap: 14px;
-  width: 360px;
-  height: 47px;
+  width: 100%;
+  height: 50px;
   padding: 8px 14px;
-  font: 600 25px var(--display);
+  font: 600 28px var(--display);
   text-transform: uppercase;
   letter-spacing: 0.035em;
 }
@@ -630,15 +517,16 @@ kbd {
   margin-left: auto;
 }
 .pause-menu kbd {
-  font: 9px var(--mono);
-  width: 23px;
-  height: 23px;
+  font: 12px var(--mono);
+  width: 27px;
+  height: 27px;
 }
 .save-status {
   position: absolute;
-  left: 85px;
-  bottom: 91px;
-  font-size: 10px;
+  left: var(--content-left);
+  bottom: calc(var(--footer-bottom) + 56px);
+  max-width: var(--content-width);
+  font-size: 13px;
   color: #5a503e;
 }
 .text-button {
@@ -647,7 +535,7 @@ kbd {
   justify-content: center;
   gap: 8px;
   min-height: 40px;
-  font: 10px var(--mono);
+  font: 500 21px var(--display);
   text-transform: uppercase;
   letter-spacing: 0.035em;
 }
@@ -673,18 +561,18 @@ kbd {
   outline: none;
   box-shadow: inset 0 0 0 3px #acb28d;
 }
-.settings-dialog .screen-content::before,
-.controls-dialog .screen-content::before {
-  width: 685px;
+.settings-dialog,
+.controls-dialog {
+  --sheet-width: 708px;
 }
 .setting {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 25px;
-  width: 530px;
+  width: 100%;
   height: 59px;
-  font-size: 14px;
+  font-size: 16px;
   border-bottom: 1px solid #6e624f44;
 }
 .setting span {
@@ -756,16 +644,13 @@ kbd {
 }
 .settings-dialog .screen-content > .text-button {
   position: absolute;
-  left: 85px;
-  bottom: 92px;
-}
-.settings-dialog .screen-content > .text-button:last-child {
-  display: none;
+  left: var(--content-left);
+  bottom: calc(var(--footer-bottom) + 68px);
 }
 .control-list {
-  width: 530px;
-  margin-top: 10px;
-  font-size: 13px;
+  width: 100%;
+  margin: 0;
+  font-size: 15px;
 }
 .control-list > div {
   display: flex;
@@ -776,34 +661,24 @@ kbd {
 }
 .control-list dd {
   margin: 0;
-  font: 11px var(--mono);
+  font: 13px var(--mono);
   max-width: 290px;
   text-align: right;
 }
 .controls-dialog .control-note {
-  font-size: 12px;
-  max-width: 530px;
+  font-size: 14px;
+  max-width: 100%;
   margin-top: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
 }
-.controls-dialog .screen-content > .text-button {
-  display: none;
-}
-.confirm-dialog .screen-content::before {
-  left: 330px;
-  top: 120px;
-  width: 620px;
-  height: 475px;
-}
-.confirm-dialog .screen-content {
-  padding: 195px 400px;
+.confirm-dialog {
+  --sheet-left: 310px;
+  --sheet-top: 112px;
+  --sheet-width: 660px;
+  --sheet-height: 496px;
 }
 .confirm-dialog h2 {
   font-size: 48px;
-}
-.confirm-dialog .dialog-close {
-  left: 400px;
-  bottom: 164px;
 }
 .dialog-actions {
   display: flex;
@@ -813,16 +688,17 @@ kbd {
   white-space: nowrap;
 }
 .confirm-dialog .dialog-actions {
-  width: 470px;
+  width: 100%;
+  gap: 24px;
 }
-.ending-dialog .screen-content::before {
-  left: 275px;
-  top: 50px;
-  width: 730px;
-  height: 620px;
+.ending-dialog {
+  --sheet-left: 275px;
+  --sheet-top: 50px;
+  --sheet-width: 730px;
+  --sheet-height: 620px;
+  --content-top: 145px;
 }
 .ending-dialog .screen-content {
-  padding: 148px 350px;
   text-align: center;
 }
 .ending-dialog h2 {
@@ -841,56 +717,54 @@ kbd {
   display: flex;
   margin: 0 auto;
 }
-.ending-dialog .dialog-close {
-  left: 360px;
-  bottom: 85px;
+.map-dialog,
+.notebook-dialog {
+  --sheet-left: 24px;
+  --sheet-top: 16px;
+  --sheet-width: 1232px;
+  --sheet-height: 688px;
+  --sheet-inset: 92px;
 }
 .map-dialog .screen-content::before,
 .notebook-dialog .screen-content::before {
-  left: 24px;
-  top: 15px;
-  width: 1232px;
-  height: 693px;
   background-size: cover;
   mask: var(--paper-image) center / 100% 100% no-repeat;
 }
-.map-dialog .dialog-close,
-.notebook-dialog .dialog-close {
-  bottom: 32px;
-}
 .screen-heading {
-  position: absolute;
-  left: 78px;
-  top: 57px;
+  position: relative;
 }
 .screen-heading h2 {
-  margin: 12px 0;
-  font-size: 46px;
+  margin: 0;
+  font-size: 54px;
 }
-.screen-heading .overline {
-  font-size: 9px;
-  color: #6c5238;
+.paper-map {
+  display: grid;
+  grid-template-columns: 274px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  align-items: center;
+  gap: 36px;
+  height: 440px;
+  margin-top: 24px;
 }
 .paper-map img {
-  position: absolute;
-  left: 390px;
-  top: 150px;
-  width: 780px;
-  height: 488px;
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   object-fit: contain;
   mix-blend-mode: multiply;
 }
 .map-stops {
-  position: absolute;
-  left: 80px;
-  top: 213px;
+  grid-column: 1;
+  grid-row: 1;
   padding: 0;
   margin: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 22px;
-  width: 268px;
+  width: 100%;
 }
 .map-stops li {
   display: flex;
@@ -924,9 +798,9 @@ kbd {
 }
 .archive-tabs {
   position: absolute;
-  top: 147px;
-  left: 80px;
-  right: 80px;
+  top: 156px;
+  left: var(--content-left);
+  width: var(--content-width);
   display: flex;
   border-top: 1px solid #75654c88;
   border-bottom: 1px solid #75654c88;
@@ -943,7 +817,7 @@ kbd {
   letter-spacing: 0.06em;
 }
 .archive-tabs button span {
-  font: 10px var(--mono);
+  font: 13px var(--mono);
 }
 .archive-tabs button[aria-pressed="true"] {
   color: #f2e6c7;
@@ -952,60 +826,53 @@ kbd {
 }
 .archive-content {
   position: absolute;
-  top: 227px;
-  left: 80px;
-  width: 1120px;
-  height: 302px;
+  top: 236px;
+  left: var(--content-left);
+  width: var(--content-width);
+  height: 280px;
   display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 58px;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 44px;
 }
 .archive-diagram {
-  padding-top: 24px;
+  padding-top: 10px;
   border-right: 1px solid #7b6b4d55;
-  padding-right: 42px;
+  padding-right: 36px;
   text-align: center;
   color: #807052;
 }
 .archive-diagram.restored {
   color: #536144;
 }
-.archive-diagram .overline {
-  font-size: 8px;
-}
 .notebook-sketch {
-  width: 320px;
+  width: 100%;
   height: 195px;
   transform: rotate(-2deg);
 }
 .diagram-label {
   display: block;
-  font: 10px var(--mono);
-  letter-spacing: 0.12em;
-}
-.archive-record > .overline {
-  font-size: 8px;
-  color: #7d492e;
+  font: 500 21px var(--display);
+  letter-spacing: 0.06em;
 }
 .archive-record h3 {
   font: 500 35px var(--serif);
-  margin: 8px 0 12px;
+  margin: 0 0 12px;
 }
 .notebook-evidence {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.6;
-  width: 610px;
+  width: 100%;
 }
 .archive-stats {
   display: flex;
   gap: 35px;
-  margin: 20px 0 13px;
+  margin: 16px 0 12px;
 }
 .archive-stats span {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  font: 9px var(--mono);
+  font: 12px var(--mono);
 }
 .archive-stats strong {
   font: 600 25px var(--display);
@@ -1013,15 +880,15 @@ kbd {
 }
 .evidence-log p {
   font:
-    11px/1.5 "DM Sans",
+    13px/1.5 "DM Sans",
     sans-serif;
   margin: 5px 0;
 }
 .personal-note {
   position: absolute;
-  left: 80px;
-  top: 558px;
-  width: 1030px;
+  left: var(--content-left);
+  top: 544px;
+  width: var(--content-width);
   display: flex;
   gap: 30px;
   align-items: center;
@@ -1046,75 +913,59 @@ kbd {
 }
 .notebook-pagination {
   position: absolute;
-  right: 86px;
-  bottom: 31px;
+  right: calc(1280px - var(--content-right));
+  bottom: var(--footer-bottom);
   display: flex;
   align-items: center;
   gap: 14px;
-  font: 11px var(--mono);
+  font: 14px var(--mono);
 }
 .archive-export {
   position: absolute;
   left: 50%;
-  bottom: 30px;
+  bottom: var(--footer-bottom);
   transform: translateX(-50%);
 }
 
 /* Repair station: the instrument fills the left side; a torn instruction leaf sits beside it. */
 .repair-dialog {
+  --sheet-left: 844px;
+  --sheet-top: 104px;
+  --sheet-width: 396px;
+  --sheet-height: 540px;
   color: #e7ddc4;
   background: linear-gradient(90deg, #071510db 0%, #0d211aa1 63%, #0a15125c);
 }
 .repair-dialog .screen-content {
   padding: 0;
 }
-.repair-dialog .screen-content::before {
-  left: 862px;
-  top: 111px;
-  width: 372px;
-  height: 530px;
-}
 .repair-heading {
   position: absolute;
   left: 55px;
-  top: 42px;
-}
-.repair-heading .overline {
-  font-size: 9px;
-  color: #c9b58f;
+  top: 52px;
 }
 .repair-heading h1 {
   font: 600 37px var(--display);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-top: 8px;
+  margin: 0;
   color: #f1e5c9;
-}
-.repair-close-hint {
-  display: none;
 }
 .repair-instruction {
   position: absolute;
-  left: 907px;
-  top: 150px;
-  width: 278px;
+  left: 896px;
+  top: 158px;
+  width: 288px;
   display: flex;
   gap: 12px;
   color: #393a2c;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.5;
 }
 .repair-instruction svg {
   flex-shrink: 0;
   margin-top: 2px;
   color: #89563a;
-}
-.repair-instruction small {
-  display: block;
-  font: 9px var(--mono);
-  letter-spacing: 0.14em;
-  color: #8a4d30;
-  margin-bottom: 10px;
 }
 .repair-layout {
   position: absolute;
@@ -1134,13 +985,9 @@ kbd {
   width: 752px;
   height: 28px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   color: #d4ccb4;
-}
-.board-topline > span {
-  font: 8px var(--mono);
-  letter-spacing: 0.14em;
 }
 .board-tools {
   display: flex;
@@ -1151,7 +998,7 @@ kbd {
   align-items: center;
   gap: 6px;
   height: 28px;
-  font: 10px var(--mono);
+  font: 500 20px var(--display);
 }
 .board-tools button:disabled {
   opacity: 0.4;
@@ -1357,7 +1204,7 @@ kbd {
   justify-content: flex-end;
   height: 26px;
   text-align: right;
-  font-size: 10px;
+  font-size: 13px;
   color: #d3d4bc;
 }
 .cancel-wire {
@@ -1369,19 +1216,19 @@ kbd {
 }
 .materials {
   position: absolute;
-  left: 859px;
-  top: 365px;
-  width: 278px;
+  left: 848px;
+  top: 352px;
+  width: 288px;
   color: #393a2e;
   padding-top: 13px;
   border-top: 1px solid #76684977;
 }
 .materials-label {
   display: block;
-  font: 9px var(--mono);
+  font: 500 19px var(--display);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-bottom: 11px;
+  margin-bottom: 8px;
 }
 .material-options {
   display: flex;
@@ -1396,7 +1243,7 @@ kbd {
   height: 59px;
   flex: 1;
   border: 1px solid #79674988;
-  font: 10px var(--mono);
+  font: 500 19px var(--display);
 }
 .material-options button[aria-pressed="true"] {
   border: 2px solid #6a442a;
@@ -1424,9 +1271,9 @@ kbd {
 }
 .repair-actions {
   position: absolute;
-  left: 859px;
-  top: 132px;
-  width: 278px;
+  left: 848px;
+  top: 112px;
+  width: 288px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1506,10 +1353,10 @@ kbd {
 }
 .repair-footer > div {
   display: flex;
-  gap: 22px;
+  gap: 28px;
 }
 .repair-footer .text-button {
-  font-size: 10px;
+  font-size: 19px;
   color: #e4d6b9;
 }
 .repair-dialog .dialog-close {
@@ -1519,11 +1366,11 @@ kbd {
 }
 .pip-radio {
   position: absolute;
-  left: 887px;
+  left: 865px;
   top: 134px;
-  width: 323px;
-  height: 430px;
-  padding: 46px 25px 25px;
+  width: 354px;
+  height: 466px;
+  padding: 62px 38px 80px;
   z-index: 6;
   color: #333b2e;
   isolation: isolate;
@@ -1538,13 +1385,13 @@ kbd {
 }
 .pip-radio > .icon-button {
   position: absolute;
-  right: 17px;
-  top: 15px;
+  right: 29px;
+  top: 24px;
   width: 30px;
   height: 30px;
 }
-.pip-radio .overline {
-  font-size: 9px;
+.radio-title {
+  font: 600 26px/1.2 var(--display);
   color: #834e33;
 }
 .pip-radio p {
@@ -1574,13 +1421,13 @@ kbd {
 }
 .radio-pagination {
   position: absolute;
-  bottom: 30px;
-  left: 30px;
-  right: 30px;
+  bottom: 36px;
+  left: 38px;
+  right: 38px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font: 10px var(--mono);
+  font: 13px var(--mono);
 }
 .radio-pagination button {
   width: 40px;
@@ -1647,18 +1494,12 @@ kbd {
   .interact-prompt span {
     font-size: 21px;
   }
-  .interact-prompt small {
-    font-size: 11px;
-  }
   .movement-hint {
     bottom: 35px;
     font-size: 15px;
   }
   .radio-subtitle {
     bottom: 220px;
-  }
-  .location-hud {
-    display: none;
   }
   .pause-trigger {
     width: 54px;

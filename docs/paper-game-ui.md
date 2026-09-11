@@ -4,7 +4,9 @@ The active interface is a first-person game with a fixed 16:9 composition. Its m
 
 Every screen is authored at 1280 × 720 and scales uniformly to the available display. Other aspect ratios receive letterboxing. Dialogs occupy the same game frame. There are no scrolling menus, pages, or repair panels. Field notes use three indexed discoveries; longer radio replies turn into pages. Fullscreen is available on the title screen, in the pause menu, in Settings, and with F. Touch controls also scale with the frame; landscape is the useful phone orientation.
 
-The electrical instrument occupies the left side of a repair screen. One torn instruction sheet on the right holds Pip’s current instruction and the controls for that step. The first repair teaches one action at a time. The map and field notes use a wider sheet, inked headings, and fixed content positions. Exploration keeps only a small objective scrap and contextual HUD.
+The electrical instrument occupies the left side of a repair screen. One torn instruction sheet on the right holds Pip’s current instruction and the controls for that step. The first repair teaches one action at a time. The map and field notes use a wider sheet with inked headings. Exploration uses a compass, reticle, next-repair marker, and contextual interaction prompt.
+
+Menus omit decorative captions, chapter labels, repeated branding, and routine save messages. The pause menu aligns every item to the same text column. Shared sheet geometry keeps ordinary menus 76 pixels inside the paper’s bounding edges and wide menus 92 pixels inside; footer controls sit 60 pixels above the paper’s lower edge, within the fixed 1280 × 720 composition. The map uses a bounded grid so its illustration and location list stay aligned. Functional controls and field-guide titles use larger type.
 
 ## Paper asset
 

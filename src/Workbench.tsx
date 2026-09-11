@@ -201,20 +201,11 @@ export function Workbench({
       onClose={onClose}
     >
       <div className="repair-heading">
-        <span className="overline">
-          {practice ? "FREE CIRCUIT" : `POWER SYSTEM ${mission.number}`}
-        </span>
         <h1>{SITES[id].name}</h1>
-        <span className="repair-close-hint">
-          <kbd>Esc</kbd> Close panel
-        </span>
       </div>
       <div className="repair-instruction" role="status">
         <Radio size={18} />
-        <span>
-          <small>PIP</small>
-          <span>{instruction}</span>
-        </span>
+        <span>{instruction}</span>
       </div>
       <div className="repair-layout">
         <CircuitBoard
@@ -382,14 +373,12 @@ export function Workbench({
           >
             <X size={17} />
           </button>
+          <h3 className="radio-title">
+            {reply?.source === "field-guide" ? "Pip’s field guide" : "Pip"}
+          </h3>
           {pending && <p role="status">Pip is thinking…</p>}
           {reply && (
             <div role="status">
-              <span className="overline">
-                {reply.source === "live"
-                  ? "PIP · LIVE COACH"
-                  : "PIP · FIELD GUIDE"}
-              </span>
               <p>{replyPages[replyPage] ?? replyPages[0]}</p>
               {replyPages.length > 1 && (
                 <div className="radio-pagination">

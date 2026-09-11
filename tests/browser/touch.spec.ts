@@ -73,9 +73,11 @@ for (const viewport of [
         path: `docs/screenshots/fps-touch-${viewport.width}.png`,
       });
       await workshopRepair(page);
+      await page.getByRole("button", { name: "Pause game", exact: true }).tap();
+      await page.getByRole("button", { name: /^Island map/ }).tap();
       await expect(
-        page.getByText("Bring the harbor lights online", { exact: true }),
-      ).toBeVisible();
+        page.locator('.map-stops [aria-current="step"]'),
+      ).toContainText("Harbor relay");
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,

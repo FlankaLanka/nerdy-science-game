@@ -101,9 +101,6 @@ export function Notebook({
   return (
     <Dialog title="Notebook" onClose={onClose} className="notebook-dialog">
       <header className="screen-heading">
-        <span className="overline">
-          KEEPER’S ARCHIVE / {state.completed.length} OF 3 RESTORED
-        </span>
         <h2>FIELD NOTES</h2>
       </header>
       <nav className="archive-tabs" aria-label="Discoveries">
@@ -121,16 +118,12 @@ export function Notebook({
       </nav>
       <div className="archive-content">
         <div className={`archive-diagram ${done ? "restored" : ""}`}>
-          <span className="overline">
-            {done ? "VERIFIED CIRCUIT" : "DISCOVERY PENDING"}
-          </span>
           <Sketch page={page} />
           <span className="diagram-label">
             {["COMPLETE LOOP", "SERIES CIRCUIT", "PARALLEL CIRCUIT"][page]}
           </span>
         </div>
         <div className="archive-record">
-          <span className="overline">DISCOVERY {mission.number}</span>
           <h3>{done ? mission.discovery : "A light waiting to return."}</h3>
           <p className="notebook-evidence">
             {done
