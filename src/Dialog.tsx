@@ -6,16 +6,19 @@ export function Dialog({
   title,
   children,
   onClose,
+  open = true,
   className = "",
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
+  open?: boolean;
   className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = ref.current!;
+    if (!open) return;
     const opener =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -41,7 +44,7 @@ export function Dialog({
           .querySelector<HTMLButtonElement>('[aria-label="Pause game"]')
           ?.focus({ preventScroll: true });
     };
-  }, []);
+  }, [open]);
   return createPortal(
     <dialog
       ref={ref}

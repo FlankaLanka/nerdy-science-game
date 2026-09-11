@@ -1,5 +1,22 @@
 # Verification record
 
+## Workshop geometry and circuit loading — September 11, 2026
+
+The final TypeScript/Vite production build, all **34 unit tests**, and all **18 browser tests** passed. The browser suite includes the complete island walk and repair sequence, save restoration, keyboard and touch controls, Reset, graphics fallback, accessibility checks, fullscreen, and delayed circuit textures.
+
+- Closed the front/rear gables and roof ridge; aligned door/window openings, trim, rafters, porch supports, fixtures, and furniture. The chimney base follows the roof pitch. Plaster coordinates stay continuous across adjoining walls and gables.
+- Replaced overlapping floor slabs with a continuous joint, graded the hillside below the foundation, and excluded grass from the porch. Camera height, cabinet placement, and walking collision agree with the model. Raycasts cover roof undersides, both sides of each gable, openings, slab edges, and terrain clearance.
+- Removed Undo, Hint, Ask Pip, and the coaching panel from circuit activities. Clear is now Reset. Player wires still support individual removal, and the current experiment instruction remains visible.
+- Prepared paper, fonts, circuit textures, HDR lighting, and all three kits before entering the island. The workbench keeps one renderer across visits and stops drawing when closed or idle. The world retains its paused frame instead of repeatedly drawing behind menus. The fallback board stays stable if circuit graphics cannot prepare.
+
+The local 1280 × 720 diagnostic measured **313–383 ms** from the opening key to the detailed board before the change, and **15–44 ms** afterward. Three visits previously caused six renderer builds in development StrictMode; now they reuse one. The final sample recorded no opening-time art requests, no main-thread tasks over 50 ms during opening, and no visible plain-board state. These samples include automation overhead and are not device benchmarks. See [baseline](circuit-loading-before.json), [final timings and seven views](workshop-review.json), and the reproducible `scripts/workshop-review.mjs`.
+
+Reviewed the final [front](screenshots/workshop-front.png), [rear](screenshots/workshop-rear.png), [west](screenshots/workshop-west.png), [east](screenshots/workshop-east.png), [doorway from inside](screenshots/workshop-interior-door.png), [ceiling](screenshots/workshop-interior-roof.png), and [interior floor](screenshots/workshop-interior-rear.png), plus the [simplified circuit controls](screenshots/workshop-circuit.png).
+
+The production smoke check loaded all 33 requested assets successfully, exercised Reset and circuit testing, reopened the same canvas, and operated the repair controls through fullscreen. The map also opened correctly. No browser page errors were reported; see [production-check.json](production-check.json). Vite retains its Three.js chunk advisory (about 588 kB uncompressed); the build succeeds.
+
+The development server remains at **http://127.0.0.1:5174**. Temporary test/review servers on 5175 and 5176 were stopped. The records below describe previous interface versions, including the retired coaching controls.
+
 ## Menu spacing and text cleanup — September 11, 2026
 
 The production TypeScript/Vite build and all **18 browser tests** passed after removing decorative menu captions and persistent objective text. Existing progression checks now verify restored cabinets, the map’s next location, and saved discoveries. The full island playthrough, touch repair at three phone sizes, keyboard controls, fullscreen, accessibility checks, and long radio pagination all passed.

@@ -74,49 +74,26 @@ test("pre-first-person saves keep their repairs and start safely on the path", a
   await restored.close();
 });
 
-test("abandoned coaching requests do not reappear and authored hints survive network failure", async ({
+test("circuit activities expose reset without undo or coaching controls", async ({
   page,
 }) => {
-  let release = () => {};
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  let arrived = () => {};
-  const requested = new Promise<void>((resolve) => {
-    arrived = resolve;
-  });
-  await page.route("**/api/coach", async (route) => {
-    arrived();
-    await gate;
-    await route
-      .fulfill({
-        json: { source: "live", text: "A stale reply that must never appear." },
-      })
-      .catch(() => {});
+  const requests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/coach")) requests.push(request.url());
   });
   await openWorkshop(page);
-  await page.getByRole("button", { name: "Hint", exact: true }).click();
-  await requested;
-  await page
-    .getByRole("button", {
-      name: "Close keeper’s workshop circuit",
-      exact: true,
-    })
-    .click();
-  release();
-  await page.keyboard.press("e");
   await expect(
-    page.getByText("A stale reply that must never appear.", { exact: true }),
+    page.getByRole("button", { name: /^(Undo|Clear|Hint|Ask Pip)$/ }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Hint", exact: true }),
-  ).toBeEnabled();
-  await page.unroute("**/api/coach");
-  await page.route("**/api/coach", (route) => route.abort());
-  await page.getByRole("button", { name: "Hint", exact: true }).click();
+    page.getByRole("button", { name: "Reset", exact: true }),
+  ).toBeDisabled();
+  await connect(page, "Lamp A right", "Bridge left");
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Pip’s field guide", exact: true }),
-  ).toBeVisible();
+    page.getByRole("button", { name: /^Remove wire from/ }),
+  ).toHaveCount(0);
+  expect(requests).toEqual([]);
 });
 
 test("WebGL failure offers explicit circuit mode instead of a broken world", async ({

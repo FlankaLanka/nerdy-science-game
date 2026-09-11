@@ -1,4 +1,5 @@
 import type { MissionId } from "../missions.ts";
+import { WORKSHOP } from "./workshopLayout.ts";
 
 export type Player = { x: number; z: number; yaw: number; pitch: number };
 export type Obstacle =
@@ -30,7 +31,7 @@ export const SITES: Record<
   },
 };
 
-export function terrainHeight(x: number, z: number) {
+function islandHeight(x: number, z: number) {
   const radius = Math.hypot(x / 34, (z + 2) / 38);
   const hill = 4.4 * Math.exp(-((x - 11) ** 2 / 190 + (z + 21) ** 2 / 220));
   const land = 1.15 + hill + Math.sin(x * 0.14) * Math.cos(z * 0.16) * 0.28;
@@ -38,9 +39,40 @@ export function terrainHeight(x: number, z: number) {
   return land * (1 - coast * coast) - 2.6 * coast * coast;
 }
 
+export function terrainHeight(x: number, z: number) {
+  const height = islandHeight(x, z);
+  const { x: cx, z: cz, width, depth, porchDepth } = WORKSHOP;
+  const dx = Math.max(0, Math.abs(x - cx) - width / 2 - 0.45);
+  const dz = Math.max(
+    0,
+    cz - depth / 2 - 0.3 - z,
+    z - cz - depth / 2 - porchDepth,
+  );
+  const distance = Math.hypot(dx, dz);
+  if (distance >= 1.4) return height;
+  // Grade below the entire slab, plus one terrain-grid cell so triangles cannot
+  // cut through its edges. Blend back into the hillside outside the foundation.
+  const t = Math.max(0, (distance - 0.55) / 0.85);
+  const blend = t * t * (3 - 2 * t);
+  const beneathFloor = Math.min(height, workshopFloorHeight() - 0.12);
+  return beneathFloor + (height - beneathFloor) * blend;
+}
+
 export function groundHeight(x: number, z: number) {
   if (x >= 22 && x <= 34 && z >= 12.4 && z <= 16.6) return 0.95;
+  const { x: cx, z: cz, width, depth, porchDepth } = WORKSHOP;
+  const onHouseFloor =
+    Math.abs(x - cx) <= width / 2 + 0.3 && Math.abs(z - cz) <= depth / 2 + 0.3;
+  const onPorch =
+    Math.abs(x - cx) <= width / 2 + 0.45 &&
+    z >= cz + depth / 2 + 0.3 &&
+    z <= cz + depth / 2 + porchDepth;
+  if (onHouseFloor || onPorch) return workshopFloorHeight();
   return terrainHeight(x, z);
+}
+
+export function workshopFloorHeight() {
+  return islandHeight(WORKSHOP.x, WORKSHOP.z) + WORKSHOP.floorLift;
 }
 
 export function canWalk(x: number, z: number, obstacles: Obstacle[]) {

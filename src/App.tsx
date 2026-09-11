@@ -25,6 +25,7 @@ import { Notebook } from "./Notebook";
 import { Dialog } from "./Dialog";
 import { useSound } from "./audio";
 import { GameViewport } from "./GameViewport";
+import { prepareInterface } from "./interfaceAssets";
 
 const World = lazy(() => import("./World"));
 type Menu =
@@ -48,6 +49,17 @@ export default function App() {
   const [running, setRunning] = useState(false),
     [ready, setReady] = useState(false),
     [failed, setFailed] = useState(false);
+  const [kitReady, setKitReady] = useState(false);
+  const [interfaceReady, setInterfaceReady] = useState(false);
+  useEffect(() => {
+    let canceled = false;
+    void prepareInterface().then(() => {
+      if (!canceled) setInterfaceReady(true);
+    });
+    return () => {
+      canceled = true;
+    };
+  }, []);
   const [entered, setEntered] = useState(false),
     [menu, setMenu] = useState<Menu>(null),
     [active, setActive] = useState<MissionId | null>(null);
@@ -83,6 +95,8 @@ export default function App() {
     sound = useSound(state.sound);
   const next = currentMission(state),
     allDone = state.completed.length === 3;
+  const panelId = active ?? next;
+  const arrived = ready && kitReady && interfaceReady;
   const reducedMotion = state.reducedMotion || systemMotion;
   const playing = running && !menu && !active && !failed;
   useEffect(() => {
@@ -243,8 +257,12 @@ export default function App() {
               <h1>
                 SIGNAL<span>THE LAST LIGHTHOUSE</span>
               </h1>
-              <button className="title-play" disabled={!ready} onClick={begin}>
-                {!ready
+              <button
+                className="title-play"
+                disabled={!arrived}
+                onClick={begin}
+              >
+                {!arrived
                   ? "Arriving on the island…"
                   : failed
                     ? "Play circuit puzzles"
@@ -308,27 +326,24 @@ export default function App() {
             )}
           </>
         )}
-        {active && (
-          <Workbench
-            key={active}
-            id={active}
-            progress={practice ?? state.missions[active]}
-            practice={!!practice}
-            saved={saved}
-            lesson={state.lesson}
-            onLesson={(step) => dispatch({ type: "LESSON", step })}
-            onAction={(action) =>
-              practice
-                ? setPractice((p) =>
-                    p ? updateProgress(active, p, action) : p,
-                  )
-                : dispatch({ type: "MISSION", id: active, action })
-            }
-            onClose={closePanel}
-            onComplete={complete}
-            play={sound.play}
-          />
-        )}
+        <Workbench
+          open={!!active}
+          onReady={() => setKitReady(true)}
+          id={panelId}
+          progress={practice ?? state.missions[panelId]}
+          practice={!!practice}
+          saved={saved}
+          lesson={state.lesson}
+          onLesson={(step) => dispatch({ type: "LESSON", step })}
+          onAction={(action) =>
+            practice
+              ? setPractice((p) => (p ? updateProgress(panelId, p, action) : p))
+              : dispatch({ type: "MISSION", id: panelId, action })
+          }
+          onClose={closePanel}
+          onComplete={complete}
+          play={sound.play}
+        />
         {menu === "pause" && (
           <Dialog title="Paused" className="pause-dialog" onClose={resume}>
             <h2>Paused</h2>
@@ -343,9 +358,7 @@ export default function App() {
               <button onClick={() => setMenu("journal")}>
                 Field notes <kbd>J</kbd>
               </button>
-              <button onClick={() => setMenu("settings")}>
-                Settings
-              </button>
+              <button onClick={() => setMenu("settings")}>Settings</button>
               <button onClick={() => setMenu("controls")}>Controls</button>
               <button onClick={() => void toggleFullscreen()}>
                 {fullscreen ? "Exit fullscreen" : "Fullscreen"}
@@ -380,7 +393,9 @@ export default function App() {
                 {MISSIONS.map((m) => (
                   <li
                     key={m.id}
-                    aria-current={m.id === next && !allDone ? "step" : undefined}
+                    aria-current={
+                      m.id === next && !allDone ? "step" : undefined
+                    }
                     className={
                       state.completed.includes(m.id)
                         ? "done"

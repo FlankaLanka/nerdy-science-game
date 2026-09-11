@@ -1,10 +1,26 @@
 import * as THREE from "three";
-import { rng, rounded, rockGeometry, surface } from "./art";
-import { SITES, terrainHeight } from "./navigation";
+import { rng, rounded, rockGeometry, surface as loadSurface } from "./art";
+import {
+  SITES,
+  terrainHeight,
+  groundHeight,
+  workshopFloorHeight,
+} from "./navigation";
+import { buildWorkshop } from "./workshop";
+import { WORKSHOP } from "./workshopLayout";
 import type { Obstacle } from "./navigation";
 import type { MissionId } from "../missions";
 
-export function buildIsland(scene: THREE.Scene) {
+export function buildIsland(
+  scene: THREE.Scene,
+  manager?: THREE.LoadingManager,
+) {
+  const surface = (
+    name: string,
+    repeat = 1,
+    color = "#ffffff",
+    metalness = 0,
+  ) => loadSurface(name, repeat, color, metalness, manager);
   const obstacles: Obstacle[] = [];
   const root = new THREE.Group();
   scene.add(root);
@@ -215,72 +231,25 @@ export function buildIsland(scene: THREE.Scene) {
   }
 
   // Keeper’s workshop: open doorway, work surfaces, joinery, gutters and a sheltered repair cabinet.
-  const wy = terrainHeight(-6, 0);
-  box(-6, wy + 0.08, -0.5, 9.3, 0.25, 7.4, stone);
-  for (const x of [-10.5, -1.5]) {
-    box(x, wy + 1.9, -1, 0.28, 3.7, 7, plaster);
-    obstacles.push({ x, z: -1, width: 0.28, depth: 7 });
-  }
-  box(-6, wy + 1.9, -4.5, 9, 3.7, 0.3, plaster);
-  obstacles.push({ x: -6, z: -4.5, width: 9, depth: 0.3 });
-  for (const [x, w] of [
-    [-8.95, 3.1],
-    [-3.05, 3.1],
-  ]) {
-    box(x, wy + 1.9, 2.5, w, 3.7, 0.3, plaster);
-    obstacles.push({ x, z: 2.5, width: w, depth: 0.3 });
-  }
-  box(-6, wy + 3.5, 2.5, 2.8, 0.6, 0.4, wood);
-  for (const x of [-7.42, -4.58])
-    box(x, wy + 1.55, 2.74, 0.16, 3.1, 0.16, wood);
-  for (const x of [-8.8, -3.1]) {
-    box(x, wy + 2.05, 2.69, 1.25, 1.2, 0.08, wood);
-    box(x, wy + 2.05, 2.75, 1.06, 1.02, 0.02, glass);
-    for (const dx of [-0.5, 0, 0.5])
-      box(x + dx, wy + 2.05, 2.78, 0.045, 1.04, 0.04, wood);
-    box(x, wy + 2.05, 2.8, 1.1, 0.045, 0.04, wood);
-  }
-  for (const side of [-1, 1]) {
-    const r = box(-6 + side * 2.42, wy + 4.27, -1, 5.3, 0.18, 8.3, roof);
-    r.rotation.z = -side * 0.3;
-    // Raised seams catch the low sun along the roof.
-    for (let z = -4.8; z < 3.1; z += 0.48) {
-      const seam = box(-6 + side * 2.42, wy + 4.38, z, 5.3, 0.035, 0.035, iron);
-      seam.rotation.z = -side * 0.3;
-    }
-  }
-  pole(
-    new THREE.Vector3(-6, wy + 5.1, -5.1),
-    new THREE.Vector3(-6, wy + 5.1, 3.1),
-    0.1,
+  const workshop = buildWorkshop(workshopFloorHeight(), {
+    wood,
+    stone,
+    plaster,
+    roof,
     iron,
-  );
-  box(-9, wy + 4.8, -2.5, 0.8, 2.1, 0.8, stone);
-  box(-9, wy + 5.9, -2.5, 1, 0.15, 1, stone);
-  const workshopSign = label("KEEPER’S WORKSHOP", 4.2, 0.64);
-  workshopSign.position.set(-6, wy + 3.2, 2.82);
+  });
+  root.add(workshop.root);
+  obstacles.push(...workshop.obstacles);
+  const workshopSign = label("KEEPER’S WORKSHOP", 4.2, 0.46);
+  workshopSign.position.set(-6, workshop.signY, 2.68);
   root.add(workshopSign);
-  for (const x of [-10.8, -1.2]) {
-    box(x, wy + 1.7, 4.9, 0.16, 3.4, 0.16, wood);
-    obstacles.push({ x, z: 4.9, radius: 0.12 });
-  }
-  box(-6, wy + 3.55, 4.05, 10, 0.14, 2.5, roof).rotation.x = 0.06;
-  for (let i = 0; i < 4; i++) {
-    const x = -9.7 + i * 0.77;
-    box(x, wy + 0.47, -3.8, 0.7, 0.78, 0.85, wood);
-    for (const z of [-4.2, -3.4]) box(x, wy + 0.47, z, 0.74, 0.085, 0.04, iron);
-  }
-  box(-8.8, wy + 1, -1.6, 2.7, 0.16, 1.1, wood);
-  for (const x of [-10, -7.6])
-    for (const z of [-2, -1.2]) box(x, wy + 0.48, z, 0.1, 1, 0.1, iron);
-  obstacles.push({ x: -8.8, z: -1.6, width: 2.7, depth: 1.1 });
-  lamp("workshop", -6, wy + 2.95, 3.8, 80);
-  lamp("workshop", -6, wy + 2.85, -0.8, 65);
+  lamp("workshop", -6, workshop.porchLampY, workshop.porchLampZ, 80);
+  lamp("workshop", -6, workshop.interiorLampY, -1, 65);
 
   // Every puzzle lives in a physical cabinet with a power indicator.
   const indicators: Record<string, THREE.MeshStandardMaterial> = {};
   for (const [id, site] of Object.entries(SITES)) {
-    const y = terrainHeight(site.x, site.z),
+    const y = groundHeight(site.x, site.z),
       group = new THREE.Group();
     group.position.set(site.x, y, site.z);
     root.add(group);
@@ -579,7 +548,7 @@ export function buildIsland(scene: THREE.Scene) {
   }
 
   // Layered pine boughs use photographic alpha cutouts instead of cone silhouettes.
-  const textureLoader = new THREE.TextureLoader();
+  const textureLoader = new THREE.TextureLoader(manager);
   const pineMap = textureLoader.load("/art/pine-color.webp");
   pineMap.colorSpace = THREE.SRGBColorSpace;
   const pineAlpha = textureLoader.load("/art/pine-alpha.webp");
@@ -712,7 +681,12 @@ export function buildIsland(scene: THREE.Scene) {
     const x = (rng(i + 3000) - 0.5) * 57,
       z = (rng(i + 17000) - 0.5) * 64 - 2;
     if (Math.hypot(x / 34, (z + 2) / 38) > 0.8) continue;
-    if (x > -11 && x < -1 && z > -5 && z < 5) continue;
+    if (
+      Math.abs(x - WORKSHOP.x) < WORKSHOP.width / 2 + 0.8 &&
+      z > WORKSHOP.z - WORKSHOP.depth / 2 - 0.6 &&
+      z < WORKSHOP.z + WORKSHOP.depth / 2 + WORKSHOP.porchDepth + 0.4
+    )
+      continue;
     if (Math.abs(x + 3) < 1.4 && z > 3) continue;
     if (Math.abs(z - (x + 3) * 0.2 - 8) < 1.6 && x > -4 && x < 24) continue;
     if (Math.abs(x - (7 - z * 0.35)) < 2 && z > -17 && z < 9) continue;
@@ -760,7 +734,7 @@ export function buildIsland(scene: THREE.Scene) {
   }
   // A small field companion, waiting beside the first repair.
   const pip = new THREE.Group();
-  pip.position.set(-4.55, terrainHeight(-4.55, 4.3), 4.3);
+  pip.position.set(-4.55, groundHeight(-4.55, 4.3), 4.3);
   root.add(pip);
   for (const x of [-0.19, 0.19]) {
     mesh(rounded(0.2, 0.2, 0.32), iron, x, 0.13, 0.08, pip);

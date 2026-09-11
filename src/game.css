@@ -962,11 +962,6 @@ kbd {
   font-size: 16px;
   line-height: 1.5;
 }
-.repair-instruction svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: #89563a;
-}
 .repair-layout {
   position: absolute;
   top: 150px;
@@ -1012,6 +1007,9 @@ kbd {
   border-radius: 7px;
   background: #172f2a;
   box-shadow: 0 15px 38px #0005;
+}
+.circuit-board.is-preparing > :not(.bench-scene) {
+  visibility: hidden;
 }
 .circuit-drawing {
   display: block;
@@ -1351,10 +1349,6 @@ kbd {
   font-size: 10px;
   color: #efd2a0;
 }
-.repair-footer > div {
-  display: flex;
-  gap: 28px;
-}
 .repair-footer .text-button {
   font-size: 19px;
   color: #e4d6b9;
@@ -1363,76 +1357,6 @@ kbd {
   left: 57px;
   bottom: 32px;
   color: #e4d6b9;
-}
-.pip-radio {
-  position: absolute;
-  left: 865px;
-  top: 134px;
-  width: 354px;
-  height: 466px;
-  padding: 62px 38px 80px;
-  z-index: 6;
-  color: #333b2e;
-  isolation: isolate;
-}
-.pip-radio::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--paper-image) center / 100% 100%;
-  filter: drop-shadow(-6px 8px 8px #0005);
-}
-.pip-radio > .icon-button {
-  position: absolute;
-  right: 29px;
-  top: 24px;
-  width: 30px;
-  height: 30px;
-}
-.radio-title {
-  font: 600 26px/1.2 var(--display);
-  color: #834e33;
-}
-.pip-radio p {
-  font-size: 14px;
-  line-height: 1.65;
-  overflow-wrap: anywhere;
-  margin-top: 16px;
-}
-.pip-radio form label {
-  display: block;
-  font: 25px var(--serif);
-  margin: 15px 0 25px;
-}
-.pip-radio input {
-  display: block;
-  width: 100%;
-  padding: 10px 5px;
-  color: #35452e;
-  background: #c8b78422;
-  border: 0;
-  border-bottom: 1px solid #786843;
-  font-size: 14px;
-}
-.pip-radio form .text-button {
-  float: right;
-  margin-top: 18px;
-}
-.radio-pagination {
-  position: absolute;
-  bottom: 36px;
-  left: 38px;
-  right: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font: 13px var(--mono);
-}
-.radio-pagination button {
-  width: 40px;
-  height: 40px;
-  font-size: 22px;
 }
 .graphics-fallback {
   position: absolute;

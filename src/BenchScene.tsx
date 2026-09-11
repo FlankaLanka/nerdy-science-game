@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 import { rounded, surface, disposeScene } from "./scene/art";
+import { MISSIONS } from "./missions";
 import type { Mission } from "./missions";
 import type { Progress } from "./game";
 import type { CircuitResult } from "./circuit";
@@ -9,72 +10,80 @@ import { FULL_POWER } from "./circuit";
 import { gamePixelRatio } from "./viewport";
 
 type Props = {
+  active: boolean;
   mission: Mission;
   progress: Progress;
   result: CircuitResult | null;
   removed: boolean;
   onReady: (ready: boolean) => void;
 };
+type Runtime = { wake: () => void; dispose: () => void };
 
-/** The camera shares the exact 720×460 coordinate system of the accessible socket layer. */
+/** One renderer and three prepared kits survive opening, closing and changing stations. */
 export function BenchScene(props: Props) {
-  const host = useRef<HTMLDivElement>(null),
-    current = useRef(props);
+  const host = useRef<HTMLDivElement>(null);
+  const current = useRef(props);
+  const runtime = useRef<Runtime | null>(null);
   current.current = props;
   useEffect(() => {
-    performance.mark("signal-kit-build");
-    const container = host.current!;
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({
-        alpha: true,
-        antialias: true,
-        powerPreference: "high-performance",
-      });
-    } catch {
-      return;
-    }
-    let disposed = false;
-    renderer.setPixelRatio(gamePixelRatio(1.75));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.domElement.setAttribute("aria-hidden", "true");
-    container.append(renderer.domElement);
+    // Let StrictMode cancel its probe before allocating a graphics context.
+    const timer = setTimeout(() => {
+      runtime.current = prepareBench(host.current!, () => current.current);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      runtime.current?.dispose();
+      runtime.current = null;
+    };
+  }, []);
+  useLayoutEffect(() => runtime.current?.wake());
+  return <div ref={host} className="bench-scene" aria-hidden="true" />;
+}
+
+function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
+  performance.mark("signal-kit-build");
+  let renderer: THREE.WebGLRenderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      powerPreference: "high-performance",
+    });
+  } catch {
+    state().onReady(false);
+    return { wake() {}, dispose() {} };
+  }
+  let disposed = false,
+    prepared = false,
+    frame = 0,
+    last = 0,
+    signature = "";
+  renderer.setPixelRatio(gamePixelRatio(1.75));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.domElement.setAttribute("aria-hidden", "true");
+  container.append(renderer.domElement);
+  const camera = new THREE.OrthographicCamera(-360, 360, 230, -230, 0.1, 1500);
+  camera.position.set(0, 900, 0);
+  camera.up.set(0, 0, -1);
+  camera.lookAt(0, 0, 0);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  let environment: THREE.WebGLRenderTarget | null = null;
+  let assetFailed = false;
+  const manager = new THREE.LoadingManager();
+  const assets = new Promise<void>((resolve) => {
+    manager.onLoad = resolve;
+  });
+  manager.onError = () => {
+    assetFailed = true;
+  };
+  manager.itemStart("kit-setup");
+  function buildKit(mission: Mission) {
     const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(
-      -360,
-      360,
-      230,
-      -230,
-      0.1,
-      1500,
-    );
-    camera.position.set(0, 900, 0);
-    camera.up.set(0, 0, -1);
-    camera.lookAt(0, 0, 0);
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    let environment: THREE.WebGLRenderTarget | null = null;
     scene.environmentIntensity = 0.75;
-    const lighting = new Promise<void>((resolve) =>
-      new HDRLoader().load(
-        "/art/coastal-sunset.hdr",
-        (t) => {
-          if (disposed) {
-            t.dispose();
-            return;
-          }
-          environment = pmrem.fromEquirectangular(t);
-          scene.environment = environment.texture;
-          t.dispose();
-          resolve();
-        },
-        undefined,
-        () => resolve(),
-      ),
-    );
     scene.add(new THREE.HemisphereLight("#cce1ec", "#182222", 1.35));
     const key = new THREE.DirectionalLight("#ffe2b2", 3.0);
     key.position.set(-230, 400, -150);
@@ -105,10 +114,10 @@ export function BenchScene(props: Props) {
       clearcoat: 0.8,
       clearcoatRoughness: 0.15,
     });
-    const enamel = surface("metal", 1, "#638389", 0.42);
+    const enamel = surface("metal", 1, "#638389", 0.42, manager);
     enamel.roughness = 0.62;
     enamel.normalScale.set(0.13, 0.13);
-    const timber = surface("wood", 1, "#c39b63");
+    const timber = surface("wood", 1, "#c39b63", 0, manager);
     function mesh(
       g: THREE.BufferGeometry,
       m: THREE.Material,
@@ -186,7 +195,7 @@ export function BenchScene(props: Props) {
     c.fillStyle = gradient;
     c.fillRect(0, 0, 128, 128);
     const glowTexture = new THREE.CanvasTexture(glowCanvas);
-    for (const lamp of props.mission.lamps) {
+    for (const lamp of mission.lamps) {
       const { x, y: z } = lamp;
       box(152, 6, 14, brass, x, 6, z, 3);
       box(103, 5, 90, dark, x, 5, z, 16);
@@ -302,7 +311,7 @@ export function BenchScene(props: Props) {
       transparent: true,
       opacity: 0.7,
     });
-    if (props.mission.id === "workshop") {
+    if (mission.id === "workshop") {
       box(160, 9, 55, dark, 480, 8, 330, 7);
       strip = box(117, 9, 29, timber, 480, 19, 330, 2);
       for (const x of [418, 542]) {
@@ -310,114 +319,166 @@ export function BenchScene(props: Props) {
         cyl(4, 2, nickel, x, 24, 330);
       }
     }
-    for (const terminal of props.mission.terminals) {
+    for (const terminal of mission.terminals) {
       cyl(12, 4, dark, terminal.x, 7, terminal.y);
       cyl(8, 7, brass, terminal.x, 11, terminal.y);
       cyl(4, 1, dark, terminal.x, 15, terminal.y);
     }
-    function resize() {
-      renderer.setPixelRatio(gamePixelRatio(1.75));
-      renderer.setSize(container.clientWidth, container.clientHeight);
+    return { scene, bulbs, strip, copper, bridgeGlass, timber, glowTexture };
+  }
+  const kits = new Map(
+    MISSIONS.map((mission) => [mission.id, buildKit(mission)]),
+  );
+  new HDRLoader(manager).load("/art/coastal-sunset.hdr", (texture) => {
+    if (!disposed) {
+      environment = pmrem.fromEquirectangular(texture);
+      for (const kit of kits.values())
+        kit.scene.environment = environment.texture;
     }
-    const observer = new ResizeObserver(resize);
-    observer.observe(container);
-    window.addEventListener("resize", resize);
-    resize();
-    const textures = new Set<THREE.Texture>();
-    scene.traverse((n) => {
-      if (n instanceof THREE.Mesh)
-        for (const m of Array.isArray(n.material) ? n.material : [n.material])
-          for (const t of Object.values(m))
-            if (t instanceof THREE.Texture) textures.add(t);
-    });
-    let frame = 0,
-      last = 0,
-      signature = "",
-      lastPaint = 0;
-    const warmUntil = performance.now() + 3500;
-    function render(now: number) {
+    texture.dispose();
+  });
+  manager.itemEnd("kit-setup");
+  function resize() {
+    if (disposed) return;
+    renderer.setPixelRatio(gamePixelRatio(1.75));
+    // Closed dialogs have zero layout size; the kit still prepares at its authored size.
+    renderer.setSize(760, (760 * 460) / 720, false);
+    signature = "";
+    wake();
+  }
+  window.addEventListener("resize", resize);
+  resize();
+  function wake() {
+    if (!disposed && prepared && state().active && !document.hidden && !frame)
       frame = requestAnimationFrame(render);
-      const dt = Math.min((now - last) / 1000, 0.06);
-      last = now;
-      if (document.hidden) return;
-      const p = current.current;
-      const reduced = document.documentElement.dataset.motion === "reduce";
-      const nextSignature = JSON.stringify([
-        p.progress.material,
-        p.result,
-        p.removed,
-        container.clientWidth,
-        container.clientHeight,
-        renderer.getPixelRatio(),
-        reduced,
-        [...textures].map((t) => t.version),
-      ]);
-      if (
-        reduced &&
-        signature === nextSignature &&
-        (now > warmUntil || now - lastPaint < 240)
-      )
-        return;
-      signature = nextSignature;
-      lastPaint = now;
-      for (const bulb of bulbs) {
-        const target = p.result?.lamps[bulb.id].on
-          ? Math.sqrt(p.result.lamps[bulb.id].power / FULL_POWER)
-          : 0;
-        bulb.level = THREE.MathUtils.lerp(
-          bulb.level,
-          target,
-          reduced ? 1 : Math.min(1, dt * 8),
-        );
-        bulb.group.visible = !(p.removed && bulb.id === "a");
-        bulb.filament.emissiveIntensity = bulb.level * 12;
-        bulb.light.intensity = bulb.level * 22000;
-        bulb.glass.emissive.set("#ffbb55");
-        bulb.glass.emissiveIntensity = bulb.level * 0.65;
-        (bulb.glow.material as THREE.SpriteMaterial).opacity =
-          bulb.level * 0.78;
-      }
-      if (strip)
-        strip.material =
-          p.progress.material === "copper"
-            ? copper
-            : p.progress.material === "glass"
-              ? bridgeGlass
-              : timber;
-      renderer.render(scene, camera);
+  }
+  function render(now: number) {
+    frame = 0;
+    if (disposed || !prepared || !state().active || document.hidden) return;
+    const p = state(),
+      kit = kits.get(p.mission.id)!;
+    const reduced = document.documentElement.dataset.motion === "reduce";
+    const dt = Math.min((now - last) / 1000, 0.06);
+    last = now;
+    const nextSignature = JSON.stringify([
+      p.mission.id,
+      p.progress.material,
+      p.result,
+      p.removed,
+      renderer.getPixelRatio(),
+      reduced,
+    ]);
+    let animating = false;
+    for (const bulb of kit.bulbs) {
+      const target = p.result?.lamps[bulb.id].on
+        ? Math.sqrt(p.result.lamps[bulb.id].power / FULL_POWER)
+        : 0;
+      const unsettled = Math.abs(bulb.level - target) > 0.001;
+      bulb.level =
+        reduced || !unsettled
+          ? target
+          : THREE.MathUtils.lerp(bulb.level, target, Math.min(1, dt * 8));
+      animating ||= unsettled && !reduced;
+      bulb.group.visible = !(p.removed && bulb.id === "a");
+      bulb.filament.emissiveIntensity = bulb.level * 12;
+      bulb.light.intensity = bulb.level * 22000;
+      bulb.glass.emissive.set("#ffbb55");
+      bulb.glass.emissiveIntensity = bulb.level * 0.65;
+      (bulb.glow.material as THREE.SpriteMaterial).opacity = bulb.level * 0.78;
     }
-    const lost = (e: Event) => {
-      e.preventDefault();
-      current.current.onReady(false);
-    };
-    renderer.domElement.addEventListener("webglcontextlost", lost);
-    void lighting
-      .then(async () => {
-        if (disposed) return;
-        await renderer.compileAsync(scene, camera);
-        if (disposed) return;
-        render(performance.now());
-        current.current.onReady(true);
-        performance.mark("signal-kit-ready");
-      })
-      .catch(() => {
-        if (!disposed) current.current.onReady(false);
-      });
-    return () => {
+    if (kit.strip)
+      kit.strip.material =
+        p.progress.material === "copper"
+          ? kit.copper
+          : p.progress.material === "glass"
+            ? kit.bridgeGlass
+            : kit.timber;
+    if (signature !== nextSignature || animating) {
+      renderer.render(kit.scene, camera);
+      signature = nextSignature;
+      performance.mark("signal-kit-paint");
+    }
+    if (animating) wake();
+  }
+  function lost(event: Event) {
+    event.preventDefault();
+    prepared = false;
+    cancelAnimationFrame(frame);
+    frame = 0;
+    state().onReady(false);
+  }
+  renderer.domElement.addEventListener("webglcontextlost", lost);
+  document.addEventListener("visibilitychange", wake);
+  let deadline: ReturnType<typeof setTimeout>;
+  const timedAssets = Promise.race([
+    assets.then(() => !assetFailed),
+    new Promise<boolean>((resolve) => {
+      deadline = setTimeout(() => resolve(false), 12000);
+    }),
+  ]);
+  void timedAssets
+    .then(async (loaded) => {
+      clearTimeout(deadline);
+      if (disposed) return;
+      if (!loaded) {
+        state().onReady(false);
+        return;
+      }
+      for (const kit of kits.values()) {
+        const variants = kit.strip
+          ? [kit.timber, kit.copper, kit.bridgeGlass]
+          : [null];
+        for (const material of variants) {
+          if (material && kit.strip) kit.strip.material = material;
+          await renderer.compileAsync(kit.scene, camera);
+          if (disposed) return;
+          renderer.render(kit.scene, camera);
+        }
+      }
+      if (disposed) return;
+      prepared = true;
+      // The hidden canvas must contain the current kit before the first dialog opens.
+      const initial = state(),
+        kit = kits.get(initial.mission.id)!;
+      if (kit.strip)
+        kit.strip.material =
+          initial.progress.material === "copper"
+            ? kit.copper
+            : initial.progress.material === "glass"
+              ? kit.bridgeGlass
+              : kit.timber;
+      renderer.render(kit.scene, camera);
+      performance.mark("signal-kit-ready");
+      state().onReady(true);
+      wake();
+    })
+    .catch(() => {
+      if (!disposed) state().onReady(false);
+    });
+  return {
+    wake() {
+      signature = "";
+      wake();
+    },
+    dispose() {
       disposed = true;
+      clearTimeout(deadline);
       cancelAnimationFrame(frame);
-      observer.disconnect();
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", wake);
       renderer.domElement.removeEventListener("webglcontextlost", lost);
-      disposeScene(scene);
-      [copper, bridgeGlass, timber].forEach((m) => m.dispose());
-      glowTexture.dispose();
+      for (const kit of kits.values()) {
+        disposeScene(kit.scene);
+        [kit.copper, kit.bridgeGlass, kit.timber].forEach((material) =>
+          material.dispose(),
+        );
+        kit.glowTexture.dispose();
+      }
       environment?.dispose();
       pmrem.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
       renderer.domElement.remove();
-    };
-  }, [props.mission.id]);
-  return <div ref={host} className="bench-scene" aria-hidden="true" />;
+    },
+  };
 }

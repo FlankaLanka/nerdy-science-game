@@ -96,7 +96,12 @@ export function renderWorld(o: Options) {
   const fill = new THREE.DirectionalLight("#a2bed0", 0.55);
   fill.position.set(20, 20, -30);
   scene.add(fill);
-  const model = buildIsland(scene);
+  const manager = new THREE.LoadingManager();
+  const texturesReady = new Promise<void>((resolve) => {
+    manager.onLoad = resolve;
+  });
+  manager.itemStart("island-setup");
+  const model = buildIsland(scene, manager);
   let player = { ...SPAWN };
   try {
     player = restorePlayer(localStorage.getItem(PLAYER_KEY), model.obstacles);
@@ -105,7 +110,9 @@ export function renderWorld(o: Options) {
   }
   const camera = new THREE.PerspectiveCamera(68, 1, 0.08, 650);
   camera.rotation.order = "YXZ";
-  const normal = new THREE.TextureLoader().load("/art/water-normal.webp");
+  const normal = new THREE.TextureLoader(manager).load(
+    "/art/water-normal.webp",
+  );
   normal.wrapS = normal.wrapT = THREE.RepeatWrapping;
   const water = new Water(new THREE.PlaneGeometry(1500, 1500), {
     textureWidth: coarse ? 256 : 512,
@@ -134,8 +141,8 @@ export function renderWorld(o: Options) {
     time = 0,
     lastHud = 0,
     lastSave = 0,
-    lastPaint = 0,
     lastStep = 0;
+  let stillFrame = "";
   let ready = false,
     moved = false,
     wasPlaying = false,
@@ -300,8 +307,9 @@ export function renderWorld(o: Options) {
     if (document.hidden) return;
     if (wasPlaying && !state.playing) release();
     wasPlaying = state.playing;
-    if (!state.playing && now - lastPaint < 180 && ready) return;
-    lastPaint = now;
+    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.completed.join()}:${state.reducedMotion}`;
+    if (!state.playing && ready && stillFrame === frameKey) return;
+    stillFrame = state.playing ? "" : frameKey;
     let walking = false;
     if (state.playing) {
       player.yaw +=
@@ -357,7 +365,7 @@ export function renderWorld(o: Options) {
       g.material.emissiveIntensity = THREE.MathUtils.lerp(
         g.material.emissiveIntensity,
         target * 5,
-        state.reducedMotion ? 1 : Math.min(1, dt * 1.6),
+        state.reducedMotion || !state.playing ? 1 : Math.min(1, dt * 1.6),
       );
       if (g.light)
         g.light.intensity =
@@ -419,7 +427,7 @@ export function renderWorld(o: Options) {
     }
   }
   const skyTask = new Promise<void>((resolve) => {
-    new HDRLoader().load(
+    new HDRLoader(manager).load(
       "/art/coastal-sunset.hdr",
       (texture) => {
         if (disposed) {
@@ -443,7 +451,8 @@ export function renderWorld(o: Options) {
       () => resolve(),
     );
   });
-  void skyTask
+  manager.itemEnd("island-setup");
+  void Promise.all([skyTask, texturesReady])
     .then(async () => {
       if (disposed) return;
       await renderer.compileAsync(scene, camera);

@@ -64,7 +64,10 @@ test("walk the island, restore all three physical stations, and retain discoveri
     .getByRole("button", { name: "Light the workshop", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "Inspect Keeper’s workshop", exact: true }),
+    page.getByRole("button", {
+      name: "Inspect Keeper’s workshop",
+      exact: true,
+    }),
   ).toBeVisible();
   await walkTo(page, -3, 8.5);
   await walkTo(page, 21, 8.5);
@@ -184,7 +187,10 @@ test("walk the island, restore all three physical stations, and retain discoveri
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await page.keyboard.press("e");
   await expect(
-    page.getByRole("dialog", { name: "Lighthouse control circuit", exact: true }),
+    page.getByRole("dialog", {
+      name: "Lighthouse control circuit",
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /^Remove wire from/ }),
@@ -235,7 +241,7 @@ test("pause, mouse release, wall collision, map, and safe restart preserve progr
   expect(kept.z).toBeCloseTo(wall.z, 1);
 });
 
-test("keyboard socket selection, undo, closing a panel and reloading retain the circuit", async ({
+test("keyboard socket selection, reset, closing a panel and reloading retain the circuit", async ({
   page,
 }) => {
   await openWorkshop(page);
@@ -243,7 +249,7 @@ test("keyboard socket selection, undo, closing a panel and reloading retain the 
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "Bridge left", exact: true }).focus();
   await page.keyboard.press("Enter");
-  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
   await expect(
     page.getByRole("button", {
       name: "Remove wire from Lamp A right to Bridge left",
@@ -336,9 +342,9 @@ test("first repair restores the environment and marks the harbor on the map", as
   await openWorkshop(page);
   await workshopRepair(page);
   await page.keyboard.press("m");
-  await expect(
-    page.locator('.map-stops [aria-current="step"]'),
-  ).toContainText("Harbor relay");
+  await expect(page.locator('.map-stops [aria-current="step"]')).toContainText(
+    "Harbor relay",
+  );
   const completed = await page.evaluate(
     () => JSON.parse(localStorage.getItem("signal.lighthouse.v1")!).completed,
   );

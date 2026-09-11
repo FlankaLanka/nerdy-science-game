@@ -1,0 +1,104 @@
+{
+  "date": "2026-09-11",
+  "baseCommit": "5080cb38953cba26e2335bcca7a641f85dfcb173",
+  "viewport": "1280 × 720",
+  "renderer": "Playwright Chromium with platform GPU; reduced motion",
+  "method": "Three consecutive keyboard openings on the local development server before the renderer lifecycle change. Times include automation overhead; local diagnostic only.",
+  "timings": [
+    {
+      "open": 1,
+      "dialogMs": 168,
+      "detailedMs": 313
+    },
+    {
+      "open": 2,
+      "dialogMs": 133,
+      "detailedMs": 383
+    },
+    {
+      "open": 3,
+      "dialogMs": 111,
+      "detailedMs": 357
+    }
+  ],
+  "marks": [
+    {
+      "name": "signal-kit-build",
+      "start": 2277
+    },
+    {
+      "name": "signal-kit-build",
+      "start": 2307.2000000476837
+    },
+    {
+      "name": "signal-kit-ready",
+      "start": 2554.5
+    },
+    {
+      "name": "signal-kit-build",
+      "start": 2621.9000000953674
+    },
+    {
+      "name": "signal-kit-build",
+      "start": 2643.5
+    },
+    {
+      "name": "signal-kit-ready",
+      "start": 2879.7000000476837
+    },
+    {
+      "name": "signal-kit-build",
+      "start": 3003.2000000476837
+    },
+    {
+      "name": "signal-kit-build",
+      "start": 3021.7000000476837
+    },
+    {
+      "name": "signal-kit-ready",
+      "start": 3248.2999999523163
+    }
+  ],
+  "states": [
+    {
+      "state": "closed",
+      "time": 36.299999952316284
+    },
+    {
+      "state": "circuit-board editable  ",
+      "time": 2323.5
+    },
+    {
+      "state": "circuit-board editable with-depth ",
+      "time": 2558.7999999523163
+    },
+    {
+      "state": "closed",
+      "time": 2584.4000000953674
+    },
+    {
+      "state": "circuit-board editable  ",
+      "time": 2663.4000000953674
+    },
+    {
+      "state": "circuit-board editable with-depth ",
+      "time": 2883.9000000953674
+    },
+    {
+      "state": "closed",
+      "time": 2993.9000000953674
+    },
+    {
+      "state": "circuit-board editable  ",
+      "time": 3038.2000000476837
+    },
+    {
+      "state": "circuit-board editable with-depth ",
+      "time": 3253.4000000953674
+    },
+    {
+      "state": "closed",
+      "time": 3360.100000143051
+    }
+  ]
+}

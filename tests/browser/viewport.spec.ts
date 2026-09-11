@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { begin, connect, openWorkshop } from "./helpers";
+import { begin, connect } from "./helpers";
 
 async function checkFrame(page: Page) {
   await expect
@@ -194,38 +194,56 @@ test("fullscreen works from the title, the F key and the pause menu", async ({
   ).toHaveValue("f");
 });
 
-test("long radio replies page without hiding text or adding a scrollbar", async ({
+test("circuit art is prepared before entry and its renderer survives reopening", async ({
   page,
 }) => {
-  const reply =
-    "Follow the conducting path from one battery end, through the lamp, and back to the other end. ".repeat(
-      9,
-    ) + "W".repeat(300);
-  await page.route("**/api/coach", (route) =>
-    route.fulfill({ json: { source: "live", text: reply } }),
+  let release = () => {};
+  let requested = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const arrival = new Promise<void>((resolve) => {
+    requested = resolve;
+  });
+  await page.route("**/art/wood-color.webp", async (route) => {
+    requested();
+    await gate;
+    await route.continue();
+  });
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "signal.lighthouse.player.v1",
+      JSON.stringify({ x: -3, z: 5.6, yaw: 0, pitch: 0 }),
+    ),
   );
-  await openWorkshop(page);
-  await page.getByRole("button", { name: "Hint", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Next radio page" }),
-  ).toBeVisible();
-  const observed: string[] = [];
-  for (let i = 0; i < 20; i++) {
+  await page.goto("/");
+  await arrival;
+  await expect(page.locator(".title-play")).toBeDisabled();
+  release();
+  await page
+    .getByRole("button", { name: "Enter the island", exact: true })
+    .click();
+  const canvas = await page.locator(".bench-scene canvas").elementHandle();
+  expect(canvas).not.toBeNull();
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press("e");
+    await expect(
+      page.getByRole("dialog", {
+        name: "Keeper’s workshop circuit",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.locator(".circuit-board")).toHaveClass(/with-depth/);
+    await expect(page.locator(".circuit-board")).not.toHaveClass(
+      /is-preparing/,
+    );
+    await expect(page.locator(".flat-board").first()).not.toBeVisible();
     await checkFrame(page);
-    observed.push(await page.locator(".pip-radio p").innerText());
-    const text = (await page.locator(".pip-radio p").boundingBox())!;
-    const paging = (await page.locator(".radio-pagination").boundingBox())!;
-    expect(text.y + text.height).toBeLessThan(paging.y - 4);
-    const next = page.getByRole("button", { name: "Next radio page" });
-    if (await next.isDisabled()) break;
-    await next.click();
+    await page.keyboard.press("Escape");
+    expect(await canvas!.evaluate((element) => element.isConnected)).toBe(true);
   }
-  expect(observed.join("").replaceAll(/\s/g, "")).toBe(
-    reply.replaceAll(/\s/g, ""),
+  const builds = await page.evaluate(
+    () => performance.getEntriesByName("signal-kit-build").length,
   );
-  await page.screenshot({ path: "docs/screenshots/paper-radio.png" });
-  await page.getByRole("button", { name: "Previous radio page" }).click();
-  await expect(page.locator(".pip-radio p")).toHaveText(
-    observed[observed.length - 2],
-  );
+  expect(builds).toBe(1);
 });

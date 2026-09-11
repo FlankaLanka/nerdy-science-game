@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { RotateCcw, Undo2, X } from "lucide-react";
+import { RotateCcw, X } from "lucide-react";
 import { MATERIALS, wireKey } from "./missions";
 import type { Mission, Terminal, Wire } from "./missions";
 import type { Progress, MissionAction } from "./game";
@@ -20,6 +20,8 @@ export function cablePath(a: Terminal, b: Terminal): string {
 }
 
 type Props = {
+  active: boolean;
+  onReady: () => void;
   mission: Mission;
   progress: Progress;
   result: CircuitResult | null;
@@ -30,6 +32,8 @@ type Props = {
 };
 
 export function CircuitBoard({
+  active,
+  onReady,
   mission,
   progress,
   result,
@@ -42,6 +46,7 @@ export function CircuitBoard({
     [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
   const [notice, setNotice] = useState("");
   const [threeReady, setThreeReady] = useState(false);
+  const [preparing, setPreparing] = useState(true);
   const board = useRef<HTMLDivElement>(null),
     skipClick = useRef(false);
   const drag = useRef<{
@@ -54,10 +59,12 @@ export function CircuitBoard({
   useEffect(() => {
     setSelected(null);
     setPointer(null);
-  }, [progress.phase, lesson]);
+    drag.current = null;
+    skipClick.current = false;
+  }, [active, mission.id, progress.phase, lesson]);
   useEffect(() => {
     setNotice("");
-  }, [progress.wires, progress.material, progress.phase]);
+  }, [active, mission.id, progress.wires, progress.material, progress.phase]);
   const terminal = (id: string) => mission.terminals.find((t) => t.id === id)!;
   function connect(wire: Wire) {
     const key = wireKey(wire);
@@ -69,7 +76,7 @@ export function CircuitBoard({
       setNotice(
         installed
           ? "That cable is already installed for this experiment."
-          : "The board is full. Remove a wire or use Undo to make another connection.",
+          : "The board is full. Remove a wire or reset the board to make another connection.",
       );
       setSelected(null);
       setPointer(null);
@@ -109,33 +116,22 @@ export function CircuitBoard({
         <div className="board-tools" hidden={lesson === 0}>
           <button
             onClick={() => {
-              onAction({ type: "UNDO" });
-              setSelected(null);
-              play("soft");
-            }}
-            disabled={!editable || !progress.history.length}
-            title="Undo last change"
-          >
-            <Undo2 size={16} />
-            <span>Undo</span>
-          </button>
-          <button
-            onClick={() => {
               onAction({ type: "CLEAR" });
               setSelected(null);
+              setPointer(null);
               play("soft");
             }}
             disabled={!editable || !progress.wires.length}
-            title="Clear your wires"
+            title="Reset your wires"
           >
             <RotateCcw size={15} />
-            <span>Clear</span>
+            <span>Reset</span>
           </button>
         </div>
       </div>
       <div
         ref={board}
-        className={`circuit-board ${editable ? "editable" : ""} ${threeReady ? "with-depth" : ""} ${result?.count ? "has-power" : ""}`}
+        className={`circuit-board ${editable ? "editable" : ""} ${preparing ? "is-preparing" : ""} ${threeReady ? "with-depth" : ""} ${result?.count ? "has-power" : ""}`}
         onPointerMove={(e) => {
           if (selected && !drag.current)
             setPointer(point(e.clientX, e.clientY));
@@ -150,11 +146,16 @@ export function CircuitBoard({
         }}
       >
         <BenchScene
+          active={active}
           mission={mission}
           progress={progress}
           result={result}
           removed={removed}
-          onReady={setThreeReady}
+          onReady={(ready) => {
+            setThreeReady(ready);
+            setPreparing(false);
+            onReady();
+          }}
         />
         <div
           className={`board-instrument ${result?.count ? "live" : ""}`}

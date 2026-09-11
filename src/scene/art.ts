@@ -2,6 +2,9 @@ import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
+// Reuse decoded image data across the island and persistent circuit renderer.
+THREE.Cache.enabled = true;
+
 export function rng(seed: number) {
   const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
   return n - Math.floor(n);
@@ -12,8 +15,9 @@ export function surface(
   repeat = 1,
   color = "#ffffff",
   metalness = 0,
+  manager?: THREE.LoadingManager,
 ) {
-  const loader = new THREE.TextureLoader();
+  const loader = new THREE.TextureLoader(manager);
   const load = (suffix: string) => {
     const t = loader.load(`/art/${name}-${suffix}.webp`);
     t.wrapS = t.wrapT = THREE.RepeatWrapping;

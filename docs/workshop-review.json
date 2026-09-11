@@ -1,0 +1,109 @@
+{
+  "date": "2026-09-11T22:57:09.394Z",
+  "viewport": "1280 × 720",
+  "renderer": "Playwright Chromium with platform GPU; reduced motion",
+  "method": "Three consecutive keyboard openings on a local development server. Times include automation overhead and are a local diagnostic, not a device benchmark.",
+  "timings": [
+    {
+      "open": 1,
+      "dialogMs": 40,
+      "detailedMs": 44
+    },
+    {
+      "open": 2,
+      "dialogMs": 32,
+      "detailedMs": 33
+    },
+    {
+      "open": 3,
+      "dialogMs": 14,
+      "detailedMs": 15
+    }
+  ],
+  "longTasks": [
+    {
+      "start": 198.29999995231628,
+      "duration": 77
+    },
+    {
+      "start": 285.90000009536743,
+      "duration": 50
+    },
+    {
+      "start": 369.2000000476837,
+      "duration": 115
+    },
+    {
+      "start": 487.2000000476837,
+      "duration": 177
+    },
+    {
+      "start": 698.9000000953674,
+      "duration": 50
+    },
+    {
+      "start": 791.7000000476837,
+      "duration": 567
+    },
+    {
+      "start": 1364.4000000953674,
+      "duration": 124
+    },
+    {
+      "start": 1890.4000000953674,
+      "duration": 185
+    }
+  ],
+  "states": [
+    {
+      "state": "closed",
+      "time": 49.799999952316284
+    },
+    {
+      "state": "circuit-board editable  with-depth ",
+      "time": 2174.7000000476837
+    },
+    {
+      "state": "closed",
+      "time": 2385.7000000476837
+    },
+    {
+      "state": "circuit-board editable  with-depth ",
+      "time": 2400.0999999046326
+    },
+    {
+      "state": "closed",
+      "time": 2431.7000000476837
+    },
+    {
+      "state": "circuit-board editable  with-depth ",
+      "time": 2439.7999999523163
+    },
+    {
+      "state": "closed",
+      "time": 2454.7000000476837
+    }
+  ],
+  "openingLongTasks": [],
+  "marks": [
+    {
+      "name": "signal-kit-build",
+      "start": 198.40000009536743
+    },
+    {
+      "name": "signal-kit-ready",
+      "start": 1488.5
+    }
+  ],
+  "openingArtRequests": [],
+  "views": [
+    "front",
+    "rear",
+    "west",
+    "east",
+    "interior-door",
+    "interior-roof",
+    "interior-rear"
+  ],
+  "errors": []
+}
