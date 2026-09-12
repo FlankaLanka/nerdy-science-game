@@ -16,7 +16,7 @@ test("doorway faces remain separated on both approaches and during door travel",
       layoutUrl
     )) as typeof import("../../src/scene/shipLayout");
     const model = buildSpaceship(new THREE.Scene());
-    const player = { x: 0, z: 15.5, yaw: 0, pitch: 0 };
+    const player = { x: -10, z: 15.5, yaw: 0, pitch: 0 };
     const ray = new THREE.Raycaster();
     ray.far = 5;
     const failures: object[] = [];
@@ -99,17 +99,25 @@ test("doorway faces remain separated on both approaches and during door travel",
     }
     model.update(0, 0, player, [], true, true);
     inspect(PORTALS, "closed");
-    for (const amount of [0.08, 0.3, 0.6, 1]) {
-      model.update(0, 0, player, [], true, true);
-      model.update(
-        amount === 1 ? 0 : -Math.log(1 - amount) / 8,
-        0,
-        player,
-        ["workshop"],
-        amount === 1,
-        true,
-      );
-      inspect([PORTALS[0]], `open ${amount}`);
+    for (const portal of PORTALS) {
+      const approach = {
+        x: portal.x + Math.sin(portal.rotation) * 2.4,
+        z: portal.z + Math.cos(portal.rotation) * 2.4,
+        yaw: 0,
+        pitch: 0,
+      };
+      for (const amount of [0.08, 0.3, 0.6, 1]) {
+        model.update(0, 0, approach, [], true, true);
+        model.update(
+          amount === 1 ? 0 : -Math.log(1 - amount) / 8,
+          0,
+          approach,
+          [portal.system],
+          amount === 1,
+          true,
+        );
+        inspect([portal], `open ${amount}`);
+      }
     }
     return { count: failures.length, samples: failures.slice(0, 20) };
   });
@@ -161,7 +169,7 @@ test("every pressure window opens onto the exterior while the hull blocks escape
     });
   });
   expect(windows.length).toBeGreaterThanOrEqual(30);
-  expect(new Set(windows.map((w) => w.bank)).size).toBe(9);
+  expect(new Set(windows.map((w) => w.bank)).size).toBe(11);
   expect(windows.filter((w) => w.blocked || w.canEscape)).toEqual([]);
 });
 
@@ -204,4 +212,93 @@ test("orbital shader textures are released when the scene is disposed", async ({
   });
   expect(disposed).toHaveLength(7);
   expect(disposed.every((count) => count === 1)).toBe(true);
+});
+
+test("the complete chamber route and its return path remain walkable through all six powered gates", async ({
+  page,
+}) => {
+  await page.goto("/credits.html");
+  const result = await page.evaluate(async () => {
+    const threeUrl = "/node_modules/.vite/deps/three.js",
+      shipUrl = "/src/scene/spaceship.ts",
+      navUrl = "/src/scene/navigation.ts";
+    const THREE = (await import(threeUrl)) as typeof import("three");
+    const { buildSpaceship } = (await import(
+      shipUrl
+    )) as typeof import("../../src/scene/spaceship");
+    const { movePlayer, SPAWN } = (await import(
+      navUrl
+    )) as typeof import("../../src/scene/navigation");
+    const scene = new THREE.Scene(),
+      model = buildSpaceship(scene);
+    let player = { ...SPAWN };
+    const completed: import("../../src/chambers").ChamberId[] = [];
+    const route: [number, number][] = [];
+    function go(x: number, z: number) {
+      route.push([x, z]);
+      for (let step = 0; step < 1000; step++) {
+        const dx = x - player.x,
+          dz = z - player.z,
+          d = Math.hypot(dx, dz);
+        if (d < 0.01) return;
+        const dt = Math.min(1 / 60, d / 3.5);
+        model.update(dt, 0, player, completed, true, true);
+        player = movePlayer(
+          player,
+          dx / d,
+          -dz / d,
+          dt,
+          false,
+          model.obstacles,
+        );
+      }
+      throw new Error(
+        `Route blocked at ${player.x.toFixed(2)},${player.z.toFixed(2)} heading to ${x},${z}`,
+      );
+    }
+    go(-10, 21.5);
+    completed.push("wake");
+    go(-7.4, 21.5);
+    go(-7.4, 15.6);
+    go(-10, 15.6);
+    go(-10, 7.5);
+    completed.push("contact");
+    go(-7.4, 7.5);
+    go(-7.4, 1.6);
+    go(-10, 1.6);
+    go(-10, -6.5);
+    completed.push("build");
+    go(-6.5, -6.5);
+    go(-6.5, -8);
+    go(6.5, -8);
+    go(6.5, -6.5);
+    go(10, -6.5);
+    completed.push("resist");
+    go(10, -3.6);
+    go(10, 2.1);
+    go(12.6, 2.1);
+    go(12.6, 7.5);
+    go(10, 7.5);
+    completed.push("share");
+    go(10, 10.4);
+    go(10, 16.1);
+    go(12.6, 16.1);
+    go(12.6, 21.5);
+    go(10, 21.5);
+    completed.push("branch");
+    go(10, 31);
+    const waypoints = [...route].reverse();
+    for (const [x, z] of waypoints) go(x, z);
+    const p = player;
+    model.dispose();
+    return {
+      completed: completed.length,
+      position: p,
+      legs: waypoints.length * 2,
+    };
+  });
+  expect(result.completed).toBe(6);
+  expect(result.position.x).toBeCloseTo(-10, 1);
+  expect(result.position.z).toBeCloseTo(21.5, 1);
+  expect(result.legs).toBeGreaterThan(40);
 });

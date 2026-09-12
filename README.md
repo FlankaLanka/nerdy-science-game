@@ -1,6 +1,6 @@
-# SIGNAL — Asterion
+# Asterion — Restore the light
 
-An exploratory circuits lesson aboard a stranded space station. Restore eight connected systems, investigate their behavior with working instruments, and bring the distress transmitter online.
+A quiet circuit-building game aboard a dark space station. Connect physical parts, watch current flow, and restore power to open the next chamber. ASTER, the station's stranded maintenance intelligence, accompanies the player through six short chambers to an observation deck.
 
 ## Run
 
@@ -11,47 +11,48 @@ npm install
 npm run dev
 ```
 
-The default address is **http://127.0.0.1:5174**. Set `PORT` to change it. No account or AI key is needed. Fonts, PBR textures, geometry and synthesized equipment audio are served locally. Optional read-aloud uses an available local English browser voice; the same guidance is always visible as text.
+The default address is **http://127.0.0.1:5174**; set `PORT` to change it. No account, API key, remote asset service or narration service is needed.
 
-| Action                           | Control                                               |
-| -------------------------------- | ----------------------------------------------------- |
-| Move / run                       | WASD or ↑ ↓ / Shift                                   |
-| Look                             | Mouse, ← →, Page Up / Page Down                       |
-| Use nearby equipment             | E                                                     |
-| Pause / release mouse            | Esc or Tab                                            |
-| Station map / field observations | M / J                                                 |
-| System diagnostics               | Q                                                     |
-| Fullscreen                       | F                                                     |
-| Wire a circuit                   | Select two sockets, or drag between them              |
-| Remove a wire / undo             | Select the cable / Undo                               |
-| Test                             | Test circuit or Test & record; no prediction required |
+| Action                    | Control                                                         |
+| ------------------------- | --------------------------------------------------------------- |
+| Move / run                | WASD / Shift                                                    |
+| Look                      | Mouse or arrows; Page Up / Down for vertical look               |
+| Use a circuit bench       | E                                                               |
+| Notebook / station map    | N / M                                                           |
+| Back / pause              | Esc                                                             |
+| Connect                   | Click two contacts, or drag between them                        |
+| Add a part                | Choose a tray item, then click the board; or drag from the tray |
+| Move a part               | Drag its body; select and use arrow keys with a keyboard        |
+| Rotate / remove selection | R / Delete                                                      |
 
-The station has two service loops around a central hub. After emergency lighting, either wing can be explored first. The map shows commissioning dependencies and lets the player track an available repair. Later equipment can be inspected and tested early. Working systems remain available for practice without overwriting their recorded commissioning evidence.
+Touch controls provide a movement stick, drag-to-look and a bench interaction button. Circuit contacts also work by tapping. The interface uses the full viewport, including portrait screens.
 
-Nine window banks open the hull to a continuous view of textured Earth, Moon, Saturn and the Milky Way, with nearby station solar wings. Command has a three-sided observation gallery. The celestial view is composed for the fictional setting; it is not an orbital-scale simulation. Texture attribution is available in Settings → Asset credits.
+## Sample progression
 
-## Learning progression
+| Chamber           | New idea                         | Player action                                             |
+| ----------------- | -------------------------------- | --------------------------------------------------------- |
+| 01 · Wake         | A complete conducting path       | Connect the two open contacts                             |
+| 02 · Contact      | Switching                        | Close the physical switch                                 |
+| 03 · Assembly     | Constructing with familiar parts | Add a battery and bulb; make a loop                       |
+| 04 · Balance      | Resistance and voltage           | Add and adjust a resistor for a 6 V lamp on a 12 V supply |
+| 05 · Shared light | Series circuits                  | Power two 6 V lamps from one 12 V source                  |
+| 06 · Stay alive   | Parallel circuits and isolation  | Give the second lamp an independent path                  |
 
-| Equipment          | Investigation                                                |
-| ------------------ | ------------------------------------------------------------ |
-| Engineering        | Conductors, open and closed loops, current                   |
-| Materials workshop | I–V comparisons; resistance, resistivity, length and area    |
-| Distribution       | Series paths, voltage division, shared faults                |
-| Life support       | Power, Kirchhoff's loop rule, internal source resistance     |
-| Station hub        | Parallel and compound circuits, junction conservation        |
-| Reserve vault      | Series/parallel capacitor banks, plate charge, stored energy |
-| Airlock control    | RC charging and discharging, time constants, power hold-up   |
-| Command            | Independent circuit construction and fault tolerance         |
+Circuits run continuously. There is no Test button, hypothesis form, measurement log or commissioning step. A working circuit lights its chamber and permanently unlocks the next door. The first successful restoration returns the player to the room; the bench remains available for experimentation.
 
-This covers playable investigations across AP Physics 2 Unit 11, with a bridge to capacitor concepts from Unit 10.6. It is not a complete AP course or a validated substitute for laboratory work. The [research and design report](docs/research/station-design.md) contains the curriculum graph, source references, scaffolding rationale, misconceptions, state transitions, tuning assumptions and student playtest protocol.
+The notebook has **Parts**, **Formulas** and **Map** tabs. Components and equations appear as they are encountered. Three wall posters introduce Ohm's law, series voltage sharing and parallel voltage. The walking HUD contains a room number, reticle, contextual interaction key, notebook and pause icons. ASTER speaks through short, transient subtitles.
 
-The circuit model uses ideal wires and resistive test loads. The specimen rig opens a resettable virtual fuse above its 2 A rating. The pump model includes source resistance and accounts for power losses. Capacitor responses are calculated analytically, so display frame rate cannot change their electrical behavior. RC exponentials are used internally; the player reads graphs and measurements without entering calculus or an exponential formula.
+Eleven window banks provide 38 hull openings onto textured Earth, Moon, Saturn and a star field. The final observation deck has windows on three sides. These views are composed for the fictional setting; they are not a scale model of the Solar System. Asset attribution is available through Pause → Credits.
 
-## Saves and compatibility
+## Physics and pedagogy
 
-Campaign state uses `signal.asterion.circuits.v2`; position uses `signal.asterion.player.v2`. Earlier spaceship progress is read as a migration source if no new save exists. Its conducting-loop and series work is preserved; new prerequisites must still be completed. Earlier spaceship and lighthouse save keys are left untouched. Active RC playback pauses when the equipment closes or the tab is hidden. Reload restores validated recorded tests, not an unattended running simulation.
+The kit uses modified nodal analysis to solve the actual connected network. Batteries maintain voltage; resistors and the simplified 12 Ω lamps are resistive loads. Wires and closed switches use 1 mΩ resistance. A resettable virtual fuse trips above 4 A; editing a short immediately retries the circuit. Bulbs respond to voltage with visible dimming or overload color. The final chamber validates branch independence by simulating its isolator opening.
 
-When storage is unavailable, progress remains in the open tab. If WebGL is unavailable, the circuit activities remain accessible through the fallback interface. Keyboard, drag-look, touch controls, fullscreen and reduced motion are supported. The interface retains the fixed 1280×720 composition; phone users benefit from landscape orientation.
+These are six foundational DC samples, not a complete AP Physics 2 unit. Capacitors, resistivity investigations and transistor behavior are not presented as unlocked mechanics. The earlier campaign's tested physics modules remain available for future work, but its worksheet interface has been removed. See [the chamber design](docs/chambers.md) for the learning sequence, model boundaries, sources and playtest criteria.
+
+## Saves
+
+This version uses `signal.asterion.chambers.v1` and `signal.asterion.chambers.player.v1`. Earlier game saves are left untouched. Completed circuits are re-simulated when loading; invalid evidence cannot unlock later chambers. Doors stay unlocked when a completed circuit is subsequently changed or reset. Storage failure permits session-only play. If WebGL is unavailable, the circuit kit and sequential chamber navigation remain playable.
 
 ## Development
 
@@ -59,30 +60,10 @@ When storage is unavailable, progress remains in the open tab. If WebGL is unava
 npm test
 npm run test:browser
 npm run build
+REVIEW_URL=http://localhost:5176 npm run review
+REVIEW_URL=http://localhost:5176 node scripts/profile-station.mjs
 ```
 
-Playwright browser tests use port 5175 and Chromium. Install it with `npx playwright install chromium` if needed. With a development server running, produce the current visual review:
+Browser tests use Chromium and port 5175. Run `npx playwright install chromium` if needed. Reviews are generated into ignored `artifacts/station/`; no screenshots are runtime assets. [Verification](docs/verification.md) records the current checks and their limits.
 
-```sh
-REVIEW_URL=http://127.0.0.1:5174 npm run review
-```
-
-Review captures go to ignored `artifacts/station/`. Only current, useful views are retained. No source screenshot or unused texture library is shipped.
-
-## Organization
-
-- `src/activities.ts`: curriculum graph, equipment goals and fixed locations.
-- `src/campaign.ts`: eight-repair progression, commissioning and save migration.
-- `src/labPhysics.ts`: quantitative DC and capacitor experiments.
-- `src/LabWorkbench.tsx`: instruments, graphs, measurement records and guidance.
-- `src/circuit.ts`, `game.ts`, `CircuitBoard.tsx`, `BenchScene.tsx`: the three wiring investigations and their validated legacy data.
-- `src/scene/shipLayout.ts`: shared hull, collision, furniture and map coordinates.
-- `src/scene/spaceship.ts`: authored pressure-wall kit, machinery, four local lights and powered fixtures.
-- `src/scene/space.ts`: textured celestial bodies, atmosphere, star field and instanced solar wings.
-- `src/scene/renderWorld.ts`: rendering, controls, cached shadows and telemetry.
-- `src/ShipMap.tsx`, `Notebook.tsx`: navigation and learning evidence.
-- `public/materials/`: three licensed 1K runtime PBR maps; see [asset provenance](docs/assets.md).
-- `public/space/`: seven licensed 2K space maps, served locally; attribution in `public/credits.html`.
-- `server/`: optional foundational-circuit coaching API. The game does not call it.
-
-`main` preserves the cleaned lighthouse baseline at `0f3007f`. The spaceship work is on `codex/spaceship-dead-orbit`. The prior three-room spaceship is preserved at `0421e7b`. Nothing has been pushed or deployed.
+Current work is on `codex/asterion-circuit-chambers`, based on `36eeedc` on `codex/spaceship-dead-orbit`. The prior station and extended curriculum remain in Git history. Nothing is pushed or deployed by these commands.

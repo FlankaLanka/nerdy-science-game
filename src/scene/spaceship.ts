@@ -1,6 +1,9 @@
 import * as THREE from "three";
-import { ACTIVITIES, available } from "../activities";
-import type { ActivityId } from "../activities";
+import { CHAMBERS, FORMULAS } from "../chambers";
+import type { ChamberId } from "../chambers";
+import { simulate } from "../circuitKit";
+import type { Circuit } from "../circuitKit";
+import { buildKit } from "./kitArt";
 import { DECK, FURNITURE, PORTALS, windowAt } from "./shipLayout";
 import { shipArt, surface } from "./shipArt";
 import type { Obstacle, Player } from "./navigation";
@@ -10,8 +13,7 @@ export function buildSpaceship(scene: THREE.Scene) {
   const root = new THREE.Group();
   root.name = "Asterion / maintenance station";
   scene.add(root);
-  const { box, bevel, rod, mesh, label, instrument, batch, disposeDisplays } =
-    shipArt(root);
+  const { box, bevel, rod, mesh, label, batch } = shipArt(root);
   const obstacles: Obstacle[] = FURNITURE.map((f) => ({ ...f }));
   const mat = (color: string, metalness = 0.35, roughness = 0.65) =>
     new THREE.MeshStandardMaterial({ color, metalness, roughness });
@@ -21,8 +23,7 @@ export function buildSpaceship(scene: THREE.Scene) {
     rubber = mat("#0e1412", 0.03, 0.96),
     steel = mat("#73827b", 0.8, 0.32),
     copper = mat("#89613d", 0.75, 0.42),
-    ochre = mat("#b28e4d", 0.2, 0.7),
-    green = mat("#647b69", 0.25, 0.7);
+    ochre = mat("#b28e4d", 0.2, 0.7);
   ivory.map = surface("panel");
   const floor = mat("#777d73", 0.7, 0.8);
   const loader = new THREE.TextureLoader();
@@ -47,21 +48,15 @@ export function buildSpaceship(scene: THREE.Scene) {
       roughness: 0.4,
     });
   const trims = new Map<string, THREE.Material>();
-  const amber = emission("#edb56a", 1.4),
-    screen = emission("#8aa992", 0.7);
+  const amber = emission("#edb56a", 0.7);
   const fixtures: {
     x: number;
     y: number;
     z: number;
-    system: ActivityId;
+    system: ChamberId;
     color: THREE.Color;
     material: THREE.MeshStandardMaterial;
   }[] = [];
-  const readouts: {
-    id: ActivityId;
-    setStatus: (state: "ready" | "offline" | "online") => void;
-  }[] = [];
-  const fans: { g: THREE.Group; id: ActivityId }[] = [];
   const glass = new THREE.MeshBasicMaterial({
     color: "#9baeb2",
     transparent: true,
@@ -367,16 +362,24 @@ export function buildSpaceship(scene: THREE.Scene) {
       }
     }
   }
-  function portal(x: number, z: number, rotation: number, name: string) {
+  const doors: {
+    portal: (typeof PORTALS)[number];
+    leaves: THREE.Group[];
+    colliders: Obstacle[];
+    status: THREE.MeshStandardMaterial;
+    opening: number;
+  }[] = [];
+  for (const p of PORTALS) {
     const g = new THREE.Group();
-    g.position.set(x, 0, z);
-    g.rotation.y = rotation;
+    g.position.set(p.x, 0, p.z);
+    g.rotation.y = p.rotation;
     root.add(g);
+    g.name = `Door frame ${p.name}`;
+    const turned = Math.abs(Math.sin(p.rotation)) > 0.5;
     for (const side of [-1, 1]) {
-      const turned = Math.abs(Math.sin(rotation)) > 0.5;
       obstacles.push({
-        x: x + side * 1.76 * Math.cos(rotation),
-        z: z - side * 1.76 * Math.sin(rotation),
+        x: p.x + side * 1.76 * Math.cos(p.rotation),
+        z: p.z - side * 1.76 * Math.sin(p.rotation),
         width: turned ? 0.7 : 0.28,
         depth: turned ? 0.28 : 0.7,
       });
@@ -384,252 +387,152 @@ export function buildSpaceship(scene: THREE.Scene) {
       box(side * 1.76, 0.9, 0.38, 0.055, 0.75, 0.022, amber, g);
     }
     bevel(0, 2.99, 0, 3.8, 0.38, 0.7, frame, 0.045, g);
-    label(name, "", 0, 3.01, 0.385, 1.95, 0.15, "#a4afa0", 0, false, g);
+    box(0, 3.29, 0, 3.8, 0.22, 0.4, charcoal, g);
+    label(p.name, "", 0, 3.01, 0.385, 0.52, 0.15, "#b7c7b9", 0, false, g);
     box(0, 0.012, 0, 3.24, 0.024, 0.7, rubber, g);
+    const door = dynamic(p.x, 0, p.z);
+    door.rotation.y = p.rotation;
+    door.name = `Door ${p.system}`;
+    const leaves: THREE.Group[] = [],
+      colliders: Obstacle[] = [];
+    for (const side of [-1, 1]) {
+      const leaf = new THREE.Group();
+      leaf.position.x = side * 2.6;
+      door.add(leaf);
+      leaves.push(leaf);
+      bevel(0, 1.4, 0, 1.58, 2.72, 0.22, ivory, 0.045, leaf);
+      box(0, 0.43, 0.165, 1.42, 0.44, 0.07, frame, leaf);
+      box(side * 0.57, 1.3, 0.15, 0.15, 0.5, 0.06, charcoal, leaf);
+      for (const y of [1, 2.2])
+        box(0, y, 0.15, 1.35, 0.035, 0.016, frame, leaf);
+      const collider = {
+        x: p.x + side * 2.6 * Math.cos(p.rotation),
+        z: p.z - side * 2.6 * Math.sin(p.rotation),
+        width: turned ? 0.3 : 1.58,
+        depth: turned ? 1.58 : 0.3,
+      };
+      colliders.push(collider);
+      obstacles.push(collider);
+    }
+    const status = emission("#c29c62", 0.45);
+    box(1.76, 1.96, 0.38, 0.1, 0.3, 0.03, status, g);
+    doors.push({ portal: p, leaves, colliders, status, opening: 1 });
   }
-  PORTALS.forEach((p) => portal(p.x, p.z, p.rotation, p.name));
-  const door = dynamic(0, 0, 13);
-  const leaves: THREE.Group[] = [];
-  const doorColliders: Obstacle[] = [];
-  for (const side of [-1, 1]) {
-    const leaf = new THREE.Group();
-    door.add(leaf);
-    leaf.position.x = side * 2.6;
-    leaves.push(leaf);
-    bevel(0, 1.4, 0, 1.58, 2.72, 0.22, ivory, 0.045, leaf);
-    box(0, 0.43, 0.165, 1.42, 0.44, 0.07, frame, leaf);
-    box(side * 0.57, 1.3, 0.15, 0.15, 0.5, 0.06, charcoal, leaf);
-    for (const y of [1, 1.2, 2.2])
-      box(0, y, 0.15, 1.35, 0.035, 0.016, frame, leaf);
-    const obstacle: Obstacle = {
-      x: side * 2.6,
-      z: 13,
-      width: 1.58,
-      depth: 0.3,
-    };
-    doorColliders.push(obstacle);
-    obstacles.push(obstacle);
-  }
-  const hatchStatus = emission("#d1af78", 0.7);
-  box(1.76, 1.96, 13.38, 0.1, 0.3, 0.03, hatchStatus);
-  // The cabinet silhouette and inset display identify serviceable equipment.
-  // Its name and instructions appear only in the nearby interaction / repair UI.
-  for (const a of ACTIVITIES) {
-    const g = new THREE.Group();
-    g.position.set(a.x, 0, a.z);
-    root.add(g);
-    obstacles.push({ x: a.x, z: a.z, width: 1.65, depth: 0.9 });
-    bevel(0, 0.58, 0, 1.65, 1.16, 0.85, charcoal, 0.1, g);
-    bevel(0, 1.36, -0.12, 1.72, 0.76, 0.62, ivory, 0.07, g);
-    bevel(0, 1.43, 0.225, 1.16, 0.5, 0.08, rubber, 0.04, g);
-    const readout = instrument("service", 0, 1.44, 0.277, 1.03, 0.36, g);
-    readouts.push({ id: a.id, setStatus: readout.setStatus });
-    box(0, 1.05, 0.39, 1.5, 0.09, 0.4, steel, g);
-    for (let i = 0; i < 7; i++)
-      bevel(
-        -0.53 + i * 0.13,
-        1.105,
-        0.4,
-        0.09,
-        0.05,
-        0.13,
-        i === 6 ? ochre : charcoal,
-        0.01,
+  const benches = CHAMBERS.map((c) => {
+    bevel(c.bench.x, 0.47, c.bench.z, 2.9, 0.94, 1.5, charcoal, 0.09);
+    for (const dx of [-1.2, 1.2])
+      box(c.bench.x + dx, 0.6, c.bench.z + 0.77, 0.075, 0.7, 0.055, steel);
+    const kit = buildKit();
+    kit.root.position.set(c.bench.x, 1.03, c.bench.z);
+    kit.root.scale.setScalar(0.0032);
+    root.add(kit.root);
+    kit.sync(c.initial, simulate(c.initial));
+    // The few wall posters appear only where a new equation becomes useful.
+    if (c.formula) {
+      const g = new THREE.Group();
+      g.position.set(c.x + 5.5, 0, c.z + 3.85);
+      g.rotation.y = -Math.PI / 2;
+      root.add(g);
+      bevel(0, 1.95, 0, 1.64, 1.14, 0.1, frame, 0.03, g);
+      label(
+        FORMULAS[c.formula].equation,
+        FORMULAS[c.formula].note,
+        0,
+        1.95,
+        0.065,
+        1.55,
+        1.05,
+        "#d2dbc6",
+        0,
+        true,
         g,
       );
-    for (const x of [-0.71, 0.71])
-      for (const y of [0.19, 0.91]) bolt(x, y, 0.438, g);
-    for (let j = 0; j < 5; j++)
-      box(0, 0.34 + j * 0.075, 0.436, 0.95, 0.023, 0.025, steel, g);
-    tube(
-      [a.x - 0.62, 0.28, a.z - 0.2],
-      [a.x - 0.62, 0.12, a.z - 1.3],
-      0.035,
-      rubber,
-    );
-  }
-  // Hub: a heat-exchanger tower, with walkable sightline breaks and pipe manifolds.
-  const hx = -1.5,
-    hz = 4.5;
-  bevel(hx, 0.25, hz, 3.25, 0.5, 3.25, frame, 0.12);
-  mesh(new THREE.CylinderGeometry(1.2, 1.3, 3.7, 32), steel, hx, 2.3, hz);
-  for (let y = 0.7; y < 4.3; y += 0.27) {
-    const tor = mesh(
-      new THREE.TorusGeometry(1.27, 0.06, 5, 36),
-      copper,
-      hx,
-      y,
-      hz,
-    );
-    tor.rotation.x = Math.PI / 2;
-  }
-  for (const side of [-1, 1]) {
-    tube([hx + side * 1.6, 0.4, hz], [hx + side * 1.6, 4.5, hz], 0.13, frame);
-    tube([hx + side * 1.6, 4.5, hz], [hx + side * 1.6, 4.5, -1.5], 0.13, frame);
-  }
-  function rack(x: number, z: number, rotation = 0) {
-    const g = new THREE.Group();
-    g.position.set(x, 0, z);
-    g.rotation.y = rotation;
-    root.add(g);
-    bevel(0, 1.45, 0, 1.25, 2.9, 0.7, frame, 0.04, g);
-    for (let i = 0; i < 6; i++) {
-      bevel(0, 0.3 + i * 0.43, 0.38, 1.08, 0.35, 0.16, charcoal, 0.025, g);
-      for (let j = 0; j < 5; j++)
-        box(
-          -0.3 + j * 0.13,
-          0.3 + i * 0.43,
-          0.47,
-          0.04,
-          0.025,
-          0.016,
-          j % 2 ? screen : amber,
-          g,
-        );
-      box(0.38, 0.3 + i * 0.43, 0.48, 0.06, 0.24, 0.035, steel, g);
     }
-  }
-  for (const x of [11.5, 14, 16.5]) rack(x, 16.3, Math.PI);
-  for (const z of [-3, -5, -7]) rack(17.6, z, -Math.PI / 2);
-  // Materials: work surfaces, specimens, oscilloscope, storage cabinets.
-  bevel(-17.3, 0.89, 11, 1.25, 0.16, 5, steel, 0.04);
-  for (const z of [9, 13]) {
-    box(-17.3, 0.43, z, 1.1, 0.86, 0.12, frame);
-    bevel(-17.2, 1.3, z, 0.8, 0.6, 0.6, ivory, 0.04);
-    instrument("wave", -17.2, 1.34, z + 0.31, 0.63, 0.3);
-  }
-  for (let i = 0; i < 6; i++)
-    tube(
-      [-17.7, 1.03, 10 + i * 0.18],
-      [-16.9, 1.03, 10 + i * 0.18],
-      0.015,
-      i % 2 ? copper : steel,
-    );
-  // Engineering: reserve cells, oxygen cylinders, tool lockers.
-  for (const x of [1.2, 2.8, 4.4]) {
-    mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.8, 20), green, x, 1.12, 25);
-    for (const y of [0.38, 1.58]) {
-      const t = mesh(
-        new THREE.TorusGeometry(0.56, 0.04, 5, 24),
-        steel,
-        x,
-        y,
-        25,
-      );
-      t.rotation.x = Math.PI / 2;
-    }
-    box(x, 2.1, 25, 0.25, 0.25, 0.2, steel);
-  }
-  for (const x of [-4.6, -3.2, -1.8]) {
-    bevel(x, 1.2, 25.4, 1.2, 2.4, 0.75, ivory, 0.06);
-    box(x + 0.38, 1.2, 24.98, 0.05, 0.3, 0.09, steel);
-  }
-  function fan(x: number, z: number) {
-    const g = dynamic(x, 2, z);
-    bevel(0, 0, 0, 1.65, 1.65, 0.45, frame, 0.08, g);
-    const rotor = new THREE.Group();
-    g.add(rotor);
-    for (let i = 0; i < 5; i++) {
-      const blade = bevel(0, 0.43, 0.28, 0.32, 0.75, 0.06, steel, 0.04, rotor);
-      blade.rotation.z = (i * Math.PI * 2) / 5;
-      blade.position.set(
-        -Math.sin((i * Math.PI * 2) / 5) * 0.4,
-        Math.cos((i * Math.PI * 2) / 5) * 0.4,
-        0.28,
-      );
-    }
-    for (let i = -3; i <= 3; i++)
-      box(i * 0.2, 0, 0.39, 0.025, 1.5, 0.05, charcoal, g);
-    fans.push({ g: rotor, id: "power" });
-  }
-  for (const z of [-2.2, -5, -7.8]) {
-    fan(-17.55, z);
-    bevel(-17.8, 0.6, z, 1.2, 1.2, 1.8, green, 0.08);
-  }
-  // Command: two angled navigation desks behind a wraparound observation gallery.
-  for (const side of [-1, 1]) {
-    const g = new THREE.Group();
-    g.position.set(side * 5.9, 0, -18);
-    g.rotation.y = -side * 0.28;
-    root.add(g);
-    bevel(0, 0.9, 0, 1.5, 0.6, 2.8, frame, 0.1, g);
-    for (const z of [-0.75, 0.65]) {
-      bevel(0, 1.45, z, 1.25, 0.72, 0.3, ivory, 0.07, g);
-      instrument("orbit", 0, 1.47, z + 0.17, 1, 0.44, g);
-    }
-  }
+    // A low strip under the sill carries the restoration response without signage.
+    const rail = emission(c.color, 0.15);
+    for (const side of [-1, 1])
+      box(c.x + side * 5.52, 0.25, c.z, 0.025, 0.035, 7, rail);
+    return { kit, rail, previous: c.initial };
+  });
   const space = buildSpace(scene, () => {
     root.userData.textureRevision = (root.userData.textureRevision ?? 0) + 1;
   });
   const pools = Array.from({ length: 4 }, () => {
-    const l = new THREE.PointLight("#e1d9c2", 0, 14, 2);
-    root.add(l);
-    return l;
+    const light = new THREE.PointLight("#dedfcd", 0, 14, 2);
+    root.add(light);
+    return light;
   });
   batch();
   let initialized = false,
-    opening = 1,
-    previous = new Set<ActivityId>(),
+    previous = new Set<ChamberId>(),
     textureRevision = -1;
   return {
     root,
     obstacles,
-    dispose: disposeDisplays,
+    dispose() {
+      benches.forEach((b) => b.kit.dispose());
+    },
     update(
       dt: number,
       time: number,
       player: Player,
-      completed: ActivityId[],
+      completed: ChamberId[],
       reduced: boolean,
       playing: boolean,
+      circuits?: Circuit[],
     ) {
       const events: ("door" | "power")[] = [];
       root.userData.shadowsDirty = !initialized;
       const online = new Set(completed);
-      if (initialized && playing && completed.some((id) => !previous.has(id)))
+      if (initialized && completed.some((id) => !previous.has(id)))
         events.push("power");
-      if (completed.join() !== [...previous].join() || !initialized) {
-        for (const s of readouts)
-          s.setStatus(
-            online.has(s.id)
-              ? "online"
-              : available(s.id, completed)
-                ? "ready"
-                : "offline",
-          );
-        hatchStatus.color.set(online.has("workshop") ? "#91b7a0" : "#d1af78");
-        hatchStatus.emissive.copy(hatchStatus.color);
+      for (const door of doors) {
+        const p = door.portal,
+          dx = player.x - p.x,
+          dz = player.z - p.z;
+        const across = dx * Math.cos(p.rotation) - dz * Math.sin(p.rotation),
+          normal = dx * Math.sin(p.rotation) + dz * Math.cos(p.rotation);
+        const inAperture = Math.abs(normal) < 0.6 && Math.abs(across) < 1.8;
+        const target =
+          (online.has(p.system) || (!initialized && inAperture)) &&
+          Math.hypot(dx, dz) < 5
+            ? 1
+            : 0;
+        const old = door.opening;
+        door.opening = reduced
+          ? target
+          : THREE.MathUtils.damp(old, target, 8, dt);
+        if (inAperture && old > 0.15)
+          door.opening = Math.max(old, door.opening);
+        if (Math.abs(old - door.opening) > 0.001)
+          root.userData.shadowsDirty = true;
+        if (initialized && playing && old < 0.02 && door.opening > 0.02)
+          events.push("door");
+        door.leaves.forEach((leaf, i) => {
+          const x = (i ? 1 : -1) * (0.8 + door.opening * 1.8);
+          leaf.position.x = x;
+          door.colliders[i].x = p.x + x * Math.cos(p.rotation);
+          door.colliders[i].z = p.z - x * Math.sin(p.rotation);
+        });
+        door.status.color.set(online.has(p.system) ? "#91c3aa" : "#b39059");
+        door.status.emissive.copy(door.status.color);
       }
-      const authorized =
-        online.has("workshop") ||
-        player.z < 13 ||
-        (!initialized && Math.abs(player.z - 13) < 0.65);
-      const target = authorized && Math.abs(player.z - 13) < 5 ? 1 : 0;
-      const old = opening;
-      opening = reduced ? target : THREE.MathUtils.damp(opening, target, 8, dt);
-      if (
-        Math.abs(player.z - 13) < 0.6 &&
-        Math.abs(player.x) < 1.8 &&
-        old > 0.15
-      )
-        opening = Math.max(opening, old);
-      if (Math.abs(old - opening) > 0.001) root.userData.shadowsDirty = true;
-      if (initialized && playing && old < 0.02 && opening > 0.02)
-        events.push("door");
-      for (let i = 0; i < 2; i++) {
-        const x = (i ? 1 : -1) * (0.8 + opening * 1.8);
-        leaves[i].position.x = x;
-        doorColliders[i].x = x;
-      }
-      fixtures.forEach((f) => {
-        const powered = online.has(f.system);
+      benches.forEach((b, i) => {
+        const circuit = circuits?.[i] ?? CHAMBERS[i].initial;
+        if (circuit !== b.previous) {
+          b.kit.sync(circuit, simulate(circuit));
+          b.previous = circuit;
+          root.userData.shadowsDirty = true;
+        }
+        b.rail.emissiveIntensity = online.has(CHAMBERS[i].id) ? 1.5 : 0.08;
+      });
+      for (const f of fixtures)
         f.material.emissiveIntensity = THREE.MathUtils.damp(
           f.material.emissiveIntensity,
-          powered ? 2.3 : 0.35,
+          online.has(f.system) ? 2.3 : 0.16,
           2,
           dt,
         );
-      });
       const nearest = [...fixtures]
         .sort(
           (a, b) =>
@@ -639,15 +542,9 @@ export function buildSpaceship(scene: THREE.Scene) {
         .slice(0, 4);
       nearest.forEach((f, i) => {
         pools[i].position.set(f.x, f.y, f.z);
-        pools[i].color.copy(
-          online.has(f.system)
-            ? new THREE.Color("#e4e6d6")
-            : new THREE.Color("#d39b5e"),
-        );
-        pools[i].intensity = online.has(f.system) ? 32 : 13;
+        pools[i].color.set(online.has(f.system) ? "#e4e6d6" : "#d39b5e");
+        pools[i].intensity = online.has(f.system) ? 32 : 7;
       });
-      if (playing && !reduced)
-        for (const f of fans) if (online.has(f.id)) f.g.rotation.z += dt * 1.6;
       space.update(time, reduced);
       if (root.userData.textureRevision !== textureRevision) {
         textureRevision = root.userData.textureRevision;

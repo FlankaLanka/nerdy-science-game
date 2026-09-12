@@ -7,26 +7,22 @@ import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { disposeScene } from "./art";
 import { buildSpaceship } from "./spaceship";
-import { deckSection } from "./shipLayout";
+import { deckSection, roomAt, progressionStageAt } from "./shipLayout";
 import {
   focusedSite,
   groundHeight,
   movePlayer,
   PLAYER_KEY,
   restorePlayer,
-  SITES,
   SPAWN,
 } from "./navigation";
-import { nextActivity } from "../activities";
-import type { ActivityId as MissionId } from "../activities";
+import type { ChamberId as MissionId } from "../chambers";
+import type { Circuit } from "../circuitKit";
 import { gamePixelRatio } from "../viewport";
-import { projectWaypoint } from "./waypoint";
-import type { Waypoint } from "./waypoint";
 
 export type Telemetry = {
   focus: MissionId | null;
-  distance: number;
-  heading: number;
+  room: number;
   moved: boolean;
   locked: boolean;
   section: string;
@@ -36,10 +32,8 @@ export type WorldState = {
   completed: MissionId[];
   reducedMotion: boolean;
   sensitivity: number;
-  distressSent: boolean;
-  transmitting: boolean;
+  circuits: Circuit[];
   preview: boolean;
-  tracked?: MissionId | null;
 };
 type Options = {
   container: HTMLDivElement;
@@ -47,7 +41,6 @@ type Options = {
   ready: () => void;
   error: () => void;
   telemetry: (data: Telemetry) => void;
-  waypoint: (point: Waypoint) => void;
   interact: (id: MissionId) => void;
   pause: () => void;
   step: () => void;
@@ -84,7 +77,7 @@ export function renderWorld(o: Options) {
   const canvas = renderer.domElement;
   canvas.setAttribute(
     "aria-label",
-    "First-person view of the research ship Asterion. WASD to move, mouse or arrow keys to look, E to interact.",
+    "First-person view of the research ship Asterion. WASD to move, mouse or arrow keys to look, E to use the circuit bench.",
   );
   canvas.setAttribute("role", "img");
   canvas.tabIndex = -1;
@@ -119,6 +112,8 @@ export function renderWorld(o: Options) {
   let player = { ...SPAWN };
   try {
     player = restorePlayer(localStorage.getItem(PLAYER_KEY), model.obstacles);
+    if (progressionStageAt(player.x, player.z) > o.state().completed.length)
+      player = { ...SPAWN };
   } catch {
     /* Session-only play. */
   }
@@ -300,7 +295,8 @@ export function renderWorld(o: Options) {
   observer.observe(o.container);
   window.addEventListener("resize", resize);
   resize();
-  const targetPoint = new THREE.Vector3();
+  let circuits: Circuit[] | null = null,
+    revision = 0;
 
   function animate(now: number) {
     if (disposed) return;
@@ -311,7 +307,11 @@ export function renderWorld(o: Options) {
     if (document.hidden) return;
     if (wasPlaying && !state.playing) release();
     wasPlaying = state.playing;
-    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.completed.join()}:${state.reducedMotion}:${state.distressSent}:${model.root.userData.textureRevision}`;
+    if (circuits !== state.circuits) {
+      circuits = state.circuits;
+      revision++;
+    }
+    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.completed.join()}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}`;
     if (
       !state.playing &&
       (!state.preview || state.reducedMotion) &&
@@ -369,10 +369,10 @@ export function renderWorld(o: Options) {
       player.z,
     );
     if (state.preview) {
-      camera.position.set(-2, 1.9, 23);
+      camera.position.set(-8.2, 1.9, 23);
       camera.rotation.set(
         -0.025,
-        -0.2 + (state.reducedMotion ? 0 : Math.sin(time * 0.12) * 0.015),
+        0.28 + (state.reducedMotion ? 0 : Math.sin(time * 0.12) * 0.015),
         0,
         "YXZ",
       );
@@ -385,24 +385,11 @@ export function renderWorld(o: Options) {
       state.completed,
       state.reducedMotion,
       state.playing,
+      state.circuits,
     ))
       o.environment(event);
     renderer.shadowMap.needsUpdate = !!model.root.userData.shadowsDirty;
-    const next = nextActivity(state.completed, state.tracked);
     composer.render();
-    const site = SITES[next];
-    const distance = Math.hypot(site.x - player.x, site.z - player.z);
-    targetPoint.set(site.x, groundHeight(site.x, site.z) + 2.45, site.z);
-    o.waypoint(
-      projectWaypoint(
-        camera,
-        targetPoint,
-        width,
-        height,
-        distance,
-        state.playing && !state.distressSent,
-      ),
-    );
     if (!ready) {
       ready = true;
       o.ready();
@@ -411,8 +398,7 @@ export function renderWorld(o: Options) {
       lastHud = now;
       o.telemetry({
         focus: state.playing ? focusedSite(player, model.obstacles) : null,
-        distance,
-        heading: ((((-player.yaw * 180) / Math.PI) % 360) + 360) % 360,
+        room: roomAt(player.x, player.z),
         moved,
         locked: document.pointerLockElement === canvas,
         section: deckSection(player.z, player.x),
@@ -465,8 +451,8 @@ export function renderWorld(o: Options) {
       canvas.removeEventListener("pointerup", up);
       canvas.removeEventListener("pointercancel", up);
       canvas.removeEventListener("webglcontextlost", lost);
-      disposeScene(scene);
       model.dispose();
+      disposeScene(scene);
       environment.dispose();
       pmrem.dispose();
       composer.dispose();

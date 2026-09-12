@@ -1,3 +1,5 @@
+> Historical design for the earlier station campaign. The current playable sequence and playtest criteria are in [Circuit chambers](chambers.md).
+
 # Student playtest protocol
 
 Use the [research and design report](research/station-design.md) as the instructional specification. Automated tests verify electrical behavior and interaction reliability; they cannot establish that students learned the concepts.

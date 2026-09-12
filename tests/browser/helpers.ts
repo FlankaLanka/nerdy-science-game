@@ -1,99 +1,82 @@
 import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import type { Player } from "../../src/scene/navigation";
-
-export async function begin(page: Page, nearWorkshop = false) {
-  if (nearWorkshop)
-    await page.addInitScript(() => {
-      if (!localStorage.getItem("signal.asterion.player.v2"))
-        localStorage.setItem(
-          "signal.asterion.player.v2",
-          JSON.stringify({ x: -3, z: 22.5, yaw: 0, pitch: 0 }),
-        );
-    });
+import { CHAMBERS } from "../../src/chambers.ts";
+import { SAVE_KEY, serializeCampaign } from "../../src/chamberCampaign.ts";
+import { PLAYER_KEY } from "../../src/scene/navigation.ts";
+import type { Player } from "../../src/scene/navigation.ts";
+import { chamberFixture } from "../chamber-fixtures.ts";
+export async function begin(page: Page, index = 0, player?: Player) {
+  const c = CHAMBERS[index];
+  const state = chamberFixture(index);
+  await page.addInitScript(
+    ({ key, value, playerKey, position }) => {
+      localStorage.setItem(key, value);
+      localStorage.setItem(playerKey, JSON.stringify(position));
+    },
+    {
+      key: SAVE_KEY,
+      value: serializeCampaign(state),
+      playerKey: PLAYER_KEY,
+      position: player ?? {
+        x: c.bench.x,
+        z: c.bench.z + 2.5,
+        yaw: 0,
+        pitch: 0,
+      },
+    },
+  );
   await page.goto("/");
-  await page
-    .getByRole("button", { name: /^(Board the Asterion|Continue)$/ })
-    .click({ timeout: 60000 });
-  await expect(
-    page.getByRole("button", { name: "Pause game", exact: true }),
-  ).toBeVisible();
+  await page.getByRole("button", { name: /^(Begin|Continue)$/ }).click();
+  await expect(page.getByRole("button", { name: "Pause game" })).toBeVisible();
 }
-export async function openWorkshop(page: Page) {
-  await begin(page, true);
+export async function bench(page: Page, index = 0) {
   await expect(
-    page.getByRole("button", { name: "Repair Engineering", exact: true }),
+    page.getByRole("button", { name: "Use circuit bench" }),
   ).toBeVisible();
   await page.keyboard.press("e");
   await expect(
-    page.getByRole("dialog", {
-      name: "Engineering circuit",
-      exact: true,
+    page.getByRole("region", {
+      name: `Chamber ${CHAMBERS[index].number} circuit`,
     }),
   ).toBeVisible();
+  await expect(page.locator(".kit-board canvas")).toBeVisible();
 }
-export async function connect(page: Page, from: string, to: string) {
-  await page.getByRole("button", { name: from, exact: true }).click();
-  await page.getByRole("button", { name: to, exact: true }).click();
+export async function connect(page: Page, a: string, b: string) {
+  await page.getByRole("button", { name: a, exact: true }).click();
+  await page.getByRole("button", { name: b, exact: true }).click();
+}
+export async function add(page: Page, kind: string, x: number, y: number) {
+  await page.getByRole("button", { name: `Add ${kind}`, exact: true }).click();
+  const box = (await page.locator(".kit-board").boundingBox())!;
+  await page.mouse.click(
+    box.x + (x / 900) * box.width,
+    box.y + (y / 500) * box.height,
+  );
 }
 export async function hold(page: Page, key: string, ms: number) {
   await page.keyboard.down(key);
   await page.waitForTimeout(ms);
   await page.keyboard.up(key);
 }
-// Read the actual saved camera by pausing. Navigation below uses ordinary player inputs.
-export async function position(page: Page): Promise<Player> {
-  await page.keyboard.press("Tab");
+export async function saved(page: Page) {
+  return page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? "null"),
+    SAVE_KEY,
+  );
+}
+export async function position(page: Page) {
+  return page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? "null") as Player,
+    PLAYER_KEY,
+  );
+}
+export async function restored(page: Page, index: number) {
+  await expect
+    .poll(async () => !!(await saved(page))?.proofs[index])
+    .toBe(true);
   await expect(
-    page.getByRole("dialog", { name: "Paused", exact: true }),
-  ).toBeVisible();
-  const p = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("signal.asterion.player.v2")!),
-  );
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
-  return p;
-}
-export async function walkTo(page: Page, x: number, z: number) {
-  for (let i = 0; i < 12; i++) {
-    const p = await position(page),
-      dx = x - p.x,
-      dz = z - p.z,
-      distance = Math.hypot(dx, dz);
-    if (distance < 0.65) return;
-    const yaw = Math.atan2(-dx, -dz);
-    const turn = Math.atan2(Math.sin(yaw - p.yaw), Math.cos(yaw - p.yaw));
-    if (Math.abs(turn) > 0.025)
-      await hold(
-        page,
-        turn > 0 ? "ArrowLeft" : "ArrowRight",
-        (Math.abs(turn) / 1.65) * 1000,
-      );
-    await hold(
-      page,
-      "w",
-      Math.min(2800, Math.max(50, ((distance - 0.35) / 3.5) * 1000)),
-    );
-  }
-  throw new Error(
-    `Could not walk to ${x}, ${z}: ${JSON.stringify(await position(page))}`,
-  );
-}
-export async function aimAt(page: Page, x: number, z: number) {
-  const p = await position(page),
-    yaw = Math.atan2(p.x - x, p.z - z);
-  const turn = Math.atan2(Math.sin(yaw - p.yaw), Math.cos(yaw - p.yaw));
-  if (Math.abs(turn) > 0.015)
-    await hold(
-      page,
-      turn > 0 ? "ArrowLeft" : "ArrowRight",
-      (Math.abs(turn) / 1.65) * 1000,
-    );
-}
-export async function workshopRepair(page: Page) {
-  await connect(page, "Lamp A right", "Bridge left");
-  await page.getByRole("button", { name: "Copper", exact: true }).click();
-  await page.getByRole("button", { name: "Test circuit", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Restore auxiliary power", exact: true })
-    .click();
+    page.getByRole("region", {
+      name: `Chamber ${CHAMBERS[index].number} circuit`,
+    }),
+  ).not.toBeVisible();
 }

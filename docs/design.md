@@ -1,3 +1,5 @@
+> Historical design for the earlier station campaign. The current playable sequence and playtest criteria are in [Circuit chambers](chambers.md).
+
 # Station and learning design
 
 The current design is specified in [Asterion: an exploratory circuits lesson](research/station-design.md). It includes a cited research synthesis, knowledge graph, equipment requirements, five-component evaluation, state transitions, numerical assumptions and playtest scripts.

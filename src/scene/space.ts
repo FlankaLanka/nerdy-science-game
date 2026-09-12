@@ -92,7 +92,7 @@ export function buildSpace(scene: THREE.Scene, loaded: () => void) {
     g.add(sphere);
     return g;
   }
-  const earth = body("Earth", -170, 22, -25, 48, surface(earthDay, true), 72);
+  const earth = body("Earth", -170, 22, 60, 48, surface(earthDay, true), 72);
   earth.rotation.set(0.12, 0.65, -0.16);
   const atmosphere = new THREE.Mesh(
     new THREE.SphereGeometry(48.65, 64, 40),

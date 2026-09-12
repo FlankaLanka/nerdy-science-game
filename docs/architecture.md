@@ -1,46 +1,51 @@
 # Architecture
 
-React owns campaign state and the instrument UI. Three.js owns the first-person environment and its transient presentation. The reducers are authoritative for repair completion; renderer state cannot commission equipment.
+React owns the circuit documents, progression and minimal interface. Three.js renders the station and the same physical kit at two scales. Rendering cannot authorize a door: only the reducer can save a validated circuit proof.
 
-## Campaign and simulation
+## Circuit kit and campaign
 
-`activities.ts` defines eight fixed equipment locations, their prerequisites, concept summaries and guidance. `campaign.ts` stores completion, visits, a tracked objective, foundational circuit progress, five quantitative lab records and optional notes. Inspection and experimentation are permitted before prerequisites; commissioning requires both upstream repairs and physically valid evidence.
+- `circuitKit.ts`: generic component/wire graph, modified nodal solver, instantaneous readings, lamp response, virtual fuse and constrained editing.
+- `chambers.ts`: six authored starting arrangements, inventories, voltages, narrative lines, formula discoveries and physical success conditions.
+- `chamberCampaign.ts`: sequential access, latched completion, per-room undo, discovery and validated save restoration.
+- `CircuitLab.tsx`: direct manipulation, terminal targeting, keyboard editing, part tray and selected-component readings. Circuit changes run immediately; there is no submit or test state.
+- `KitScene.tsx` and `scene/kitArt.ts`: shared batteries, glass bulbs, resistors, knife switches, contacts and flexible leads. The orthographic close-up uses the same 900×500 coordinate system as its HTML hit targets and SVG current markers.
 
-`game.ts` retains the foundational wire-editing reducer and legacy save sanitizer. `circuit.ts` uses conducting-node unions and nodal analysis for the 6 V resistive wiring rigs. Shorts open a virtual fuse. Neither predictions nor selected explanations are required. Old prediction data can still be read without blocking new tests.
+Modified nodal analysis solves connected electrical islands. Source-free islands remain at zero current. A source short trips a resettable virtual fuse. Loads are fixed resistances. The final goal re-simulates the circuit with its isolator opened; a common switched return therefore cannot falsely satisfy independence. Tests compare analytical series/parallel cases and power conservation including finite lead loss.
 
-`labPhysics.ts` evaluates the specimen from resistivity and SI geometry, the pump from series resistance including source losses, and the junction network from its series/parallel arrangement. Capacitor bank values use equivalent capacitance, Q = CV, and E = ½CV². RC voltage is evaluated analytically from the starting voltage, R, C, mode and elapsed simulation time. The graph uses the same evaluator as the success predicate. No frame-integrated approximation determines the result.
+Edits have bounded stock and history. Fixed starter parts cannot be moved or removed. Mobile contacts retain their screen-pixel target size. Adding or dragging a part keeps every attached wire connected. Keyboard users add from the tray with Enter, select parts and use arrows to move, R to rotate and Delete to remove; contact connections use Enter as well.
 
-Editing a setting invalidates the current measurement. Historical samples remain available for comparison, bounded to 48 per equipment panel. The specimen comparison only qualifies readings of the same material and geometry. RC tests record starting voltage and time; restored voltage is recomputed instead of trusting saved readings. Active playback stops advancing when the panel closes or document is hidden. It resumes explicitly in the open panel; reload restores completed observations with playback paused.
+## World and navigation
 
-Completed systems are immutable in the campaign reducer. Reopening them creates local practice state. The notebook and JSON export retain original commissioning measurements.
+`shipLayout.ts` is the common spatial definition for rooms, links, windows, benches, collisions and the notebook map. Six chambers follow an authored route down the left column, across a transfer link, then back along the right column to an observation deck. There are no corridor shortcuts around locked doors.
 
-## World
+`spaceship.ts` constructs a pressure-wall kit with distinct jamb, leaf, trim and threshold surfaces. Each of the six animated doors has colliders following its leaves and a capsule guard to prevent closing on the player. Ceiling services leave header and door-travel clearances. Windows use actual wall openings with separate sill/head infills and a single transparent pane. Eleven banks supply 38 panes; the navigation hull remains sealed.
 
-`shipLayout.ts` is the common coordinate source for hull boundaries, navigation and map. The deck is the union of authored compartment footprints, with two wing loops, a transverse connection and a forward command deck. Ceiling-height transitions are closed with lintels. `navigation.ts` enforces a capsule footprint with substepped movement and occluded, facing-based interaction. Doors have colliders synchronized to visible leaves and an aperture-resume guard.
+The station has six shared kit benches, six doorway labels and three formula posters. No floor labels, mission banners, dashboards or decorative prose are created. Station fixtures and low rails respond to the completed chamber; authorized doors open on approach from either side.
 
-`spaceship.ts` builds modular pressure-wall panels, physical service cabinets, the central heat exchanger, ventilation, reserve racks and observation windows. `PORTALS` supplies the six frames and their ceiling-service clearance regions. Jambs, leaves, thresholds and attached trim occupy distinct surfaces. Wall stiffener ends sit inside the shell boundaries so exposed doorway reveals do not contain coplanar faces. Door colliders follow the revised visible leaves.
+`space.ts` retains the textured Earth, Moon, Saturn, rings, star field and nearby instanced solar wings. All textures are local. The exterior is composed for the fictional setting, not scaled orbital mechanics.
 
-`WINDOW_BANKS` defines nine authored banks with 32 panes across Engineering, Materials, Distribution, Life Support, Reserve and the three-sided Command gallery. The wall builder constructs sill and head infills around each aperture; it never creates a full wall behind a window. Ceiling haunches yield to high windows. Each glass plane shares one faintly tinted material, renders in one transparent pass, and does not write depth or cast shadows. The navigation hull remains solid regardless of the visual opening.
+`navigation.ts` applies substepped capsule movement and facing/proximity/occlusion checks before a bench can be used. `renderWorld.ts` manages camera, pointer lock, drag look, touch movement, sound events and throttled room telemetry. The notebook uses the actual saved player pose, and never teleports it.
 
-Static geometry is merged by material and 12 m spatial cell. Rounded geometry is cached by dimensions. Dynamic machinery and instrument displays remain outside immutable batches. Four local point-light slots select nearby fixtures; there is one cached directional shadow map. Surface textures are local and shared.
+## Interface and story
 
-`space.ts` builds one continuous exterior visible through every aperture. Seven locally served 2K maps supply Earth day/night/clouds, Moon, Saturn, ring alpha and the Milky Way. Shared sunlight drives the surface shader and the planet's shadow on its rings. A thin additive atmosphere surrounds Earth; nearby solar wings use 96 instanced cells for parallax. Celestial sizes and positions are art-directed. The renderer adds no lights, shadow maps or fullscreen passes for this exterior. Texture readiness invalidates steady frames, and `art.ts` disposes shader-uniform textures as well as conventional material maps.
+`App.tsx` coordinates walking, close-up, notebook and pause. There are no ordinary network requests beyond local runtime assets. ASTER's short authored lines are triggered by room entry, initial bench use, restoration and arrival at the observation deck. Heard identifiers are persisted; subtitle time pauses in menus and hidden tabs.
 
-World text is restricted to six short doorway names. Floors, cabinet headers and decorative machinery carry no writing. The inset displays reuse cached 512×256 graphical textures by display kind and equipment state; they change only when commissioning state changes. The display cache is explicitly disposed, including materials no longer attached to a visible mesh. The walking HUD shows a compact objective and location; detailed instructions live in the repair panels and optional network view.
+`Notebook.tsx` has Parts, Formulas and Map. Only encountered components and equations are listed. Part descriptions are one sentence. Map colors distinguish current, powered and inaccessible chambers.
 
-`renderWorld.ts` retains the existing pixel-ratio caps, 12-sample SSAO, restrained bloom and tone mapping. It avoids drawing hidden tabs and steady paused views. Shadow maps update when doors or texture readiness require it, not on every frame. Waypoints follow the current camera every rendered frame; React telemetry is throttled independently. All scene resources are disposed when the renderer unmounts.
+The native-viewport layout has responsive controls rather than a scaled fixed desktop frame. Native dialogs contain focus and restore it on close. If WebGL is unavailable, the circuit view supplies a schematic fallback with the same live model and sequential chamber controls. If storage fails, the same reducer continues session-only play.
 
-## Interface and fallback
+## Performance and resource lifetime
 
-The viewport preserves a 1280×720 authored composition. Native dialogs remain above fullscreen via top-layer reordering and restore focus. The advanced instrument panels use accessible HTML controls and SVG schematics/graphs, so their measurements do not depend on WebGL. Wiring panels retain a persistent precompiled 3D bench with an SVG fallback. A graphics failure exposes the next repair in circuit mode.
+Station geometry is batched by material and 12 m spatial cell. Rounded geometries are cached. Dynamic kits and doors stay outside those batches. Four nearby point lights, one cached directional shadow, existing 12-sample SSAO and restrained bloom retain the previous world rendering budget. No fullscreen effect or downloaded texture was added in this rebuild.
 
-Sound uses local Web Audio synthesis. Read-aloud is optional and available only when the browser exposes a local English speech voice. The maintenance guidance is always available as text. The UI makes no requests to the optional coaching API.
+World drawing stops for a steady paused/covered scene and hidden tabs. The active close-up draws on resize or circuit changes; current markers animate in SVG without another Three.js render loop. Only one close-up renderer exists at a time. Removed component-owned materials and replaced wire geometry are disposed. Closing the kit disposes its renderer and shadow/environment resources; station kit resources detach before general scene disposal. Shared exterior shader textures are released with ordinary texture maps.
 
-## Save keys
+Render resolution is capped at 1.65 device pixels per CSS pixel on desktop and 1.35 on touch devices. These are tuning starting values, not a performance guarantee. See [verification](verification.md) for measurements and [design](chambers.md) for their microtests.
 
-- Current campaign: `signal.asterion.circuits.v2`.
-- Current camera: `signal.asterion.player.v2`.
-- Migration source only: `signal.dead-orbit.v1`.
-- Older spaceship camera and lighthouse keys are preserved.
+## Saves and retained code
 
-A v1 campaign is sanitized through the existing foundational model. Previous working loops remain; the new advanced prerequisites are required before finishing the expanded campaign. Invalid or unavailable storage falls back to safe session state.
+Current keys are `signal.asterion.chambers.v1` and `signal.asterion.chambers.player.v1`. Earlier campaign keys are neither migrated nor overwritten. Loading sanitizes component types, inventory limits, contact IDs, coordinates and resistor values, then recomputes completion proofs in order. Undo or resetting a completed circuit does not remove door authorization.
+
+The old client worksheets, instrument panels, fixed viewport, waypoint system and map have been removed, along with their obsolete browser journeys. `activities.ts`, `campaign.ts`, `labPhysics.ts`, `missions.ts`, `game.ts`, `circuit.ts`, and `coach.ts` retain the earlier quantitative experiments and optional coaching API's tested models. They are outside the active game bundle. Future capacitor/resistivity work can reuse that physics without bringing back its retired UI.
+
+Current browser tests cover the kit, all six goals, the physical first-door transition, the full route and backtracking, windows, doorway surface separation, touch, keyboard, accessible controls, storage and rendering fallback. Review fixtures are test-only; no developer teleport or solve control is exposed in the game.

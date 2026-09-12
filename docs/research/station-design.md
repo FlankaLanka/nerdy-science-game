@@ -1,3 +1,5 @@
+> Curriculum research retained from the earlier eight-system campaign. The active game now uses six introductory DC chambers; see [the current design](../chambers.md). Advanced investigations described here are not currently presented in the UI.
+
 # Asterion: an exploratory circuits lesson
 
 ## Design decision

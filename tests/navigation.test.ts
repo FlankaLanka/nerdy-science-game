@@ -3,89 +3,82 @@ import test from "node:test";
 import {
   canWalk,
   focusedSite,
-  groundHeight,
   movePlayer,
   restorePlayer,
   SPAWN,
   SITES,
 } from "../src/scene/navigation.ts";
+import { PORTALS, progressionStageAt } from "../src/scene/shipLayout.ts";
 import type { Obstacle } from "../src/scene/navigation.ts";
-
-test("first-person movement follows camera heading and normalizes diagonal speed", () => {
-  const forward = movePlayer(SPAWN, 0, 1, 0.1, false, []);
-  const diagonal = movePlayer(SPAWN, 1, 1, 0.1, false, []);
-  assert.ok(forward.z < SPAWN.z);
+test("movement follows the camera and diagonal speed is normalized", () => {
+  const f = movePlayer(SPAWN, 0, 1, 0.1, false, []),
+    d = movePlayer(SPAWN, 1, 1, 0.1, false, []);
+  assert.ok(f.z < SPAWN.z);
+  assert.ok(Math.abs(Math.hypot(d.x - SPAWN.x, d.z - SPAWN.z) - 0.35) < 1e-8);
   assert.ok(
-    Math.abs(Math.hypot(diagonal.x - SPAWN.x, diagonal.z - SPAWN.z) - 0.35) <
-      1e-8,
+    movePlayer({ ...SPAWN, yaw: -Math.PI / 2 }, 0, 1, 0.1, false, []).x >
+      SPAWN.x,
   );
-  const east = movePlayer(
-    { ...SPAWN, yaw: -Math.PI / 2 },
-    0,
-    1,
-    0.1,
-    false,
-    [],
-  );
-  assert.ok(east.x > SPAWN.x);
-  assert.ok(Math.abs(east.z - SPAWN.z) < 1e-8);
 });
-
-test("walls block walking and sprinting, allow sliding, and cannot be tunnelled through", () => {
-  const wall: Obstacle[] = [{ x: -4, z: 19.3, width: 4, depth: 0.1 }];
+test("thin walls stop sprinting without preventing sliding", () => {
+  const wall: Obstacle[] = [{ x: -10, z: 20, width: 4, depth: 0.1 }];
   let p = { ...SPAWN };
-  for (let i = 0; i < 20; i++) p = movePlayer(p, 0, 1, 0.1, true, wall);
-  assert.ok(p.z >= 19.65);
+  for (let i = 0; i < 30; i++) p = movePlayer(p, 0, 1, 0.1, true, wall);
+  assert.ok(p.z >= 20.35);
   const slide = movePlayer(p, 1, 1, 0.1, true, wall);
   assert.ok(slide.x > p.x);
-  assert.ok(slide.z >= 19.65);
-  const lagged = movePlayer(SPAWN, 0, 1, 25, true, wall);
-  assert.ok(lagged.z >= 19.65);
+  assert.ok(slide.z >= 20.35);
+  assert.ok(movePlayer(SPAWN, 0, 1, 25, true, wall).z >= 20.35);
 });
-
-test("the entire player remains inside the hull while passage connections stay walkable", () => {
-  assert.equal(canWalk(45, 0, []), false);
-  assert.equal(canWalk(0, 26, []), false);
-  assert.equal(canWalk(8, 14, []), false);
-  assert.equal(canWalk(3, 13, []), false);
-  for (let z = -22; z < 25; z += 0.1) assert.equal(canWalk(0, z, []), true);
-  for (const site of Object.values(SITES)) {
+test("authored chamber links remain traversable and the hull stays sealed", () => {
+  for (const p of PORTALS) assert.equal(canWalk(p.x, p.z, []), true, p.system);
+  for (const site of Object.values(SITES))
     assert.equal(canWalk(site.x, site.z + 2, []), true);
-    assert.equal(groundHeight(site.x, site.z), 0);
-  }
+  for (const [x, z] of [
+    [45, 0],
+    [0, 26],
+    [0, 10],
+    [-16, 20],
+    [16, 6],
+  ])
+    assert.equal(canWalk(x, z, []), false);
+  for (let z = -8; z <= 24; z += 0.1) assert.equal(canWalk(-10, z, []), true);
+  for (let x = -10; x <= 10; x += 0.1) assert.equal(canWalk(x, -8, []), true);
+  for (let z = -8; z <= 34; z += 0.1) assert.equal(canWalk(10, z, []), true);
 });
-
-test("a repair requires proximity, looking at the cabinet, and an unobstructed approach", () => {
-  const p = { x: -3, z: 22.5, yaw: 0, pitch: 0 };
+test("using a bench requires proximity, facing it and a clear approach", () => {
+  const p = { x: -10, z: 21.5, yaw: 0, pitch: 0 };
   assert.equal(focusedSite(SPAWN, []), null);
-  assert.equal(focusedSite(p, []), "workshop");
+  assert.equal(focusedSite(p, []), "wake");
   assert.equal(focusedSite({ ...p, yaw: Math.PI }, []), null);
   assert.equal(focusedSite({ ...p, pitch: 1 }, []), null);
   assert.equal(
-    focusedSite(p, [{ x: -3, z: 21.2, width: 4, depth: 0.3 }]),
-    null,
-  );
-  assert.equal(
-    focusedSite({ ...p, z: 18.8, yaw: Math.PI }, [
-      { x: -3, z: 19.2, width: 3, depth: 0.3 },
-      { x: -3, z: 20, width: 1.05, depth: 0.6 },
-    ]),
+    focusedSite(p, [{ x: -10, z: 20.4, width: 4, depth: 0.3 }]),
     null,
   );
 });
-
-test("player saves resume safely and reject out-of-hull coordinates, obstacles, and malformed values", () => {
-  const p = { x: 2, z: 10, yaw: 2, pitch: 0.1 };
+test("player saves reject corrupt data and positions outside the hull or inside furniture", () => {
+  const p = { x: -8, z: 20, yaw: 2, pitch: 0.1 };
   assert.deepEqual(restorePlayer(JSON.stringify(p), []), p);
   for (const raw of [
     "invalid",
     "null",
-    '{"x":null,"z":0,"yaw":0,"pitch":0}',
     JSON.stringify({ ...p, x: 500 }),
+    JSON.stringify({ ...p, x: null }),
   ])
     assert.deepEqual(restorePlayer(raw, []), SPAWN);
   assert.deepEqual(
-    restorePlayer(JSON.stringify(p), [{ x: 2, z: 10, radius: 1 }]),
+    restorePlayer(JSON.stringify(p), [{ x: -8, z: 20, radius: 1 }]),
     SPAWN,
   );
+});
+
+test("saved corridor positions respect both sides of each gate", () => {
+  assert.equal(progressionStageAt(-10, 14), 0);
+  assert.equal(progressionStageAt(-10, 12), 1);
+  assert.equal(progressionStageAt(-1, -8), 2);
+  assert.equal(progressionStageAt(1, -8), 3);
+  assert.equal(progressionStageAt(10, -2), 3);
+  assert.equal(progressionStageAt(10, 0), 4);
+  assert.equal(progressionStageAt(10, 31), 6);
 });

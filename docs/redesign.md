@@ -1,3 +1,5 @@
+> Historical design for the earlier station campaign. The current playable sequence and playtest criteria are in [Circuit chambers](chambers.md).
+
 # Current redesign
 
 The eight-system exploratory station supersedes the three-room recovery prototype. See the [research and design specification](research/station-design.md), [architecture](architecture.md), and [verification record](verification.md).

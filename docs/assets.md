@@ -13,7 +13,7 @@ Color uses sRGB; normal and roughness remain linear data. Anisotropy is capped a
 
 ## Orbital exterior
 
-The following published Solar System Scope files are retained unmodified, with shorter local names. Attribution is also accessible in the game through Settings → Asset credits, served from `public/credits.html`.
+The following published Solar System Scope files are retained unmodified, with shorter local names. Attribution is also accessible in the game through Pause → Credits, served from `public/credits.html`.
 
 | Runtime file       | Original download                                                                                       |     Bytes |
 | ------------------ | ------------------------------------------------------------------------------------------------------- | --------: |

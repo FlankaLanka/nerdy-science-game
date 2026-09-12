@@ -1,798 +1,439 @@
-import { lazy, Suspense, useEffect, useReducer, useRef, useState } from "react";
-import { ArrowRight, Maximize, Pause, Radio } from "lucide-react";
 import {
-  currentMission,
-  initialProgress,
-  reducer,
-  restoreState,
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import {
+  BookOpen,
+  Check,
+  ChevronRight,
+  Pause,
+  Play,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
+import {
+  campaignReducer,
+  completedIds,
+  initialCampaign,
+  restoreCampaign,
   SAVE_KEY,
-  updateProgress,
-} from "./campaign";
-import type { Progress } from "./campaign";
-import { ACTIVITY_IDS, activity, isLab, available } from "./activities";
-import type { ActivityId as MissionId } from "./activities";
-import { LabWorkbench } from "./LabWorkbench";
-import { updateLab } from "./labPhysics";
-import type { LabProgress } from "./labPhysics";
+  serializeCampaign,
+  unlockedIndex,
+} from "./chamberCampaign";
+import { CHAMBERS } from "./chambers";
+import type { ChamberId } from "./chambers";
+import type { KitAction } from "./circuitKit";
 import type { WorldHandle } from "./World";
-import { SITES } from "./scene/navigation";
-import { Workbench } from "./Workbench";
-import { Notebook } from "./Notebook";
-import { Dialog } from "./Dialog";
+import { PLAYER_KEY, SPAWN } from "./scene/navigation";
 import { useSound } from "./audio";
-import { GameViewport } from "./GameViewport";
-import { prepareInterface } from "./interfaceAssets";
-import { ShipMap } from "./ShipMap";
-import type { Player } from "./scene/navigation";
-import { SHIP_SYSTEMS, SHIP_TUNING } from "./shipSystems";
-
+import { Dialog } from "./Dialog";
+import Notebook from "./Notebook";
+import type { NotebookTab } from "./Notebook";
+import "./game.css";
 const World = lazy(() => import("./World"));
-type Menu =
-  | "pause"
-  | "map"
-  | "journal"
-  | "settings"
-  | "controls"
-  | "reset"
-  | "ending"
-  | null;
-
+const CircuitLab = lazy(() => import("./CircuitLab"));
+function load() {
+  try {
+    return restoreCampaign(localStorage.getItem(SAVE_KEY));
+  } catch {
+    return initialCampaign();
+  }
+}
 export default function App() {
-  const [state, dispatch] = useReducer(reducer, null, () => {
-    try {
-      return restoreState(
-        localStorage.getItem(SAVE_KEY) ??
-          localStorage.getItem("signal.dead-orbit.v1"),
-      );
-    } catch {
-      return restoreState(null);
-    }
-  });
-  const [running, setRunning] = useState(false),
+  const [state, dispatch] = useReducer(campaignReducer, undefined, load);
+  const [started, setStarted] = useState(false),
     [ready, setReady] = useState(false),
     [failed, setFailed] = useState(false);
-  const [kitReady, setKitReady] = useState(false);
-  const [interfaceReady, setInterfaceReady] = useState(false);
-  useEffect(() => {
-    let canceled = false;
-    void prepareInterface().then(() => {
-      if (!canceled) setInterfaceReady(true);
-    });
-    return () => {
-      canceled = true;
-    };
-  }, []);
-  const [entered, setEntered] = useState(false),
-    [menu, setMenu] = useState<Menu>(null),
-    [active, setActive] = useState<MissionId | null>(null);
-  const [labPractice, setLabPractice] = useState<LabProgress | null>(null);
-  const [practice, setPractice] = useState<Progress | null>(null),
-    [saved, setSaved] = useState(true),
-    [page, setPage] = useState(0);
-  const [effect, setEffect] = useState<{
-    id: number;
-    kind: "boot" | "restore";
-    mission?: MissionId;
-  } | null>(null);
-  useEffect(() => {
-    if (!effect) return;
-    const timer = setTimeout(
-      () => setEffect(null),
-      effect.kind === "restore"
-        ? SHIP_TUNING.restorationNoticeMs
-        : SHIP_TUNING.bootNoticeMs,
-    );
-    return () => clearTimeout(timer);
-  }, [effect]);
-  const [subtitle, setSubtitle] = useState(""),
-    [sensitivity, setSensitivity] = useState(1);
-  const [fullscreen, setFullscreen] = useState(!!document.fullscreenElement);
-  const [displayNotice, setDisplayNotice] = useState("");
-  const [mapPlayer, setMapPlayer] = useState<Player | null>(null);
-  const [transmitting, setTransmitting] = useState(false);
-  useEffect(() => {
-    const change = () => setFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", change);
-    return () => document.removeEventListener("fullscreenchange", change);
-  }, []);
-  async function toggleFullscreen() {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else if (document.documentElement.requestFullscreen)
-        await document.documentElement.requestFullscreen();
-      else throw new Error("unavailable");
-      setDisplayNotice("");
-    } catch {
-      setDisplayNotice(
-        "Fullscreen is unavailable here. Use your browser’s fullscreen command.",
-      );
-    }
-  }
-  const [systemMotion, setSystemMotion] = useState(
-    () => matchMedia("(prefers-reduced-motion: reduce)").matches,
+  const [active, setActive] = useState<number | null>(null),
+    [room, setRoom] = useState(0),
+    [menu, setMenu] = useState<"pause" | "notebook" | null>(null);
+  const [tab, setTab] = useState<NotebookTab>("parts"),
+    [confirmReset, setConfirmReset] = useState(false),
+    [storageFailed, setStorageFailed] = useState(false);
+  const [subtitle, setSubtitle] = useState<{ id: string; text: string } | null>(
+    null,
   );
   const world = useRef<WorldHandle>(null),
     sound = useSound(state.sound);
-  const next = currentMission(state),
-    allDone = state.completed.length === ACTIVITY_IDS.length;
-  const panelId = active ?? next;
-  const basicPanel = isLab(panelId) ? "workshop" : panelId;
-  const blocked = activity(panelId)
-    .prerequisites.filter((id) => !state.completed.includes(id))
-    .map((id) => activity(id).system)
-    .join(" + ");
-  const arrived = ready && kitReady && interfaceReady;
-  const reducedMotion = state.reducedMotion || systemMotion;
-  const playing = running && !menu && !active && !failed;
-  useEffect(() => {
-    if (!transmitting) return;
-    if (!allDone || state.distressSent) {
-      setTransmitting(false);
-      return;
-    }
-    const timer = setTimeout(() => {
-      dispatch({ type: "SEND_DISTRESS" });
-      setTransmitting(false);
-      sound.play("success");
-    }, SHIP_TUNING.transmissionMs);
-    return () => clearTimeout(timer);
-  }, [transmitting, allDone, state.distressSent]);
+  const current = useRef({ state, active, menu, started, sound });
+  current.current = { state, active, menu, started, sound };
+  const subtitleTime = useRef(0),
+    heard = useRef(new Set(state.heard)),
+    transition = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const completed = completedIds(state),
+    playing = started && active === null && menu === null;
+  const reduced =
+    state.reducedMotion ||
+    matchMedia("(prefers-reduced-motion: reduce)").matches;
   useEffect(() => {
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-      setSaved(true);
+      localStorage.setItem(SAVE_KEY, serializeCampaign(state));
+      setStorageFailed(false);
     } catch {
-      setSaved(false);
+      setStorageFailed(true);
     }
   }, [state]);
-  useEffect(() => {
-    const media = matchMedia("(prefers-reduced-motion: reduce)");
-    const change = () => setSystemMotion(media.matches);
-    media.addEventListener("change", change);
-    return () => media.removeEventListener("change", change);
+  const speak = useCallback((id: string, text: string) => {
+    if (heard.current.has(id)) return;
+    heard.current.add(id);
+    dispatch({ type: "HEARD", id });
+    subtitleTime.current = Math.max(5500, text.split(" ").length * 340);
+    setSubtitle({ id, text });
   }, []);
   useEffect(() => {
-    document.documentElement.dataset.motion = reducedMotion ? "reduce" : "full";
-  }, [reducedMotion]);
-  useEffect(() => {
-    if (!subtitle) return;
-    const timer = setTimeout(() => setSubtitle(""), 8500);
-    return () => clearTimeout(timer);
-  }, [subtitle]);
-  function openMenu(value: Menu) {
+    let previous = performance.now();
+    const timer = setInterval(() => {
+      const now = performance.now(),
+        dt = now - previous;
+      previous = now;
+      if (!document.hidden && !current.current.menu) {
+        subtitleTime.current -= dt;
+        if (subtitleTime.current <= 0) setSubtitle(null);
+      }
+    }, 100);
+    return () => clearInterval(timer);
+  }, []);
+  const leaveBench = useCallback(() => {
+    if (transition.current) clearTimeout(transition.current);
+    transition.current = null;
+    setActive(null);
+  }, []);
+  const onRoom = useCallback(
+    (index: number) => {
+      if (index > unlockedIndex(current.current.state)) return;
+      setRoom(index);
+      const c = CHAMBERS[index];
+      if (!c) return;
+      dispatch({ type: "VISIT", id: c.id });
+      speak(`entry:${c.id}`, c.intro);
+    },
+    [speak],
+  );
+  const openBench = useCallback(
+    (id: ChamberId) => {
+      const index = CHAMBERS.findIndex((c) => c.id === id);
+      if (index < 0 || index > unlockedIndex(current.current.state)) return;
+      world.current?.release();
+      setActive(index);
+      setRoom(index);
+      dispatch({ type: "VISIT", id });
+      speak(`hint:${id}`, CHAMBERS[index].hint);
+      current.current.sound.play("soft");
+    },
+    [speak],
+  );
+  const pause = useCallback(() => {
+    if (!current.current.started) return;
     world.current?.release();
-    setMapPlayer(world.current?.position() ?? null);
-    setRunning(false);
-    setMenu(value);
-    sound.play("soft");
+    setMenu("pause");
+  }, []);
+  function book(next: NotebookTab = tab) {
+    if (transition.current) {
+      clearTimeout(transition.current);
+      transition.current = null;
+    }
+    world.current?.release();
+    setTab(next);
+    setMenu("notebook");
   }
   function resume() {
-    setEntered(true);
     setMenu(null);
-    setRunning(true);
-    sound.unlock();
-    world.current?.capture();
-  }
-  function begin() {
-    setEffect({ id: Date.now(), kind: "boot" });
-    if (!state.started) {
-      dispatch({ type: "START" });
-      dispatch({ type: "INTRO", step: 3 });
-      setSubtitle("The lights are out. Try the console ahead.");
-    }
-    resume();
-  }
-  function closePanel() {
-    setActive(null);
-    setPractice(null);
-    setLabPractice(null);
-    sound.play("soft");
-    if (!failed) resume();
-  }
-  function visit(id: MissionId) {
-    dispatch({ type: "VISIT", id });
-    world.current?.release();
-    setRunning(false);
-    if (id === "beacon" && allDone && !state.distressSent) {
-      setMenu("ending");
-      return;
-    }
-    setActive(id);
-    if (isLab(id) && state.completed.includes(id))
-      setLabPractice(structuredClone(state.labs[id]));
-    setSubtitle("");
-    if (!isLab(id) && state.completed.includes(id))
-      setPractice({
-        ...initialProgress(),
-        wires: structuredClone(state.missions[id].wires),
-        material: state.missions[id].material,
-      });
-    if (id === "workshop" && state.lesson === 0)
-      dispatch({
-        type: "LESSON",
-        step: state.missions.workshop.wires.length ? 2 : 1,
-      });
-    sound.play("connect");
-  }
-  function complete() {
-    if (!active) return;
-    const id = active;
-    const newlyRestored = !practice && !state.completed.includes(id);
-    if (newlyRestored && !available(id, state.completed)) return;
-    if (newlyRestored) dispatch({ type: "COMPLETE", id, now: Date.now() });
-    setActive(null);
-    setPractice(null);
-    setLabPractice(null);
-    sound.play(newlyRestored || practice ? "success" : "soft");
-    if (newlyRestored)
-      setEffect({ id: Date.now(), kind: "restore", mission: id });
-    if (id === "beacon" && !practice && !allDone) {
-      setRunning(false);
-      setMenu("ending");
-    } else {
-      setSubtitle(
-        practice
-          ? "Experiment recorded. The commissioned station remains online."
-          : activity(id).restored,
-      );
-      if (!failed) resume();
-    }
+    setConfirmReset(false);
   }
   useEffect(() => {
-    const keyboard = (e: KeyboardEvent) => {
+    if (menu && transition.current) {
+      clearTimeout(transition.current);
+      transition.current = null;
+    }
+  }, [menu]);
+  const previousCount = useRef(completed.length);
+  useEffect(() => {
+    const before = previousCount.current;
+    previousCount.current = completed.length;
+    if (completed.length <= before) return;
+    const index = completed.length - 1,
+      c = CHAMBERS[index];
+    sound.play("success");
+    speak(`restore:${c.id}`, c.restored);
+    if (active === index) {
+      transition.current = setTimeout(() => {
+        setActive(null);
+        transition.current = null;
+      }, 1600);
+    }
+  }, [completed.length, speak]);
+  useEffect(
+    () => () => {
+      if (transition.current) clearTimeout(transition.current);
+    },
+    [],
+  );
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
       if (
-        e.defaultPrevented ||
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        e.target instanceof HTMLSelectElement
+        !current.current.started ||
+        e.ctrlKey ||
+        e.metaKey ||
+        e.altKey ||
+        e.repeat
       )
         return;
-      if (e.code === "KeyF") {
+      if (window.document.querySelector("dialog[open]")) return;
+      if (["KeyN", "KeyJ", "Tab", "KeyM"].includes(e.code)) {
+        // Tab remains normal focus navigation while working at the bench.
+        if (e.code === "Tab" && current.current.active !== null) return;
         e.preventDefault();
-        if (!e.repeat) void toggleFullscreen();
-        return;
+        world.current?.release();
+        setTab(e.code === "KeyM" ? "map" : "parts");
+        setMenu("notebook");
       }
-      if (!entered || active || menu) return;
-      if (e.code === "Escape") {
+      if (e.key === "Escape") {
         e.preventDefault();
-        openMenu("pause");
-      }
-      if (e.code === "KeyM" || e.code === "KeyJ" || e.code === "Tab") {
-        e.preventDefault();
-        openMenu(
-          e.code === "KeyM" ? "map" : e.code === "KeyJ" ? "journal" : "pause",
-        );
+        if (current.current.active !== null) leaveBench();
+        else pause();
       }
     };
-    document.addEventListener("keydown", keyboard);
-    return () => document.removeEventListener("keydown", keyboard);
-  });
-  function back() {
-    setMenu("pause");
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [leaveBench, pause]);
+  function begin() {
+    setStarted(true);
+    sound.unlock();
+    dispatch({ type: "VISIT", id: "wake" });
+    if (failed) openBench(CHAMBERS[Math.min(unlockedIndex(state), 5)].id);
+    else world.current?.capture();
+    speak("entry:wake", CHAMBERS[0].intro);
+  }
+  function action(action: KitAction) {
+    if (active === null) return;
+    if (state.proofs[active] && transition.current) {
+      clearTimeout(transition.current);
+      transition.current = null;
+    }
+    dispatch({ type: "EDIT", room: active, action });
+    if (action.type === "wire") sound.play("connect");
+    else if (action.type === "toggle") sound.play("test");
+    else if (action.type !== "move") sound.play("soft");
+  }
+  function restart() {
+    if (transition.current) clearTimeout(transition.current);
+    transition.current = null;
+    heard.current.clear();
+    setSubtitle(null);
+    dispatch({ type: "NEW_GAME" });
+    try {
+      localStorage.removeItem(PLAYER_KEY);
+    } catch {
+      /* Session play. */
+    }
+    world.current?.reset();
+    setRoom(0);
+    setActive(null);
+    setMenu(null);
+    setConfirmReset(false);
+    setStarted(false);
   }
   return (
-    <GameViewport>
-      <div
-        className={`game ${active ? "inspecting" : ""} ${!entered ? "title-screen" : ""}`}
-      >
-        {interfaceReady && !failed && (
-          <Suspense fallback={null}>
-            <World
-              preview={!entered}
-              distressSent={state.distressSent}
-              transmitting={transmitting}
-              ref={world}
-              playing={playing}
-              completed={state.completed}
-              reducedMotion={reducedMotion}
-              sensitivity={sensitivity}
-              tracked={state.tracked}
-              onVisit={visit}
-              onPause={() => openMenu("pause")}
-              onReady={() => setReady(true)}
-              onStep={() => sound.play("step")}
-              onEnvironment={(event) => sound.play(event)}
-              onScan={() => sound.play("soft")}
-              onError={() => {
-                setFailed(true);
-                setReady(true);
-                setRunning(false);
-              }}
-            />
-          </Suspense>
-        )}
-        <div className="lens-vignette" aria-hidden="true" />
-        <div className="visor-grid" aria-hidden="true" />
-        {effect && (
-          <div
-            key={effect.id}
-            className={`world-transition transition-${effect.kind}`}
-            aria-hidden="true"
-          >
-            <i />
-            <i />
-            <span>
-              {effect.kind === "boot"
-                ? "NEURAL LINK ESTABLISHED"
-                : "SYSTEM RESTORED"}
-            </span>
-          </div>
-        )}
-        {effect?.kind === "restore" && effect.mission && playing && (
-          <div className="recovery-notice" role="status">
-            <span>
-              SYSTEM COMMISSIONED / {SHIP_SYSTEMS[effect.mission].code}
-            </span>
-            <strong>{SHIP_SYSTEMS[effect.mission].restored}</strong>
-          </div>
-        )}
-        {!entered && (
-          <main className="title-overlay">
-            <div className="title-topline">
-              <span className="ship-wordmark">◈ ASTERION</span>
-              <span>
-                DECK 07 <i /> {allDone ? "SYSTEMS RESTORED" : "RESERVE POWER"}
-              </span>
-            </div>
-            <div className="title-content">
-              <div className="title-kicker">
-                <span className="status-dot" /> DEEP SPACE RESEARCH VESSEL
-              </div>
-              <h1>
-                SIGNAL<span>DEAD ORBIT</span>
-              </h1>
-              <p className="title-story">
-                One ship. No contact.
-                <br />
-                You are the way back online.
-              </p>
-              <button
-                className="title-play"
-                disabled={!arrived}
-                onClick={begin}
-              >
-                {!arrived
-                  ? "Establishing uplink…"
-                  : failed
-                    ? "Play circuit puzzles"
-                    : state.started
-                      ? "Continue"
-                      : "Board the Asterion"}
-                <ArrowRight size={20} />
-              </button>
-              <button
-                className="title-fullscreen"
-                onClick={() => void toggleFullscreen()}
-              >
-                <kbd>F</kbd>
-                <Maximize size={17} />
-                {fullscreen ? "Exit fullscreen" : "Fullscreen"}
-              </button>
-              {failed && (
-                <p className="graphics-notice">
-                  3D graphics are unavailable in this browser. Circuit puzzles
-                  still work.
-                </p>
-              )}
-            </div>
-            <div className="title-manifest" aria-hidden="true">
-              <span>EMERGENCY RECORD / AST–07</span>
-              <p>
-                Primary bus failure.
-                <br />
-                External communications lost.
-              </p>
-              <div>
-                <i /> MANUAL RECOVERY REQUIRED
-              </div>
-              <svg viewBox="0 0 240 112">
-                <path d="M8 78h28l8-28 12 52 12-73 12 49h47l8-14 9 14h85" />
-                <path
-                  className="manifest-baseline"
-                  d="M8 28h224M8 103h224M8 3v105M232 3v105"
-                />
-              </svg>
-              <small>Eight connected systems. Choose your route.</small>
-            </div>
-            <div
-              className="title-systems"
-              aria-label={`${state.completed.length} of 8 systems restored`}
-            >
-              {(["workshop", "power", "beacon"] as MissionId[]).map((id) => (
-                <div
-                  key={id}
-                  className={state.completed.includes(id) ? "online" : ""}
-                >
-                  <span>{activity(id).code}</span>
-                  <i />
-                  <p>
-                    {SITES[id].name}
-                    <small>
-                      {state.completed.includes(id) ? "ONLINE" : "OFFLINE"}
-                    </small>
-                  </p>
-                </div>
-              ))}
-            </div>
-            <span className="title-footer-code">
-              VESSEL ID / AST–07 <b>•</b> MANUAL RECOVERY PROTOCOL
-            </span>
-            {displayNotice && (
-              <p className="display-notice" role="status">
-                {displayNotice}
-              </p>
-            )}
-          </main>
-        )}
-        {entered && !active && !menu && (
-          <>
-            <button
-              className="pause-trigger"
-              aria-label="Pause game"
-              onClick={() => openMenu("pause")}
-            >
-              <Pause size={16} />
-              <kbd>Esc</kbd>
-            </button>
-            {subtitle && (
-              <div className="radio-subtitle" role="status">
-                <Radio size={17} />
-                <span>{subtitle}</span>
-              </div>
-            )}
-            {failed && (
-              <main className="graphics-fallback">
-                <h1>Circuit mode</h1>
-                <p>
-                  3D graphics are unavailable. Continue the ship’s repairs here.
-                </p>
-                <button className="primary-action" onClick={() => visit(next)}>
-                  {allDone
-                    ? "Try another circuit"
-                    : `Repair ${SITES[next].name}`}
-                  <ArrowRight size={17} />
-                </button>
-              </main>
-            )}
-          </>
-        )}
-        <Workbench
-          open={!!active && !isLab(active)}
-          onReady={() => setKitReady(true)}
-          id={basicPanel}
-          progress={practice ?? state.missions[basicPanel]}
-          blocked={blocked}
-          practice={!!practice}
-          saved={saved}
-          lesson={state.lesson}
-          onLesson={(step) => dispatch({ type: "LESSON", step })}
-          onAction={(action) =>
-            practice
-              ? setPractice((p) =>
-                  p ? updateProgress(basicPanel, p, action) : p,
-                )
-              : dispatch({ type: "MISSION", id: basicPanel, action })
-          }
-          onClose={closePanel}
-          onComplete={complete}
-          play={sound.play}
+    <main className={`game ${reduced ? "reduced-motion" : ""}`}>
+      <Suspense fallback={null}>
+        <World
+          ref={world}
+          playing={playing && !failed}
+          preview={!started}
+          completed={completed}
+          circuits={state.rooms}
+          reducedMotion={reduced}
+          sensitivity={1}
+          onVisit={openBench}
+          onRoom={onRoom}
+          onObservation={() => {
+            setRoom(5);
+            speak(
+              "ending:station",
+              "There you are. I kept this window clear for you. Welcome back to Asterion.",
+            );
+          }}
+          onPause={pause}
+          onReady={() => setReady(true)}
+          onError={() => {
+            setFailed(true);
+            setReady(true);
+          }}
+          onStep={() => sound.play("step")}
+          onEnvironment={(kind) => sound.play(kind)}
         />
-        {active && isLab(active) && (
-          <LabWorkbench
+      </Suspense>
+      {!started && (
+        <div className="title-screen">
+          <div className="title-mark" aria-hidden="true">
+            A<span>◦</span>
+          </div>
+          <p className="station-kicker">DEEP SPACE RESEARCH STATION</p>
+          <h1>ASTERION</h1>
+          <p className="title-tagline">Restore the light.</p>
+          <button className="begin-button" disabled={!ready} onClick={begin}>
+            {!ready
+              ? "Connecting…"
+              : state.visited.length
+                ? "Continue"
+                : "Begin"}
+            <ChevronRight />
+          </button>
+          <span className="title-footer">A CIRCUIT EXPLORATION</span>
+        </div>
+      )}
+      {started && active === null && (
+        <header className="game-chrome">
+          <span className="room-marker">
+            {CHAMBERS[room]?.number ?? "01"}
+            <i className={state.proofs[room] ? "powered" : ""} />
+          </span>
+          <div>
+            <button
+              className="icon-button"
+              onClick={() => book()}
+              aria-label="Open notebook"
+              title="Notebook · N"
+            >
+              <BookOpen />
+            </button>
+            <button
+              className="icon-button"
+              onClick={pause}
+              aria-label="Pause game"
+              title="Pause · Esc"
+            >
+              <Pause />
+            </button>
+          </div>
+        </header>
+      )}
+      {started && active !== null && (
+        <Suspense
+          fallback={
+            <div className="bench-loading" aria-label="Opening circuit bench" />
+          }
+        >
+          <CircuitLab
             key={active}
-            id={active}
-            p={labPractice ?? state.labs[active]}
-            onAction={(action) =>
-              labPractice
-                ? setLabPractice((p) => (p ? updateLab(active, p, action) : p))
-                : dispatch({ type: "LAB", id: active, action })
+            chamber={CHAMBERS[active]}
+            circuit={state.rooms[active]}
+            restored={!!state.proofs[active]}
+            canUndo={!!state.history[active].length}
+            reducedMotion={reduced}
+            onAction={action}
+            onUndo={() => dispatch({ type: "UNDO", room: active })}
+            onReset={() => dispatch({ type: "RESET_CIRCUIT", room: active })}
+            onBack={leaveBench}
+            onNotebook={() => book()}
+          />
+        </Suspense>
+      )}
+      {started && subtitle && !menu && (
+        <div className="narration" role="status">
+          <span>ASTER</span>
+          <p key={subtitle.id}>{subtitle.text}</p>
+        </div>
+      )}
+      {started && failed && active === null && (
+        <div className="fallback-navigation">
+          <p>3D view unavailable. The circuit kit is ready.</p>
+          <button
+            onClick={() =>
+              openBench(CHAMBERS[Math.min(unlockedIndex(state), 5)].id)
             }
-            onComplete={complete}
-            onClose={closePanel}
-            completed={state.completed.includes(active)}
-            blocked={blocked}
-            play={sound.play}
-          />
-        )}
-        {menu === "pause" && (
-          <Dialog title="Paused" className="pause-dialog" onClose={resume}>
-            <h2>Paused</h2>
-            <nav className="pause-menu" aria-label="Pause menu">
-              <button className="selected" onClick={resume}>
-                Resume
-                <ArrowRight size={18} />
-              </button>
-              <button onClick={() => setMenu("map")}>
-                Deck map <kbd>M</kbd>
-              </button>
-              <button onClick={() => setMenu("journal")}>
-                Mission log <kbd>J</kbd>
-              </button>
-              <button onClick={() => setMenu("settings")}>Settings</button>
-              <button onClick={() => setMenu("controls")}>Controls</button>
-              <button onClick={() => void toggleFullscreen()}>
-                {fullscreen ? "Exit fullscreen" : "Fullscreen"}
-                <kbd>F</kbd>
-              </button>
-            </nav>
-            {!saved && (
-              <p className="save-status" role="status">
-                Saving unavailable. Progress stays in this tab.
-              </p>
-            )}
-            {displayNotice && (
-              <p className="display-notice" role="status">
-                {displayNotice}
-              </p>
-            )}
-          </Dialog>
-        )}
-        {menu === "map" && (
-          <ShipMap
-            state={state}
-            player={failed ? null : mapPlayer}
-            onClose={back}
-            onTrack={(id) => {
-              dispatch({ type: "TRACK", id });
-              resume();
-            }}
-          />
-        )}
-        {menu === "journal" && (
-          <Notebook
-            state={state}
-            page={page}
-            onPage={setPage}
-            onNote={(text) => dispatch({ type: "NOTE", text })}
-            onClose={back}
-          />
-        )}
-        {menu === "settings" && (
-          <Dialog title="Settings" onClose={back} className="settings-dialog">
-            <h2>Ship settings</h2>
-            <label className="setting">
-              <span>
-                <span className="setting-copy">
-                  Sound<small>Ship ambience, footsteps & equipment</small>
-                </span>
-              </span>
-              <input
-                type="checkbox"
-                aria-label="Sound"
-                checked={state.sound}
-                onChange={() => dispatch({ type: "SOUND" })}
-              />
-            </label>
-            <label className="setting">
-              <span className="setting-copy">
-                Reduce motion
-                <small>
-                  {systemMotion
-                    ? "Your device prefers a steady view"
-                    : "Steady camera and minimal visual effects"}
-                </small>
-              </span>
-              <input
-                type="checkbox"
-                aria-label="Reduce motion"
-                checked={reducedMotion}
-                disabled={systemMotion}
-                onChange={() => dispatch({ type: "MOTION" })}
-              />
-            </label>
-            <label className="setting">
-              <span className="setting-copy">
-                Look sensitivity<small>How quickly you turn</small>
-              </span>
-              <input
-                type="range"
-                aria-label="Look sensitivity"
-                min="0.4"
-                max="2"
-                step="0.1"
-                value={sensitivity}
-                onChange={(e) => setSensitivity(Number(e.target.value))}
-              />
-            </label>
-            <button
-              className="setting"
-              aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
-              onClick={() => void toggleFullscreen()}
-            >
-              <span className="setting-copy">
-                {fullscreen ? "Exit fullscreen" : "Fullscreen"}
-                <small>Let the ship fill the view</small>
-              </span>
-              <span className="setting-mark">↗</span>
-            </button>
-            <button
-              className="setting"
-              aria-label="Return to Engineering"
-              onClick={() => {
-                world.current?.reset();
-                setSubtitle("Back on the engineering deck.");
-                resume();
-              }}
-            >
-              <span className="setting-copy">
-                Return to Engineering
-                <small>Return safely to the starting compartment</small>
-              </span>
-              <span className="setting-mark">↶</span>
-            </button>
-            <button className="text-button" onClick={() => setMenu("reset")}>
-              Start a new adventure
-            </button>
-            <a
-              className="text-button asset-credits"
-              href="/credits.html"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Asset credits ↗
-            </a>
-          </Dialog>
-        )}
-        {menu === "controls" && (
-          <Dialog title="Controls" onClose={back} className="controls-dialog">
-            <h2>Flight controls</h2>
-            <dl className="control-list">
-              <div>
-                <dt>Move through the ship</dt>
-                <dd>W A S D / ↑ ↓</dd>
-              </div>
-              <div>
-                <dt>Look</dt>
-                <dd>Mouse / ← → / Page Up & Down</dd>
-              </div>
-              <div>
-                <dt>Run</dt>
-                <dd>Shift</dd>
-              </div>
-              <div>
-                <dt>Use equipment</dt>
-                <dd>E, when close to a cabinet</dd>
-              </div>
-              <div>
-                <dt>Pause / release mouse</dt>
-                <dd>Esc / Tab</dd>
-              </div>
-              <div>
-                <dt>Deck map / mission log</dt>
-                <dd>M / J</dd>
-              </div>
-              <div>
-                <dt>Ship systems</dt>
-                <dd>Q</dd>
-              </div>
-              <div>
-                <dt>Fullscreen</dt>
-                <dd>F</dd>
-              </div>
-            </dl>
-            <p className="control-note">
-              Drag to look if the mouse is unlocked. On touch screens, use the
-              left thumbstick to move.
-            </p>
-            <p className="control-note">
-              Select two sockets to wire them. Select a wire to remove it.
-            </p>
-          </Dialog>
-        )}
-        {menu === "reset" && (
-          <Dialog
-            title="New adventure"
-            onClose={back}
-            className="confirm-dialog"
           >
-            <h2>Begin again?</h2>
-            <p>
-              This clears your repairs, discoveries, and notes on this device.
-            </p>
-            <div className="dialog-actions">
-              <button className="text-button" onClick={back}>
-                Keep exploring
-              </button>
-              <button
-                className="primary-action"
-                onClick={() => {
-                  dispatch({ type: "RESET" });
-                  world.current?.reset();
-                  setMenu(null);
-                  setEntered(false);
-                  setRunning(false);
-                  setSubtitle("");
-                }}
-              >
-                Start new adventure
-              </button>
-            </div>
-          </Dialog>
-        )}
-        {menu === "ending" && (
-          <Dialog
-            title="Signal restored"
-            className="ending-dialog"
-            onClose={resume}
-          >
-            <span className="eyebrow">
-              ASTERION / LONG-RANGE COMMUNICATIONS
-            </span>
-            <div
-              className={`rescue-radio ${state.distressSent || transmitting ? "transmitting" : ""}`}
-              aria-hidden="true"
-            >
-              <svg viewBox="0 0 240 100">
-                <g transform="translate(120 50)">
-                  <circle className="signal-orbit" r="42" />
-                  <circle r="29" />
-                  <path d="M-52 0h30m44 0h30M0-50v28m0 44v28" />
-                  <path d="M0-17 14 8 0 3-14 8Z" />
-                  <circle className="signal-pulse" r="18" />
-                </g>
-              </svg>
-            </div>
-            <h2>
-              {state.distressSent
-                ? "Signal received."
-                : transmitting
-                  ? "Reaching beyond the orbit."
-                  : "Transmitter online."}
-            </h2>
-            <p className="rescue-message">
-              {state.distressSent
-                ? "“Asterion, this is Rescue Control. Your coordinates are locked. Hold position. We’re coming to get you.”"
-                : transmitting
-                  ? "Carrier acquired. Sending vessel identity and position through the independent backup channel."
-                  : "Eight systems restored. One way home. Your distress transmitter is ready to reach beyond this orbit."}
-            </p>
-            <div
-              className={`transmission-strip ${transmitting ? "sending" : state.distressSent ? "acknowledged" : ""}`}
-              role="status"
-            >
-              <span>
-                {state.distressSent
-                  ? "RESCUE CONTROL / ACKNOWLEDGED"
-                  : transmitting
-                    ? "COM–08 / TRANSMITTING COORDINATES"
-                    : "COM–08 / BACKUP CHANNEL VERIFIED"}
-              </span>
-              <div>
-                <i />
-              </div>
-            </div>
-            {state.distressSent ? (
-              <button className="primary-action" onClick={resume}>
-                Keep exploring
-                <ArrowRight size={18} />
-              </button>
-            ) : (
-              <button
-                className="primary-action"
-                disabled={transmitting}
-                onClick={() => {
-                  setTransmitting(true);
-                  sound.play("signal");
-                }}
-              >
-                {transmitting
-                  ? "Sending coordinates…"
-                  : "Transmit distress signal"}
-                <Radio size={18} />
-              </button>
-            )}
+            Chamber {CHAMBERS[Math.min(unlockedIndex(state), 5)].number}
+            <ChevronRight />
+          </button>
+        </div>
+      )}
+      {storageFailed && (
+        <span
+          className="save-indicator"
+          role="status"
+          title="Storage unavailable. This run cannot be saved."
+          aria-label="Storage unavailable. This run cannot be saved."
+        >
+          !
+        </span>
+      )}
+      {menu === "notebook" && (
+        <Notebook
+          state={state}
+          tab={tab}
+          onTab={setTab}
+          onClose={resume}
+          current={room}
+          player={world.current?.position() ?? SPAWN}
+        />
+      )}
+      {menu === "pause" && (
+        <Dialog title="Pause" onClose={resume} className="pause-dialog">
+          <h1>Paused</h1>
+          <button className="pause-resume" onClick={resume}>
+            <Play />
+            Resume
+          </button>
+          <div className="pause-options">
             <button
-              className="text-button"
-              onClick={() => {
-                setPage(7);
-                setMenu("journal");
-              }}
+              onClick={() => dispatch({ type: "SOUND" })}
+              aria-pressed={state.sound}
             >
-              Open mission log
+              {state.sound ? <Volume2 /> : <VolumeX />}Sound
             </button>
-          </Dialog>
-        )}
-      </div>
-    </GameViewport>
+            <button
+              onClick={() => dispatch({ type: "MOTION" })}
+              aria-pressed={reduced}
+            >
+              <span className="checkbox">{reduced && <Check />}</span>Reduced
+              motion
+            </button>
+          </div>
+          <p className="pause-controls">
+            WASD · move
+            <br />
+            Mouse / arrows · look
+            <br />E · use bench
+            <br />N · notebook &nbsp; M · map
+          </p>
+          {confirmReset ? (
+            <div className="reset-confirm">
+              <p>Start a new run?</p>
+              <button onClick={restart}>
+                <RotateCcw />
+                New run
+              </button>
+              <button onClick={() => setConfirmReset(false)}>
+                <X />
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              className="quiet-button"
+              onClick={() => setConfirmReset(true)}
+            >
+              New run
+            </button>
+          )}
+          <a
+            className="credits-link"
+            href="/credits.html"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Credits
+          </a>
+        </Dialog>
+      )}
+    </main>
   );
 }

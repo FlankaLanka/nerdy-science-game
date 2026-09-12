@@ -1,11 +1,4 @@
-export const GAME_WIDTH = 1280;
-export const GAME_HEIGHT = 720;
-
-export function gameScale() {
-  return Math.min(innerWidth / GAME_WIDTH, innerHeight / GAME_HEIGHT);
-}
-
-/** Keep the 3D drawing buffer sharp when the fixed game frame is enlarged. */
+/** Cap native-viewport render resolution for a predictable GPU budget. */
 export function gamePixelRatio(limit: number) {
-  return Math.min(devicePixelRatio * gameScale(), limit);
+  return Math.min(devicePixelRatio, limit);
 }

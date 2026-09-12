@@ -1,149 +1,205 @@
-import { Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, BookOpen, Map, Shapes, Sigma } from "lucide-react";
 import { Dialog } from "./Dialog";
-import type { LabId } from "./activities";
-import { ACTIVITIES, isLab } from "./activities";
-import type { GameState } from "./campaign";
-import { measure, rcAt } from "./labPhysics";
-export function Notebook({
+import { CHAMBERS, FORMULAS } from "./chambers";
+import type { FormulaId } from "./chambers";
+import type { Campaign } from "./chamberCampaign";
+import { unlockedIndex } from "./chamberCampaign";
+import { PART_NAMES } from "./circuitKit";
+import type { PartKind } from "./circuitKit";
+import { PartIcon } from "./PartIcon";
+import { DECK, PORTALS, deckPoint } from "./scene/shipLayout";
+import type { Player } from "./scene/navigation";
+export type NotebookTab = "parts" | "formulas" | "map";
+const notes: Record<PartKind, string> = {
+  battery: "Maintains a voltage between its contacts.",
+  bulb: "Transfers electrical energy into light and heat.",
+  resistor: "Limits current. Resistance is measured in ohms (Ω).",
+  switch: "Opens or closes a conducting path.",
+} as Record<PartKind, string>;
+const order: PartKind[] = ["battery", "bulb", "switch", "resistor"];
+export default function Notebook({
   state,
-  page,
-  onPage,
-  onNote,
+  tab,
+  onTab,
   onClose,
+  player,
+  current,
 }: {
-  state: GameState;
-  page: number;
-  onPage: (p: number) => void;
-  onNote: (s: string) => void;
+  state: Campaign;
+  tab: NotebookTab;
+  onTab: (tab: NotebookTab) => void;
   onClose: () => void;
+  player: Player;
+  current: number;
 }) {
-  const index = Math.min(page, ACTIVITIES.length - 1),
-    a = ACTIVITIES[index],
-    done = state.completed.includes(a.id);
-  function download() {
-    const file = new Blob(
-      [
-        JSON.stringify(
-          {
-            title: "Asterion circuit investigations",
-            completed: state.completed,
-            experiments: state.labs,
-            circuits: state.missions,
-            note: state.note,
-          },
-          null,
-          2,
-        ),
-      ],
-      { type: "application/json" },
-    );
-    const url = URL.createObjectURL(file);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "asterion-investigations.json";
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
+  const discovered = CHAMBERS.filter((c) => state.visited.includes(c.id));
+  const parts = new Set(
+    discovered.flatMap((c) => [
+      ...c.initial.parts.map((p) => p.kind),
+      ...c.tools,
+    ]),
+  );
+  const formulas = [
+    ...new Set(
+      discovered.map((c) => c.formula).filter((id): id is FormulaId => !!id),
+    ),
+  ];
+  const unlocked = unlockedIndex(state),
+    [px, py] = deckPoint(player.x, player.z);
   return (
-    <Dialog
-      title="Mission log"
-      className="notebook-dialog science-log"
-      onClose={onClose}
-    >
-      <header className="screen-heading">
-        <div>
-          <span className="eyebrow">ASTERION / ENGINEERING RECORD</span>
-          <h2>Field observations</h2>
-        </div>
-        <button className="text-button" onClick={download}>
-          <Download size={16} />
-          Export data
-        </button>
+    <Dialog title="Notebook" onClose={onClose} className="notebook">
+      <header className="notebook-header">
+        <BookOpen />
+        <h1>Notebook</h1>
+        <span>ASTERION</span>
       </header>
-      <div className="science-log-grid">
-        <section>
-          <span className="eyebrow">
-            {a.code} · {done ? "COMMISSIONED" : "INVESTIGATION OPEN"}
-          </span>
-          <h3>{a.concept}</h3>
-          <p>{a.purpose}</p>
-          <div className="log-discovery">
-            <span>MODEL TO TAKE WITH YOU</span>
-            <p>{a.discovery}</p>
+      <nav className="notebook-tabs" aria-label="Notebook sections">
+        {(
+          [
+            { id: "parts", name: "Parts", icon: Shapes },
+            { id: "formulas", name: "Formulas", icon: Sigma },
+            { id: "map", name: "Map", icon: Map },
+          ] as const
+        ).map((t) => (
+          <button
+            key={t.id}
+            aria-current={tab === t.id ? "page" : undefined}
+            onClick={() => onTab(t.id)}
+          >
+            <t.icon />
+            {t.name}
+          </button>
+        ))}
+      </nav>
+      <div className="notebook-page">
+        {tab === "parts" && (
+          <div className="part-index">
+            {parts.has("wire") && (
+              <article>
+                <PartIcon kind="wire" />
+                <div>
+                  <h2>Wire</h2>
+                  <p>An insulated lead. Only its contacts make connections.</p>
+                </div>
+              </article>
+            )}
+            {order
+              .filter((kind) => parts.has(kind))
+              .map((kind) => (
+                <article key={kind}>
+                  <PartIcon kind={kind} />
+                  <div>
+                    <h2>{PART_NAMES[kind]}</h2>
+                    <p>{notes[kind]}</p>
+                    {kind === "bulb" && <small>Kit lamps: 6 V · 12 Ω</small>}
+                  </div>
+                </article>
+              ))}
+            {!parts.size && (
+              <p className="empty-page">Explore to discover parts.</p>
+            )}
+            {parts.has("wire") && (
+              <small className="notebook-footnote">
+                Moving dots show conventional current: + to − outside the
+                battery.
+              </small>
+            )}
           </div>
-          <span className="eyebrow">RECORDED EVIDENCE</span>
-          {isLab(a.id) ? (
-            <table>
-              <thead>
-                <tr>
-                  <th>Trial</th>
-                  <th>Measurement</th>
-                </tr>
-              </thead>
-              <tbody>
-                {state.labs[a.id].samples.slice(-5).map((s, i) => {
-                  const r = measure(a.id as LabId, s.config);
-                  return (
-                    <tr key={i}>
-                      <td>{i + 1}</td>
-                      <td>
-                        {a.id === "timing"
-                          ? `${rcAt(s.config, "discharge", s.start!, s.time!).voltage.toFixed(2)} V after ${s.time} s · ${s.config.capacitance} mF · ${s.config.resistance} Ω`
-                          : a.id === "storage"
-                            ? `${(r.capacitance * 1000).toFixed(1)} mF · ${r.energy.toFixed(2)} J · ${["series", "parallel", "single"][s.config.topology]}`
-                            : `${r.current.toFixed(3)} A · ${r.voltage} V source`}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <p>
-              {state.missions[a.id].experiments.length} circuit tests recorded.{" "}
-              {done
-                ? "A working repair was verified."
-                : "Visit the equipment to investigate."}
+        )}
+        {tab === "formulas" && (
+          <div className="formula-index">
+            {formulas.map((id) => (
+              <article key={id}>
+                <h2>{FORMULAS[id].name}</h2>
+                <p className="equation">{FORMULAS[id].equation}</p>
+                <p>{FORMULAS[id].note}</p>
+              </article>
+            ))}
+            {!formulas.length && (
+              <p className="empty-page">Find formulas as you explore.</p>
+            )}
+          </div>
+        )}
+        {tab === "map" && (
+          <div className="station-map">
+            <svg
+              viewBox="60 0 380 540"
+              role="img"
+              aria-label={`Space station map. You are in chamber ${CHAMBERS[current]?.number ?? "01"}. ${unlocked} of 6 chambers restored.`}
+            >
+              {DECK.filter(
+                (d) => !CHAMBERS.some((c) => c.x === d.x && c.z === d.z),
+              ).map((d, i) => {
+                const [x, y] = deckPoint(d.x - d.width / 2, d.z - d.depth / 2);
+                return (
+                  <rect
+                    key={i}
+                    x={x}
+                    y={y}
+                    width={d.width * 10}
+                    height={d.depth * 10}
+                    rx="2"
+                    className="map-corridor"
+                  />
+                );
+              })}
+              {CHAMBERS.map((c, i) => {
+                const [x, y] = deckPoint(c.x - 6, c.z - 5);
+                return (
+                  <g
+                    key={c.id}
+                    className={`map-room ${i > unlocked ? "locked" : ""} ${state.proofs[i] ? "powered" : ""} ${i === current ? "current" : ""}`}
+                  >
+                    <rect x={x} y={y} width="120" height="100" rx="3" />
+                    <text x={x + 12} y={y + 24}>
+                      {c.number}
+                    </text>
+                    <text className="map-name" x={x + 12} y={y + 81}>
+                      {i <= unlocked ? c.name : ""}
+                    </text>
+                  </g>
+                );
+              })}
+              {PORTALS.map((p) => {
+                const [x, y] = deckPoint(p.x, p.z);
+                return (
+                  <path
+                    key={p.system}
+                    d={`M ${x - 13} ${y} h 26`}
+                    transform={`rotate(${(-p.rotation * 180) / Math.PI} ${x} ${y})`}
+                    className={`map-door ${state.proofs[CHAMBERS.findIndex((c) => c.id === p.system)] ? "powered" : ""}`}
+                  />
+                );
+              })}
+              <text
+                className="map-observation"
+                x="350"
+                y="485"
+                textAnchor="middle"
+              >
+                OBSERVATION
+              </text>
+              <g
+                transform={`translate(${px} ${py}) rotate(${(-player.yaw * 180) / Math.PI})`}
+                className="map-player"
+              >
+                <circle r="12" />
+                <path d="M0-8 5 6 0 3 -5 6Z" />
+              </g>
+            </svg>
+            <p className="map-legend">
+              <span className="map-you" />
+              You
+              <span className="map-power" />
+              Powered
             </p>
-          )}
-          <nav className="log-pages">
-            <button
-              aria-label="Previous investigation"
-              disabled={index === 0}
-              onClick={() => onPage(index - 1)}
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <span>
-              {index + 1} / {ACTIVITIES.length}
-            </span>
-            <button
-              aria-label="Next investigation"
-              disabled={index === ACTIVITIES.length - 1}
-              onClick={() => onPage(index + 1)}
-            >
-              <ChevronRight size={18} />
-            </button>
-          </nav>
-        </section>
-        <aside>
-          <span className="eyebrow">YOUR NOTES · OPTIONAL</span>
-          <label htmlFor="field-notes">
-            What changed, and what stayed the same?
-          </label>
-          <textarea
-            id="field-notes"
-            value={state.note}
-            onChange={(e) => onNote(e.target.value)}
-            maxLength={3000}
-            placeholder="Record a useful comparison or a question to try next."
-          />
-          <p>
-            Measurements are recorded automatically. Writing here is optional
-            and never blocks a repair.
-          </p>
-        </aside>
+          </div>
+        )}
       </div>
+      <button className="notebook-back" onClick={onClose}>
+        <ArrowLeft />
+        Return
+      </button>
     </Dialog>
   );
 }

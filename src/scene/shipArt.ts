@@ -178,158 +178,17 @@ export function shipArt(root: THREE.Group) {
         c.fillRect(24, ch - 15, 970, 1);
       }
       c.fillStyle = tint;
-      c.font = `600 ${Math.min(115, ch * (caption ? 0.33 : 0.62))}px "Space Grotesk"`;
+      c.font = `600 ${Math.min(115, ch * (caption ? 0.33 : 0.62))}px "Space Grotesk", sans-serif`;
       c.fillText(title, 28, ch * (caption ? 0.49 : 0.73), 968);
       if (caption) {
         c.fillStyle = background ? "#a8b9bc" : tint;
-        c.font = `400 ${Math.min(38, ch * 0.15)}px "IBM Plex Mono"`;
+        c.font = `400 ${Math.min(38, ch * 0.15)}px "IBM Plex Mono", monospace`;
         c.fillText(caption, 30, ch * 0.79, 960);
       }
       texture.needsUpdate = true;
     }
     paint(text);
     return { object, paint };
-  }
-  type DisplayKind = "service" | "wave" | "orbit";
-  type DisplayState = "ready" | "offline" | "online";
-  const displays = new Map<string, THREE.MeshBasicMaterial>();
-  // Shared, static phosphor graphics: equipment reads as equipment, not another sign.
-  function displayMaterial(kind: DisplayKind, state: DisplayState) {
-    const key = `${kind}:${state}`;
-    const cached = displays.get(key);
-    if (cached) return cached;
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 256;
-    const c = canvas.getContext("2d")!;
-    c.fillStyle = "#07110f";
-    c.fillRect(0, 0, 512, 256);
-    const tint =
-      state === "offline"
-        ? "#546b60"
-        : state === "ready"
-          ? "#d1af78"
-          : "#91b7a0";
-    c.strokeStyle = c.fillStyle = tint;
-    c.lineWidth = 2;
-    c.globalAlpha = 0.1;
-    for (let x = 32; x < 512; x += 32) {
-      c.beginPath();
-      c.moveTo(x, 20);
-      c.lineTo(x, 236);
-      c.stroke();
-    }
-    for (let y = 32; y < 256; y += 32) {
-      c.beginPath();
-      c.moveTo(20, y);
-      c.lineTo(492, y);
-      c.stroke();
-    }
-    c.globalAlpha = 0.8;
-    c.lineWidth = 4;
-    if (kind === "service") {
-      c.beginPath();
-      c.arc(113, 128, 63, Math.PI * 0.15, Math.PI * 1.85);
-      c.stroke();
-      c.beginPath();
-      if (state === "online") {
-        c.moveTo(83, 129);
-        c.lineTo(104, 149);
-        c.lineTo(144, 106);
-      } else if (state === "ready") {
-        // Open wrench silhouette, distinct from the steady commissioned tick.
-        c.moveTo(85, 157);
-        c.lineTo(119, 123);
-        c.lineTo(117, 105);
-        c.lineTo(130, 96);
-        c.lineTo(130, 113);
-        c.lineTo(143, 115);
-        c.lineTo(151, 100);
-        c.lineTo(154, 122);
-        c.lineTo(139, 134);
-        c.lineTo(127, 134);
-        c.lineTo(95, 167);
-        c.closePath();
-      } else {
-        c.moveTo(97, 112);
-        c.lineTo(97, 145);
-        c.moveTo(128, 112);
-        c.lineTo(128, 145);
-      }
-      c.stroke();
-      for (let i = 0; i < 5; i++) {
-        c.globalAlpha = 0.12;
-        c.fillRect(233, 76 + i * 25, 225, 7);
-        c.globalAlpha = state === "offline" ? 0.2 : 0.55;
-        c.fillRect(
-          233,
-          76 + i * 25,
-          state === "online" ? 196 : [64, 138, 102, 163, 86][i],
-          7,
-        );
-      }
-    } else if (kind === "wave") {
-      c.beginPath();
-      for (let x = 30; x <= 482; x += 3) {
-        const y = 128 + Math.sin((x - 30) / 42) * 53;
-        if (x === 30) c.moveTo(x, y);
-        else c.lineTo(x, y);
-      }
-      c.stroke();
-      c.globalAlpha = 0.25;
-      c.beginPath();
-      c.moveTo(30, 128);
-      c.lineTo(482, 128);
-      c.stroke();
-    } else {
-      for (const radius of [35, 66, 98]) {
-        c.globalAlpha = radius === 66 ? 0.7 : 0.22;
-        c.beginPath();
-        c.ellipse(185, 128, radius * 1.3, radius * 0.65, -0.32, 0, Math.PI * 2);
-        c.stroke();
-      }
-      c.globalAlpha = 0.8;
-      c.beginPath();
-      c.arc(185, 128, 7, 0, Math.PI * 2);
-      c.fill();
-      c.fillRect(257, 96, 8, 8);
-      c.globalAlpha = 0.35;
-      for (let i = 0; i < 4; i++)
-        c.fillRect(367, 78 + i * 29, [94, 62, 79, 48][i], 4);
-    }
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    const material = new THREE.MeshBasicMaterial({
-      map: texture,
-      toneMapped: false,
-    });
-    displays.set(key, material);
-    return material;
-  }
-  function instrument(
-    kind: DisplayKind,
-    x: number,
-    y: number,
-    z: number,
-    w: number,
-    h: number,
-    parent: THREE.Object3D = root,
-  ) {
-    const object = mesh(
-      new THREE.PlaneGeometry(w, h),
-      displayMaterial(kind, "online"),
-      x,
-      y,
-      z,
-      parent,
-    );
-    object.castShadow = object.receiveShadow = false;
-    object.userData.dynamic = true;
-    return {
-      setStatus: (state: DisplayState) => {
-        object.material = displayMaterial(kind, state);
-      },
-    };
   }
   /** Bake only immutable pieces, grouped by material. Doors, screens and machinery
    * carry dynamic flags, so visible animation and physical colliders stay together. */
@@ -379,12 +238,5 @@ export function shipArt(root: THREE.Group) {
       if (!retained.has(g)) g.dispose();
     });
   }
-  function disposeDisplays() {
-    displays.forEach((material) => {
-      material.map?.dispose();
-      material.dispose();
-    });
-    displays.clear();
-  }
-  return { mesh, box, bevel, rod, label, instrument, batch, disposeDisplays };
+  return { mesh, box, bevel, rod, label, batch };
 }
