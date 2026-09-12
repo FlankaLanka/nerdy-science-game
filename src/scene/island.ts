@@ -5,9 +5,22 @@ import {
   terrainHeight,
   groundHeight,
   workshopFloorHeight,
+  harborDeckHeight,
 } from "./navigation";
 import { buildWorkshop } from "./workshop";
 import { WORKSHOP } from "./workshopLayout";
+import { HARBOR, HARBOR_SIGN, LIGHTHOUSE } from "./islandLayout";
+import { distanceToTrail } from "./trails";
+import { buildSignpost } from "./signpost";
+import { COAST_ROCKS } from "./coastRocks";
+import { buildBoat } from "./boat";
+import { buildPineTrees } from "./pineTrees";
+import {
+  curvedTowerPlaque,
+  lampShadeGeometry,
+  towerRadius,
+  towerPitch,
+} from "./fixtures";
 import type { Obstacle } from "./navigation";
 import type { MissionId } from "../missions";
 
@@ -123,10 +136,14 @@ export function buildIsland(
       ctx.clearRect(rng(i) * 1024, rng(i + 98) * 256, rng(i + 12) * 6, 1);
     const map = new THREE.CanvasTexture(canvas);
     map.colorSpace = THREE.SRGBColorSpace;
-    return new THREE.Mesh(
-      new THREE.PlaneGeometry(width, height),
+    return new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.035), [
+      wood,
+      wood,
+      wood,
+      wood,
       new THREE.MeshStandardMaterial({ map, roughness: 0.9 }),
-    );
+      wood,
+    ]);
   }
   function lamp(
     id: MissionId,
@@ -142,7 +159,7 @@ export function buildIsland(
       roughness: 0.35,
     });
     mesh(new THREE.SphereGeometry(0.105, 12, 8), material, x, y, z);
-    mesh(new THREE.ConeGeometry(0.31, 0.15, 16, 1, true), iron, x, y + 0.18, z);
+    mesh(lampShadeGeometry(), iron, x, y + 0.105, z);
     const light = new THREE.PointLight("#ffc578", 0, 11, 2);
     light.position.set(x, y - 0.05, z);
     root.add(light);
@@ -168,7 +185,10 @@ export function buildIsland(
         sand,
         Math.max(0, Math.min(1, (Math.hypot(x / 34, (z + 2) / 38) - 0.66) * 4)),
       );
-    c.multiplyScalar(0.87 + rng(i + 7) * 0.2);
+    const trail =
+      1 - THREE.MathUtils.smoothstep(distanceToTrail(x, z), 0.8, 1.4);
+    c.lerp(new THREE.Color("#b9a687"), trail * 0.88);
+    c.multiplyScalar(0.94 + rng(i + 7) * 0.1);
     c.toArray(colors, i * 3);
   }
   ground.setAttribute("color", new THREE.BufferAttribute(colors, 3));
@@ -176,59 +196,6 @@ export function buildIsland(
   const groundMat = surface("ground", 22, "#c3bda5");
   groundMat.vertexColors = true;
   mesh(ground, groundMat, 0, 0, 0);
-
-  const paths = [
-    [
-      [-3, 24],
-      [-3, 14],
-      [-3, 4],
-    ],
-    [
-      [-3, 8],
-      [5, 10],
-      [13, 12],
-      [23, 14],
-    ],
-    [
-      [1, 8],
-      [6, 2],
-      [10, -6],
-      [11, -15],
-    ],
-  ];
-  const pathMat = surface("ground", 2, "#b1a289");
-  for (const points of paths) {
-    const curve = new THREE.CatmullRomCurve3(
-      points.map(([x, z]) => new THREE.Vector3(x, 0, z)),
-    );
-    const vertices: number[] = [],
-      uvs: number[] = [],
-      indices: number[] = [];
-    for (let i = 0; i <= 100; i++) {
-      const t = i / 100,
-        p = curve.getPoint(t),
-        dir = curve.getTangent(t);
-      const w = 1.05 + rng(i) * 0.17;
-      for (const side of [-1, 1]) {
-        const x = p.x + dir.z * w * side,
-          z = p.z - dir.x * w * side;
-        vertices.push(x, terrainHeight(x, z) + 0.018, z);
-        uvs.push(side === -1 ? 0 : 1, t * 9);
-      }
-      if (i < 100) {
-        const k = i * 2;
-        indices.push(k, k + 1, k + 2, k + 1, k + 3, k + 2);
-      }
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
-    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-    geo.setIndex(indices);
-    geo.computeVertexNormals();
-    const mat = pathMat.clone();
-    mat.side = THREE.DoubleSide;
-    mesh(geo, mat, 0, 0, 0);
-  }
 
   // Keeper’s workshop: open doorway, work surfaces, joinery, gutters and a sheltered repair cabinet.
   const workshop = buildWorkshop(workshopFloorHeight(), {
@@ -241,7 +208,7 @@ export function buildIsland(
   root.add(workshop.root);
   obstacles.push(...workshop.obstacles);
   const workshopSign = label("KEEPER’S WORKSHOP", 4.2, 0.46);
-  workshopSign.position.set(-6, workshop.signY, 2.68);
+  workshopSign.position.set(WORKSHOP.x, workshop.signY, workshop.signZ);
   root.add(workshopSign);
   lamp("workshop", -6, workshop.porchLampY, workshop.porchLampZ, 80);
   lamp("workshop", -6, workshop.interiorLampY, -1, 65);
@@ -268,7 +235,7 @@ export function buildIsland(
         ? "POWER / 01"
         : id === "harbor"
           ? "RELAY / 02"
-          : "BEACON / 03",
+          : "RADIO / 03",
       0.79,
       0.18,
       "#e4d3a4",
@@ -307,8 +274,25 @@ export function buildIsland(
   }
 
   // Weathered jetty, mooring ropes and paired harbor lamps.
-  for (let x = 22; x <= 34; x += 0.33)
-    box(x, 0.82, 14.5, 0.31, 0.26, 4.2, wood);
+  const rampEnd = HARBOR.start - 0.155;
+  const rampCenter = (HARBOR.approach + rampEnd) / 2;
+  const ramp = new THREE.BoxGeometry(
+    rampEnd - HARBOR.approach,
+    0.22,
+    HARBOR.width,
+  );
+  const rampVertices = ramp.attributes.position;
+  for (let i = 0; i < rampVertices.count; i++)
+    rampVertices.setY(
+      i,
+      harborDeckHeight(rampCenter + rampVertices.getX(i)) +
+        rampVertices.getY(i) -
+        0.11,
+    );
+  ramp.computeVertexNormals();
+  mesh(ramp, wood, rampCenter, 0, HARBOR.z).name = "harbor boarding ramp";
+  for (let x = HARBOR.start; x <= HARBOR.end; x += 0.33)
+    box(x, HARBOR.floor - 0.13, HARBOR.z, 0.31, 0.26, HARBOR.width, wood);
   for (let x = 22; x <= 34; x += 3)
     for (const z of [12.4, 16.6]) {
       box(x, -0.1, z, 0.25, 4.2, 0.25, wood);
@@ -337,43 +321,25 @@ export function buildIsland(
     );
     lamp("harbor", x, 3.75, 15.9, 80);
   }
-  const dockSign = label("HARBOR →", 1.8, 0.48);
-  dockSign.position.set(18.4, terrainHeight(18.4, 13) + 1.6, 13);
-  root.add(dockSign);
-  box(18.4, terrainHeight(18.4, 13) + 0.8, 12.98, 0.13, 1.6, 0.13, wood);
-  const boat = new THREE.Group();
-  root.add(boat);
-  boat.position.set(30, -0.3, 20.5);
-  boat.rotation.y = Math.PI / 2;
-  const hull = mesh(
-    new THREE.SphereGeometry(
-      1,
-      24,
-      12,
-      0,
-      Math.PI * 2,
-      Math.PI / 2,
-      Math.PI / 2,
-    ),
-    red,
-    0,
-    0.15,
-    0,
-    boat,
-  );
-  hull.scale.set(1.2, 0.8, 3.1);
-  box(0, 0.14, 0, 2.12, 0.09, 4.7, wood, boat);
-  for (const z of [-1.3, 0, 1.3]) box(0, 0.35, z, 2.05, 0.12, 0.3, wood, boat);
-  pole(
-    new THREE.Vector3(-0.85, 0.6, -2),
-    new THREE.Vector3(0.85, 0.6, 2),
-    0.06,
+  const dockFace = label("HARBOR →", HARBOR_SIGN.width, HARBOR_SIGN.height);
+  const dockSign = buildSignpost(
     wood,
-    boat,
+    dockFace.material[4],
+    terrainHeight(HARBOR_SIGN.x, HARBOR_SIGN.z),
   );
+  dockFace.geometry.dispose();
+  root.add(dockSign);
+  obstacles.push({
+    x: HARBOR_SIGN.x,
+    z: HARBOR_SIGN.z - 0.13,
+    width: 0.14,
+    depth: 0.14,
+  });
+  const boat = buildBoat(wood, red);
+  root.add(boat);
 
   // Full scale lighthouse, with masonry bands, gallery railings, glass and an animated lens.
-  const ly = terrainHeight(11, -21);
+  const ly = terrainHeight(LIGHTHOUSE.x, LIGHTHOUSE.z);
   mesh(
     new THREE.CylinderGeometry(3.15, 3.45, 0.5, 48),
     stone,
@@ -399,12 +365,44 @@ export function buildIsland(
       -21,
     );
   }
-  box(11, ly + 1.3, -18.45, 1.2, 2.6, 0.15, wood);
+  const door = box(
+    LIGHTHOUSE.x,
+    ly + 1.65,
+    LIGHTHOUSE.z + towerRadius(1.65) + 0.025,
+    1.2,
+    2.6,
+    0.2,
+    wood,
+  );
+  door.name = "lighthouse door";
+  door.rotation.x = towerPitch;
   const lighthouseSign = label("NORTH POINT", 2.4, 0.52);
-  lighthouseSign.position.set(11, ly + 3.15, -18.38);
+  lighthouseSign.geometry.dispose();
+  lighthouseSign.geometry = curvedTowerPlaque(2.4, 0.52, 3.35);
+  lighthouseSign.position.set(LIGHTHOUSE.x, ly + 3.35, LIGHTHOUSE.z);
   root.add(lighthouseSign);
-  for (const h of [5, 9, 13])
-    box(11, ly + h, -21 + (2.65 - (h / 16) * 0.93), 0.55, 1.15, 0.09, glass);
+  for (const h of [5, 9, 13]) {
+    const frame = box(
+      LIGHTHOUSE.x,
+      ly + h,
+      LIGHTHOUSE.z + towerRadius(h) + 0.025,
+      0.68,
+      1.28,
+      0.14,
+      iron,
+    );
+    frame.rotation.x = towerPitch;
+    const pane = box(
+      LIGHTHOUSE.x,
+      ly + h,
+      LIGHTHOUSE.z + towerRadius(h) + 0.1,
+      0.5,
+      1.08,
+      0.035,
+      glass,
+    );
+    pane.rotation.x = towerPitch;
+  }
   mesh(
     new THREE.CylinderGeometry(2.6, 2.3, 0.3, 48),
     stone,
@@ -442,10 +440,17 @@ export function buildIsland(
     depthWrite: false,
   });
   mesh(
-    new THREE.CylinderGeometry(1.62, 1.62, 2.6, 12, 1, true),
+    new THREE.CylinderGeometry(1.62, 1.62, 2.6, 8, 1, true),
     lanternGlass,
     11,
     ly + 17.85,
+    -21,
+  );
+  mesh(
+    new THREE.CylinderGeometry(1.72, 1.72, 0.14, 32),
+    iron,
+    11,
+    ly + 16.51,
     -21,
   );
   for (let i = 0; i < 8; i++) {
@@ -490,6 +495,16 @@ export function buildIsland(
       -21,
     ).rotation.x = Math.PI / 2;
   lightGroups.push({ id: "beacon", material: lens });
+  pole(
+    new THREE.Vector3(
+      11,
+      ly + 4.055,
+      LIGHTHOUSE.z + towerRadius(4.055) - 0.025,
+    ),
+    new THREE.Vector3(11, ly + 4.055, -18.1),
+    0.035,
+    iron,
+  );
   lamp("beacon", 11, ly + 3.8, -18.1, 95);
   const beamPivot = new THREE.Group();
   beamPivot.position.set(11, ly + 17.85, -21);
@@ -515,20 +530,8 @@ export function buildIsland(
   // Low stone boundaries give the paths a readable silhouette at eye level.
   const rockMat = surface("rock", 1, "#8d9287");
   const rockGeos = [0, 1, 2, 3].map((i) => rockGeometry(i * 6, 1));
-  for (let i = 0; i < 190; i++) {
-    const a = rng(i + 11) * Math.PI * 2,
-      r = 0.75 + rng(i + 700) * 0.29;
-    const x = Math.sin(a) * 33 * r,
-      z = Math.cos(a) * 37 * r - 2;
-    if (x > 18 && z > 10 && z < 18) continue;
-    const scale = 0.5 + rng(i + 71) * 2.4;
-    const rock = mesh(
-      rockGeos[i % 4],
-      rockMat,
-      x,
-      terrainHeight(x, z) - 0.2,
-      z,
-    );
+  for (const { i, x, y, z, r, scale } of COAST_ROCKS) {
+    const rock = mesh(rockGeos[i % 4], rockMat, x, y, z);
     rock.scale.set(scale, scale * (0.4 + rng(i + 13) * 0.7), scale * 0.8);
     rock.rotation.y = i * 1.9;
     if (r < 0.87 && scale > 0.8) obstacles.push({ x, z, radius: scale * 0.65 });
@@ -547,101 +550,9 @@ export function buildIsland(
     rock.rotation.y = i;
   }
 
-  // Layered pine boughs use photographic alpha cutouts instead of cone silhouettes.
-  const textureLoader = new THREE.TextureLoader(manager);
-  const pineMap = textureLoader.load("/art/pine-color.webp");
-  pineMap.colorSpace = THREE.SRGBColorSpace;
-  const pineAlpha = textureLoader.load("/art/pine-alpha.webp");
-  pineMap.anisotropy = 4;
-  pineAlpha.anisotropy = 4;
-  const foliage = new THREE.MeshStandardMaterial({
-    map: pineMap,
-    alphaMap: pineAlpha,
-    alphaTest: 0.38,
-    side: THREE.DoubleSide,
-    color: "#b3c19b",
-    roughness: 0.93,
-  });
-  const bough = new THREE.PlaneGeometry(0.7, 1.4);
-  const twigUV = bough.attributes.uv;
-  for (let i = 0; i < twigUV.count; i++)
-    twigUV.setXY(
-      i,
-      0.025 + twigUV.getX(i) * 0.205,
-      0.56 + twigUV.getY(i) * 0.415,
-    );
-  const needles = new THREE.InstancedMesh(bough, foliage, 6500);
-  const leafTransform = new THREE.Object3D();
-  let leafCount = 0;
-  const treeSpots = [
-    [-15, 8],
-    [-17, 1],
-    [-14, -9],
-    [-19, -12],
-    [-10, -13],
-    [-4, -12],
-    [-19, 15],
-    [-12, 20],
-    [6, 18],
-    [11, 18],
-    [18, 3],
-    [21, -4],
-    [23, -12],
-    [1, -20],
-    [-6, -23],
-    [18, -27],
-    [6, -30],
-  ];
-  for (let i = 0; i < treeSpots.length; i++) {
-    const [x, z] = treeSpots[i],
-      y = terrainHeight(x, z),
-      h = 6 + rng(i + 80) * 5;
-    mesh(new THREE.CylinderGeometry(0.1, 0.3, h, 9), wood, x, y + h / 2, z);
-    obstacles.push({ x, z, radius: 0.38 });
-    for (let branch = 0; branch < 26; branch++) {
-      const angle = branch * 2.399 + i,
-        level = branch / 26;
-      const reach = (1 - level * 0.82) * h * 0.29;
-      const start = new THREE.Vector3(x, y + h * (0.29 + level * 0.65), z);
-      const end = start
-        .clone()
-        .add(
-          new THREE.Vector3(
-            Math.cos(angle) * reach,
-            0.2 + level * 0.35,
-            Math.sin(angle) * reach,
-          ),
-        );
-      pole(start, end, 0.035 * (1 - level * 0.6), wood);
-      for (let spray = 0; spray < 14; spray++) {
-        const along = 0.35 + rng(i * 400 + branch * 14 + spray) * 0.8;
-        leafTransform.position
-          .copy(start)
-          .lerp(end, along)
-          .add(
-            new THREE.Vector3(
-              (rng(spray + branch) - 0.5) * 0.75,
-              (rng(spray * 5 + i) - 0.3) * 0.5,
-              (rng(branch + spray * 7) - 0.5) * 0.75,
-            ),
-          );
-        leafTransform.rotation.set(
-          0.2 + spray * 0.33,
-          angle + spray * 1.1,
-          -0.8 + (spray % 4) * 0.5,
-        );
-        leafTransform.scale.setScalar(
-          (0.7 + rng(branch + spray + i) * 0.55) * (1 - level * 0.4),
-        );
-        leafTransform.updateMatrix();
-        needles.setMatrixAt(leafCount++, leafTransform.matrix);
-      }
-    }
-  }
-  needles.count = leafCount;
-  needles.castShadow = true;
-  needles.receiveShadow = true;
-  root.add(needles);
+  const pines = buildPineTrees(wood, manager);
+  root.add(pines.root);
+  obstacles.push(...pines.obstacles);
   // Instanced grass blades and wildflowers supply close-range detail cheaply.
   const blade = new THREE.BufferGeometry();
   blade.setAttribute(
@@ -687,9 +598,13 @@ export function buildIsland(
       z < WORKSHOP.z + WORKSHOP.depth / 2 + WORKSHOP.porchDepth + 0.4
     )
       continue;
-    if (Math.abs(x + 3) < 1.4 && z > 3) continue;
-    if (Math.abs(z - (x + 3) * 0.2 - 8) < 1.6 && x > -4 && x < 24) continue;
-    if (Math.abs(x - (7 - z * 0.35)) < 2 && z > -17 && z < 9) continue;
+    if (distanceToTrail(x, z) < 1.65) continue;
+    if (
+      x > HARBOR.approach - 0.4 &&
+      x < HARBOR.end + 0.4 &&
+      Math.abs(z - HARBOR.z) < HARBOR.width / 2 + 0.35
+    )
+      continue;
     if (Math.hypot(x - 11, z + 21) < 4) continue;
     dummy.position.set(x, terrainHeight(x, z), z);
     dummy.rotation.set(0, rng(i + 34) * 6.28, (rng(i + 90) - 0.5) * 0.55);

@@ -8,10 +8,18 @@ The electrical instrument occupies the left side of a repair screen. One torn in
 
 Menus omit decorative captions, chapter labels, repeated branding, and routine save messages. The pause menu aligns every item to the same text column. Shared sheet geometry keeps ordinary menus 76 pixels inside the paper’s bounding edges and wide menus 92 pixels inside; footer controls sit 60 pixels above the paper’s lower edge, within the fixed 1280 × 720 composition. The map uses a bounded grid so its illustration and location list stay aligned. Functional controls and field-guide titles use larger type.
 
+## Survey chart and lettering
+
+IM Fell English provides the irregular printed lettering; Kalam supplies handwritten notes and short explanations. Both are bundled locally through Fontsource and prepared before entry. Dark text and drawings use multiply blending over the paper grain. Headings, settings, controls, circuit instructions, and notes use the same type system and inner margins.
+
+The island chart is native SVG generated from the game's terrain function, shared trail curves, building coordinates, and coastal rock placements. North is world −Z. The chart includes the waterline, elevation contours, a distance scale, current position and facing, restored stations, and the next repair. Labels have leader lines and stay clear of coast symbols. It guides the workshop → harbor relay → lighthouse radio route without teleporting the player. The earlier generated illustration is retained only as an archived asset.
+
+The radio sheet separates restoring its power from sending the distress call. After **Call for help**, an in-game coastguard acknowledgement confirms the rescue objective; the saved chart then shows “Help is on the way.”
+
 ## Paper asset
 
 - Generation mode: **built-in imagegen**, September 11, 2026. No external image API/CLI was used.
-- Original in this workspace: [`art-source/keepers-paper.png`](../art-source/keepers-paper.png), 1024 × 1536 RGBA.
+- The original source image is retained in Git history; the optimized runtime image is the maintained asset.
 - Runtime asset: [`public/art/keepers-paper.webp`](../public/art/keepers-paper.webp), 359,654 bytes, WebP quality 85 with lossless alpha.
 - Generated original retained at `/Users/frankyang/.codex/generated_images/01a09190-aeee-7d42-8e75-4ebcbb8dfc2c/exec-0e31aecc-fdcb-47d3-9017-5adfad93bd31.png`.
 
@@ -23,4 +31,4 @@ Final generation prompt:
 
 ## Review references
 
-The browser checks capture the [pause menu](screenshots/paper-pause.png), [map](screenshots/paper-island-map.png), [field notes](screenshots/paper-notebook.png), [settings](screenshots/paper-settings.png), [controls](screenshots/paper-controls.png), [conductor choice](screenshots/paper-conductor.png), [prediction](screenshots/paper-predict.png), and [reflection](screenshots/paper-reflect.png). The current complete verification is recorded in [verification.md](verification.md).
+Visual reviews are generated locally and excluded from Git. See [verification.md](verification.md).

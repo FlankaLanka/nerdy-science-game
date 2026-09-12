@@ -25,6 +25,7 @@ test("a prediction is required and editing invalidates a stale result and predic
 });
 test("the complete adventure needs real working circuits, a fault experiment, and supported explanations", () => {
   let s = reducer(initialState(), { type: "START" });
+  assert.equal(reducer(s, { type: "SEND_DISTRESS" }), s);
   assert.equal(reducer(s, { type: "COMPLETE", id: "beacon", now: 1 }), s);
   const wiring: Record<MissionId, Wire[]> = {
     workshop: [["a2", "m1"]],
@@ -56,9 +57,18 @@ test("the complete adventure needs real working circuits, a fault experiment, an
   }
   assert.equal(s.completed.length, 3);
   assert.equal(s.finishedAt, 1234);
+  assert.equal(s.distressSent, false);
+  s = reducer(s, { type: "SEND_DISTRESS" });
+  assert.equal(s.distressSent, true);
   const restored = restoreState(JSON.stringify(s));
   assert.deepEqual(restored.completed, s.completed);
   assert.equal(restored.finishedAt, 1234);
+  assert.equal(restored.distressSent, true);
+  assert.equal(
+    restoreState(JSON.stringify({ ...initialState(), distressSent: true }))
+      .distressSent,
+    false,
+  );
 });
 test("series wiring at the beacon fails the backup test and can be revised without losing evidence", () => {
   let p = initialProgress();

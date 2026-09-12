@@ -18,13 +18,15 @@ import {
 } from "./navigation";
 import type { MissionId } from "../missions";
 import { gamePixelRatio } from "../viewport";
+import { projectWaypoint } from "./waypoint";
+import type { Waypoint } from "./waypoint";
+import { WATER_LEVEL } from "./islandLayout";
 
 export type Telemetry = {
   focus: MissionId | null;
   distance: number;
   heading: number;
   moved: boolean;
-  marker: { x: number; y: number; visible: boolean };
   locked: boolean;
 };
 export type WorldState = {
@@ -32,6 +34,7 @@ export type WorldState = {
   completed: MissionId[];
   reducedMotion: boolean;
   sensitivity: number;
+  distressSent: boolean;
 };
 type Options = {
   container: HTMLDivElement;
@@ -39,6 +42,7 @@ type Options = {
   ready: () => void;
   error: () => void;
   telemetry: (data: Telemetry) => void;
+  waypoint: (point: Waypoint) => void;
   interact: (id: MissionId) => void;
   pause: () => void;
   step: () => void;
@@ -47,6 +51,7 @@ const empty = {
   capture() {},
   release() {},
   reset() {},
+  position: () => ({ ...SPAWN }),
   interact() {},
   stick(_x: number, _y: number) {},
   dispose() {},
@@ -125,7 +130,7 @@ export function renderWorld(o: Options) {
     fog: true,
   });
   water.rotation.x = -Math.PI / 2;
-  water.position.y = -0.68;
+  water.position.y = WATER_LEVEL;
   scene.add(water);
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -296,7 +301,7 @@ export function renderWorld(o: Options) {
   observer.observe(o.container);
   window.addEventListener("resize", resize);
   resize();
-  const projected = new THREE.Vector3();
+  const targetPoint = new THREE.Vector3();
   const ids: MissionId[] = ["workshop", "harbor", "beacon"];
   function animate(now: number) {
     if (disposed) return;
@@ -391,34 +396,31 @@ export function renderWorld(o: Options) {
     model.pip.rotation.y = Math.sin(time * 0.45) * 0.1;
     water.material.uniforms.time.value = time * 0.42;
     composer.render();
+    const site = SITES[next];
+    const distance = Math.hypot(site.x - player.x, site.z - player.z);
+    targetPoint.set(site.x, groundHeight(site.x, site.z) + 2.45, site.z);
+    o.waypoint(
+      projectWaypoint(
+        camera,
+        targetPoint,
+        width,
+        height,
+        distance,
+        state.playing && !state.distressSent,
+      ),
+    );
     if (!ready) {
       ready = true;
       o.ready();
     }
     if (now - lastHud > 100) {
       lastHud = now;
-      const site = SITES[next];
-      const distance = Math.hypot(site.x - player.x, site.z - player.z);
-      projected
-        .set(site.x, groundHeight(site.x, site.z) + 2.45, site.z)
-        .project(camera);
       o.telemetry({
         focus: state.playing ? focusedSite(player, model.obstacles) : null,
         distance,
         heading: ((((-player.yaw * 180) / Math.PI) % 360) + 360) % 360,
         moved,
         locked: document.pointerLockElement === canvas,
-        marker: {
-          x: (projected.x * 0.5 + 0.5) * width,
-          y: (-projected.y * 0.5 + 0.5) * height,
-          visible:
-            projected.z > -1 &&
-            projected.z < 1 &&
-            Math.abs(projected.x) < 0.9 &&
-            Math.abs(projected.y) < 0.85 &&
-            distance > 3 &&
-            state.completed.length < 3,
-        },
       });
     }
     if (state.playing && now - lastSave > 1500) {
@@ -462,6 +464,7 @@ export function renderWorld(o: Options) {
       if (!disposed) o.error();
     });
   return {
+    position: () => ({ ...player }),
     capture,
     release,
     interact,

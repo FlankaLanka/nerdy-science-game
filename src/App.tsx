@@ -1,12 +1,5 @@
 import { lazy, Suspense, useEffect, useReducer, useRef, useState } from "react";
-import {
-  ArrowRight,
-  Check,
-  Maximize,
-  Pause,
-  Radio,
-  Volume2,
-} from "lucide-react";
+import { ArrowRight, Maximize, Pause, Radio } from "lucide-react";
 import {
   currentMission,
   initialProgress,
@@ -16,7 +9,6 @@ import {
   updateProgress,
 } from "./game";
 import type { Progress } from "./game";
-import { MISSIONS } from "./missions";
 import type { MissionId } from "./missions";
 import type { WorldHandle } from "./World";
 import { SITES } from "./scene/navigation";
@@ -26,6 +18,8 @@ import { Dialog } from "./Dialog";
 import { useSound } from "./audio";
 import { GameViewport } from "./GameViewport";
 import { prepareInterface } from "./interfaceAssets";
+import { IslandMap } from "./IslandMap";
+import type { Player } from "./scene/navigation";
 
 const World = lazy(() => import("./World"));
 type Menu =
@@ -70,6 +64,7 @@ export default function App() {
     [sensitivity, setSensitivity] = useState(1);
   const [fullscreen, setFullscreen] = useState(!!document.fullscreenElement);
   const [displayNotice, setDisplayNotice] = useState("");
+  const [mapPlayer, setMapPlayer] = useState<Player | null>(null);
   useEffect(() => {
     const change = () => setFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", change);
@@ -123,6 +118,7 @@ export default function App() {
   }, [subtitle]);
   function openMenu(value: Menu) {
     world.current?.release();
+    setMapPlayer(world.current?.position() ?? null);
     setRunning(false);
     setMenu(value);
     sound.play("soft");
@@ -139,7 +135,7 @@ export default function App() {
       dispatch({ type: "START" });
       dispatch({ type: "INTRO", step: 3 });
       setSubtitle(
-        "You’re awake. Good. The storm took out our power. Let’s try the workshop.",
+        "The storm cut the power. Get the lighthouse radio working so we can call for help. Start at the workshop.",
       );
     }
     resume();
@@ -159,6 +155,10 @@ export default function App() {
     }
     world.current?.release();
     setRunning(false);
+    if (id === "beacon" && allDone && !state.distressSent) {
+      setMenu("ending");
+      return;
+    }
     setActive(id);
     setSubtitle("");
     if (id === "beacon" && allDone) setPractice(initialProgress());
@@ -185,9 +185,9 @@ export default function App() {
         practice
           ? "Another working route. Nicely done."
           : id === "workshop"
-            ? "There it is. Follow the path to the harbor. Two more lights to bring back."
+            ? "The supply is back. Follow the coastal path to the harbor relay."
             : id === "harbor"
-              ? "The harbor is alive. Head uphill. The lighthouse needs a circuit that can survive a broken lamp."
+              ? "Power is reaching North Point. Head uphill and repair the lighthouse radio’s supply."
               : "The power is holding.",
       );
       if (!failed) resume();
@@ -233,6 +233,7 @@ export default function App() {
         {!failed && (
           <Suspense fallback={null}>
             <World
+              distressSent={state.distressSent}
               ref={world}
               playing={playing}
               completed={state.completed}
@@ -378,45 +379,11 @@ export default function App() {
           </Dialog>
         )}
         {menu === "map" && (
-          <Dialog title="Island map" className="map-dialog" onClose={back}>
-            <header className="screen-heading">
-              <h2>ISLAND MAP</h2>
-            </header>
-            <div className="paper-map">
-              <img
-                src="/art/keepers-map.webp"
-                width="1536"
-                height="1024"
-                alt="The keeper’s illustrated island map: workshop to the west, harbor to the east, lighthouse to the north."
-              />
-              <ol className="map-stops">
-                {MISSIONS.map((m) => (
-                  <li
-                    key={m.id}
-                    aria-current={
-                      m.id === next && !allDone ? "step" : undefined
-                    }
-                    className={
-                      state.completed.includes(m.id)
-                        ? "done"
-                        : m.id === next
-                          ? "current"
-                          : ""
-                    }
-                  >
-                    <span>
-                      {state.completed.includes(m.id) ? (
-                        <Check size={15} />
-                      ) : (
-                        m.number
-                      )}
-                    </span>
-                    {SITES[m.id].name}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </Dialog>
+          <IslandMap
+            state={state}
+            player={failed ? null : mapPlayer}
+            onClose={back}
+          />
         )}
         {menu === "journal" && (
           <Notebook
@@ -429,30 +396,44 @@ export default function App() {
         )}
         {menu === "settings" && (
           <Dialog title="Settings" onClose={back} className="settings-dialog">
-            <h2>Settings</h2>
+            <h2>Field settings</h2>
             <label className="setting">
               <span>
-                <Volume2 size={17} /> Sound
+                <span className="setting-copy">
+                  Sound<small>Waves, footsteps & equipment</small>
+                </span>
               </span>
               <input
                 type="checkbox"
+                aria-label="Sound"
                 checked={state.sound}
                 onChange={() => dispatch({ type: "SOUND" })}
               />
             </label>
             <label className="setting">
-              <span>Reduce camera motion</span>
+              <span className="setting-copy">
+                Reduce camera motion
+                <small>
+                  {systemMotion
+                    ? "Your device prefers a steady view"
+                    : "A steady view on the island paths"}
+                </small>
+              </span>
               <input
                 type="checkbox"
+                aria-label="Reduce camera motion"
                 checked={reducedMotion}
                 disabled={systemMotion}
                 onChange={() => dispatch({ type: "MOTION" })}
               />
             </label>
             <label className="setting">
-              <span>Look sensitivity</span>
+              <span className="setting-copy">
+                Look sensitivity<small>How quickly you turn</small>
+              </span>
               <input
                 type="range"
+                aria-label="Look sensitivity"
                 min="0.4"
                 max="2"
                 step="0.1"
@@ -460,21 +441,31 @@ export default function App() {
                 onChange={(e) => setSensitivity(Number(e.target.value))}
               />
             </label>
-            <button className="setting" onClick={() => void toggleFullscreen()}>
-              <span>
-                <Maximize size={17} />{" "}
+            <button
+              className="setting"
+              aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+              onClick={() => void toggleFullscreen()}
+            >
+              <span className="setting-copy">
                 {fullscreen ? "Exit fullscreen" : "Fullscreen"}
+                <small>Let the island fill the view</small>
               </span>
+              <span className="setting-mark">↗</span>
             </button>
             <button
               className="setting"
+              aria-label="Return to the path"
               onClick={() => {
                 world.current?.reset();
                 setSubtitle("Back at the workshop path.");
                 resume();
               }}
             >
-              Return to the path
+              <span className="setting-copy">
+                Return to the path
+                <small>Find your footing by the workshop</small>
+              </span>
+              <span className="setting-mark">↶</span>
             </button>
             <button className="text-button" onClick={() => setMenu("reset")}>
               Start a new adventure
@@ -483,10 +474,10 @@ export default function App() {
         )}
         {menu === "controls" && (
           <Dialog title="Controls" onClose={back} className="controls-dialog">
-            <h2>Controls</h2>
+            <h2>Finding your feet</h2>
             <dl className="control-list">
               <div>
-                <dt>Move</dt>
+                <dt>Walk the island</dt>
                 <dd>W A S D / ↑ ↓</dd>
               </div>
               <div>
@@ -498,7 +489,7 @@ export default function App() {
                 <dd>Shift</dd>
               </div>
               <div>
-                <dt>Interact</dt>
+                <dt>Use equipment</dt>
                 <dd>E, when close to a cabinet</dd>
               </div>
               <div>
@@ -559,16 +550,40 @@ export default function App() {
             className="ending-dialog"
             onClose={resume}
           >
+            <div className="rescue-radio" aria-hidden="true">
+              <svg viewBox="0 0 240 100">
+                <path d="M54 36h132v53H54zM71 48h53v25H71zM81 53v15m9-15v15m9-15v15m9-15v15M163 37l17-31M54 62H36m-9-12q-15 12 0 24m174-24q15 12 0 24" />
+                <circle cx="153" cy="59" r="10" />
+                <path d="M170 78h6m-21 0h6m-20 0h6" />
+              </svg>
+            </div>
             <h2>
-              Someone out there
-              <br />
-              can see us now.
+              {state.distressSent
+                ? "Help is on the way."
+                : "The radio has power."}
             </h2>
-            <p>The lighthouse holds. Even when one lamp fails.</p>
-            <button className="primary-action" onClick={resume}>
-              Keep exploring
-              <ArrowRight size={18} />
-            </button>
+            <p className="rescue-message">
+              {state.distressSent
+                ? "“Bramble Island, we have your position. Keep the lighthouse lit. We’re on our way.”"
+                : "The lighthouse is shining. The radio is alive. Time to let someone know you’re here."}
+            </p>
+            {state.distressSent ? (
+              <button className="primary-action" onClick={resume}>
+                Keep exploring
+                <ArrowRight size={18} />
+              </button>
+            ) : (
+              <button
+                className="primary-action"
+                onClick={() => {
+                  dispatch({ type: "SEND_DISTRESS" });
+                  sound.play("signal");
+                }}
+              >
+                Call for help
+                <Radio size={18} />
+              </button>
+            )}
             <button
               className="text-button"
               onClick={() => {

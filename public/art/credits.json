@@ -113,13 +113,7 @@
     "license": "CC0-1.0"
   },
   {
-    "file": "keepers-map.webp",
-    "source": "Original illustration generated for SIGNAL with the built-in imagegen tool. Prompt and provenance: docs/journal-art.md.",
-    "original": "art-source/keepers-map.png"
-  },
-  {
     "file": "keepers-paper.webp",
-    "source": "Original torn rag-paper texture generated for SIGNAL with the built-in imagegen tool. Prompt and provenance: docs/paper-game-ui.md.",
-    "original": "art-source/keepers-paper.png"
+    "source": "Original torn rag-paper texture generated for SIGNAL with the built-in imagegen tool. Prompt and provenance: docs/paper-game-ui.md."
   }
 ]

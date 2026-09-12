@@ -7,13 +7,15 @@ import {
 } from "react";
 import { renderWorld } from "./scene/renderWorld";
 import type { Telemetry, WorldState } from "./scene/renderWorld";
-import { SITES } from "./scene/navigation";
+import { SITES, SPAWN } from "./scene/navigation";
+import type { Player } from "./scene/navigation";
 import type { MissionId } from "./missions";
 
 export type WorldHandle = {
   capture: () => void;
   release: () => void;
   reset: () => void;
+  position: () => Player;
 };
 type Props = WorldState & {
   onVisit: (id: MissionId) => void;
@@ -31,12 +33,15 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
   const [hud, setHud] = useState<Telemetry | null>(null);
   const [stick, setStick] = useState({ x: 0, y: 0 });
   const stickPointer = useRef<number | null>(null);
+  const waypoint = useRef<HTMLDivElement>(null);
+  const waypointDistance = useRef<HTMLSpanElement>(null);
   useImperativeHandle(
     ref,
     () => ({
       capture: () => controls.current?.capture(),
       release: () => controls.current?.release(),
       reset: () => controls.current?.reset(),
+      position: () => controls.current?.position() ?? { ...SPAWN },
     }),
     [],
   );
@@ -47,6 +52,16 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
       ready: () => latest.current.onReady(),
       error: () => latest.current.onError(),
       telemetry: setHud,
+      waypoint: (point) => {
+        if (!waypoint.current) return;
+        waypoint.current.style.visibility = point.visible
+          ? "visible"
+          : "hidden";
+        if (!point.visible) return;
+        waypoint.current.style.transform = `translate3d(${point.x}px, ${point.y}px, 0)`;
+        if (waypointDistance.current)
+          waypointDistance.current.textContent = `${Math.round(point.distance)} m`;
+      },
       interact: (id) => latest.current.onVisit(id),
       pause: () => latest.current.onPause(),
       step: () => latest.current.onStep(),
@@ -98,29 +113,38 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
             className={`reticle ${focus ? "has-target" : ""}`}
             aria-hidden="true"
           />
-          {hud.marker.visible && (
-            <div
-              className="world-waypoint"
-              style={{ left: hud.marker.x, top: hud.marker.y }}
-              aria-hidden="true"
-            >
-              <i />
-              <span>{Math.round(hud.distance)} m</span>
-            </div>
-          )}
+          <div
+            ref={waypoint}
+            className="world-waypoint"
+            style={{ visibility: "hidden" }}
+            aria-hidden="true"
+          >
+            <i />
+            <span ref={waypointDistance} />
+          </div>
           {focus && (
             <button
               className="interact-prompt"
               onClick={() => controls.current?.interact()}
-              aria-label={`${complete ? "Inspect" : available ? "Repair" : "Inspect locked"} ${SITES[focus].name}`}
+              aria-label={
+                focus === "beacon" &&
+                props.completed.length === 3 &&
+                !props.distressSent
+                  ? "Use lighthouse radio"
+                  : `${complete ? "Inspect" : available ? "Repair" : "Inspect locked"} ${SITES[focus].name}`
+              }
             >
               <kbd>E</kbd>
               <span>
-                {complete
-                  ? `Inspect ${SITES[focus].name}`
-                  : available
-                    ? `Repair ${SITES[focus].name}`
-                    : "No incoming power"}
+                {focus === "beacon" &&
+                props.completed.length === 3 &&
+                !props.distressSent
+                  ? "Use lighthouse radio"
+                  : complete
+                    ? `Inspect ${SITES[focus].name}`
+                    : available
+                      ? `Repair ${SITES[focus].name}`
+                      : "No incoming power"}
               </span>
             </button>
           )}

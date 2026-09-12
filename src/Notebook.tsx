@@ -101,7 +101,7 @@ export function Notebook({
   return (
     <Dialog title="Notebook" onClose={onClose} className="notebook-dialog">
       <header className="screen-heading">
-        <h2>FIELD NOTES</h2>
+        <h2>Field notes</h2>
       </header>
       <nav className="archive-tabs" aria-label="Discoveries">
         {MISSIONS.map((m, i) => (
@@ -132,10 +132,7 @@ export function Notebook({
           </p>
           <div className="archive-stats">
             <span>
-              <strong>{progress.experiments.length}</strong> EXPERIMENTS
-            </span>
-            <span>
-              <strong>{progress.hints}</strong> HINTS
+              <strong>{progress.experiments.length}</strong> experiments
             </span>
           </div>
           {done && (

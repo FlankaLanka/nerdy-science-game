@@ -3,7 +3,11 @@ import type { MissionId, Wire, Material } from "./missions.ts";
 import { outcomeId, sanitizeWires, solveCircuit } from "./circuit.ts";
 
 export type Phase =
-  "build" | "fault-ready" | "fault-result" | "reflect" | "complete";
+  | "build"
+  | "fault-ready"
+  | "fault-result"
+  | "reflect"
+  | "complete";
 export type Experiment = {
   type: "circuit" | "fault";
   wires: Wire[];
@@ -37,6 +41,7 @@ export type GameState = {
   sound: boolean;
   reducedMotion: boolean;
   finishedAt: number | null;
+  distressSent: boolean;
 };
 export const SAVE_KEY = "signal.lighthouse.v1";
 export function initialProgress(): Progress {
@@ -70,6 +75,7 @@ export function initialState(): GameState {
     sound: true,
     reducedMotion: false,
     finishedAt: null,
+    distressSent: false,
   };
 }
 export type MissionAction =
@@ -93,7 +99,8 @@ export type GameAction =
   | { type: "COMPLETE"; id: MissionId; now: number }
   | { type: "NOTE"; text: string }
   | { type: "SOUND" }
-  | { type: "MOTION" };
+  | { type: "MOTION" }
+  | { type: "SEND_DISTRESS" };
 
 export function currentMission(state: GameState): MissionId {
   return MISSIONS.find((m) => !state.completed.includes(m.id))?.id ?? "beacon";
@@ -294,6 +301,10 @@ export function reducer(state: GameState, action: GameAction): GameState {
       return { ...state, sound: !state.sound };
     case "MOTION":
       return { ...state, reducedMotion: !state.reducedMotion };
+    case "SEND_DISTRESS":
+      return state.completed.length === 3 && !state.distressSent
+        ? { ...state, distressSent: true }
+        : state;
     case "NOTE":
       return { ...state, note: action.text.slice(0, 1500) };
     case "MISSION": {
@@ -466,6 +477,8 @@ export function restoreState(raw: string | null): GameState {
         p.phase = "complete";
       }
     }
+    state.distressSent =
+      state.completed.length === 3 && data.distressSent === true;
     state.finishedAt =
       state.completed.length === 3 &&
       typeof data.finishedAt === "number" &&

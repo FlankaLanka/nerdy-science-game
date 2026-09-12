@@ -7,3 +7,10 @@ test-results/
 playwright-report/
 *.tsbuildinfo
 .DS_Store
+
+# Generated reviews and original downloads; runtime assets are tracked.
+docs/screenshots/
+docs/*-check.json
+docs/*-review.json
+art-source/
+artifacts/

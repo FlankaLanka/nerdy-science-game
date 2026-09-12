@@ -154,10 +154,19 @@ test("walk the island, restore all three physical stations, and retain discoveri
     })
     .click();
   await page
-    .getByRole("button", { name: "Send the signal", exact: true })
+    .getByRole("button", { name: "Power the radio", exact: true })
     .click();
   await expect(
     page.getByRole("dialog", { name: "Signal restored", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("The radio has power.", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Call for help", exact: true })
+    .click();
+  await expect(
+    page.getByText("Help is on the way.", { exact: true }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Open field notes", exact: true })

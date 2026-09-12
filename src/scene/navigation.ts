@@ -1,5 +1,6 @@
 import type { MissionId } from "../missions.ts";
 import { WORKSHOP } from "./workshopLayout.ts";
+import { HARBOR } from "./islandLayout.ts";
 
 export type Player = { x: number; z: number; yaw: number; pitch: number };
 export type Obstacle =
@@ -7,29 +8,24 @@ export type Obstacle =
   | { x: number; z: number; width: number; depth: number };
 export const PLAYER_KEY = "signal.lighthouse.player.v1";
 export const SPAWN: Player = { x: -3, z: 15.5, yaw: 0, pitch: 0.015 };
-export const SITES: Record<
-  MissionId,
-  { x: number; z: number; name: string; task: string }
-> = {
-  workshop: {
-    x: -3,
-    z: 3.2,
-    name: "Keeper’s workshop",
-    task: "Restore the workshop power",
-  },
-  harbor: {
-    x: 21,
-    z: 12,
-    name: "Harbor relay",
-    task: "Bring the harbor lights online",
-  },
-  beacon: {
-    x: 11,
-    z: -16.3,
-    name: "Lighthouse control",
-    task: "Give the lighthouse a backup circuit",
-  },
-};
+export const SITES: Record<MissionId, { x: number; z: number; name: string }> =
+  {
+    workshop: {
+      x: -3,
+      z: 3.2,
+      name: "Keeper’s workshop",
+    },
+    harbor: {
+      x: 21,
+      z: 12,
+      name: "Harbor relay",
+    },
+    beacon: {
+      x: 11,
+      z: -16.3,
+      name: "Lighthouse control",
+    },
+  };
 
 function islandHeight(x: number, z: number) {
   const radius = Math.hypot(x / 34, (z + 2) / 38);
@@ -40,7 +36,18 @@ function islandHeight(x: number, z: number) {
 }
 
 export function terrainHeight(x: number, z: number) {
-  const height = islandHeight(x, z);
+  let height = islandHeight(x, z);
+  // Grade a full terrain cell beyond the deck so triangles cannot pierce it.
+  const dockDistance = Math.hypot(
+    Math.max(0, HARBOR.approach - x, x - HARBOR.end),
+    Math.max(0, Math.abs(z - HARBOR.z) - HARBOR.width / 2),
+  );
+  if (dockDistance < 1.1) {
+    const t = Math.max(0, (dockDistance - 0.6) / 0.5);
+    const blend = t * t * (3 - 2 * t);
+    const beneathDeck = Math.min(height, harborDeckHeight(x) - 0.16);
+    height = beneathDeck + (height - beneathDeck) * blend;
+  }
   const { x: cx, z: cz, width, depth, porchDepth } = WORKSHOP;
   const dx = Math.max(0, Math.abs(x - cx) - width / 2 - 0.45);
   const dz = Math.max(
@@ -59,7 +66,12 @@ export function terrainHeight(x: number, z: number) {
 }
 
 export function groundHeight(x: number, z: number) {
-  if (x >= 22 && x <= 34 && z >= 12.4 && z <= 16.6) return 0.95;
+  if (
+    x >= HARBOR.approach &&
+    x <= HARBOR.end &&
+    Math.abs(z - HARBOR.z) <= HARBOR.width / 2
+  )
+    return harborDeckHeight(x);
   const { x: cx, z: cz, width, depth, porchDepth } = WORKSHOP;
   const onHouseFloor =
     Math.abs(x - cx) <= width / 2 + 0.3 && Math.abs(z - cz) <= depth / 2 + 0.3;
@@ -69,6 +81,17 @@ export function groundHeight(x: number, z: number) {
     z <= cz + depth / 2 + porchDepth;
   if (onHouseFloor || onPorch) return workshopFloorHeight();
   return terrainHeight(x, z);
+}
+
+/** The short boarding ramp meets the first plank without a camera-height step. */
+export function harborDeckHeight(x: number) {
+  const firstPlank = HARBOR.start - 0.155;
+  const t = Math.max(
+    0,
+    Math.min(1, (x - HARBOR.approach) / (firstPlank - HARBOR.approach)),
+  );
+  const shore = islandHeight(HARBOR.approach, HARBOR.z) + 0.025;
+  return shore + (HARBOR.floor - shore) * t;
 }
 
 export function workshopFloorHeight() {

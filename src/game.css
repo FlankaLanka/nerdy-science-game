@@ -6,10 +6,11 @@
   --muted-ink: #5a5140;
   --rust: #8e452e;
   --gold: #e2c28b;
-  --mono: "IBM Plex Mono", monospace;
-  --display: "Barlow Condensed", sans-serif;
-  --serif: "Cormorant Garamond", Georgia, serif;
-  font-family: "DM Sans", sans-serif;
+  --mono: "IM Fell English", Georgia, serif;
+  --hand: "Kalam", cursive;
+  --display: "IM Fell English", Georgia, serif;
+  --serif: "IM Fell English", Georgia, serif;
+  font-family: "IM Fell English", Georgia, serif;
   color: #eee5cf;
   background: #070908;
   font-synthesis: none;
@@ -181,13 +182,17 @@ kbd {
 }
 .world-waypoint {
   position: absolute;
-  transform: translate(-50%, -100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  will-change: transform;
+  transition: none;
 }
 .world-waypoint i {
+  position: absolute;
+  left: -5px;
+  top: -5px;
   width: 10px;
   height: 10px;
   border: 1px solid #ffe2ab;
@@ -195,7 +200,12 @@ kbd {
   box-shadow: 0 0 10px #dab36644;
 }
 .world-waypoint span {
-  font: 11px var(--mono);
+  position: absolute;
+  top: 17px;
+  left: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font: 16px var(--display);
   color: #ffe7b7;
 }
 .pause-trigger {
@@ -277,8 +287,8 @@ kbd {
   padding: 12px 25px;
   color: #f7ecd6;
   font:
-    14px/1.55 "DM Sans",
-    sans-serif;
+    14px/1.55 "IM Fell English",
+    serif;
   background: linear-gradient(
     90deg,
     transparent,
@@ -314,8 +324,8 @@ kbd {
   width: 470px;
 }
 .title-content h1 {
-  font: 600 120px/0.92 var(--display);
-  letter-spacing: 0.065em;
+  font: 400 100px/0.98 var(--display);
+  letter-spacing: 0;
   margin: 0 0 52px;
   color: #eae0c6;
   text-shadow:
@@ -324,7 +334,7 @@ kbd {
 }
 .title-content h1 span {
   display: block;
-  font: 500 25px var(--display);
+  font: 400 25px var(--display);
   letter-spacing: 0.18em;
   margin-top: 20px;
   color: #e7dac0;
@@ -339,9 +349,9 @@ kbd {
   align-items: center;
   justify-content: space-between;
   gap: 30px;
-  font: 600 23px var(--display);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font: 400 23px var(--display);
+  letter-spacing: 0.015em;
+  text-transform: none;
   color: var(--ink);
 }
 .title-play::before {
@@ -358,8 +368,8 @@ kbd {
   gap: 10px;
   height: 46px;
   margin: 4px 0 0 22px;
-  font: 500 21px var(--display);
-  text-transform: uppercase;
+  font: 400 21px var(--display);
+  text-transform: none;
   color: #e4d7b9;
 }
 .title-fullscreen kbd {
@@ -371,8 +381,8 @@ kbd {
 }
 .title-content .graphics-notice {
   font:
-    12px/1.5 "DM Sans",
-    sans-serif;
+    12px/1.5 "IM Fell English",
+    serif;
   width: 330px;
   margin-top: 12px;
 }
@@ -394,7 +404,9 @@ kbd {
   --sheet-inset: 76px;
   --content-left: calc(var(--sheet-left) + var(--sheet-inset));
   --content-top: calc(var(--sheet-top) + 64px);
-  --content-right: calc(var(--sheet-left) + var(--sheet-width) - var(--sheet-inset));
+  --content-right: calc(
+    var(--sheet-left) + var(--sheet-width) - var(--sheet-inset)
+  );
   --content-width: calc(var(--sheet-width) - 2 * var(--sheet-inset));
   --footer-bottom: calc(720px - var(--sheet-top) - var(--sheet-height) + 60px);
   position: fixed;
@@ -439,15 +451,15 @@ kbd {
   pointer-events: none;
 }
 .dialog h2 {
-  font: 600 58px/0.95 var(--display);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font: 400 52px/1.05 var(--display);
+  letter-spacing: -0.025em;
+  text-transform: none;
   margin: 0 0 28px;
 }
 .dialog > p,
 .screen-content > p {
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 20px;
+  line-height: 1.45;
   max-width: 390px;
 }
 .dialog-close {
@@ -461,7 +473,7 @@ kbd {
   gap: 9px;
   height: 40px;
   width: 120px;
-  font: 600 22px var(--display);
+  font: 400 22px var(--display);
   letter-spacing: 0.04em;
   color: var(--ink);
 }
@@ -497,9 +509,9 @@ kbd {
   width: 100%;
   height: 50px;
   padding: 8px 14px;
-  font: 600 28px var(--display);
-  text-transform: uppercase;
-  letter-spacing: 0.035em;
+  font: 400 27px var(--display);
+  text-transform: none;
+  letter-spacing: 0;
 }
 .pause-menu button svg {
   width: 17px;
@@ -535,9 +547,9 @@ kbd {
   justify-content: center;
   gap: 8px;
   min-height: 40px;
-  font: 500 21px var(--display);
-  text-transform: uppercase;
-  letter-spacing: 0.035em;
+  font: 400 21px var(--display);
+  text-transform: none;
+  letter-spacing: 0;
 }
 .primary-action {
   position: relative;
@@ -549,9 +561,9 @@ kbd {
   padding: 11px 17px;
   color: #f4e7c7;
   background: #414b34;
-  font: 600 20px var(--display);
-  text-transform: uppercase;
-  letter-spacing: 0.045em;
+  font: 400 21px var(--display);
+  text-transform: none;
+  letter-spacing: 0;
   clip-path: polygon(1% 5%, 98.5% 0, 100% 94%, 0 100%);
 }
 .primary-action:disabled {
@@ -563,7 +575,7 @@ kbd {
 }
 .settings-dialog,
 .controls-dialog {
-  --sheet-width: 708px;
+  --sheet-width: 770px;
 }
 .setting {
   display: flex;
@@ -571,8 +583,8 @@ kbd {
   justify-content: space-between;
   gap: 25px;
   width: 100%;
-  height: 59px;
-  font-size: 16px;
+  height: 66px;
+  font-size: 22px;
   border-bottom: 1px solid #6e624f44;
 }
 .setting span {
@@ -650,7 +662,7 @@ kbd {
 .control-list {
   width: 100%;
   margin: 0;
-  font-size: 15px;
+  font-size: 20px;
 }
 .control-list > div {
   display: flex;
@@ -661,12 +673,12 @@ kbd {
 }
 .control-list dd {
   margin: 0;
-  font: 13px var(--mono);
-  max-width: 290px;
+  font: 17px var(--mono);
+  max-width: 310px;
   text-align: right;
 }
 .controls-dialog .control-note {
-  font-size: 14px;
+  font-size: 18px;
   max-width: 100%;
   margin-top: 14px;
   line-height: 1.5;
@@ -702,7 +714,7 @@ kbd {
   text-align: center;
 }
 .ending-dialog h2 {
-  font: 500 56px/1.05 var(--serif);
+  font: 400 56px/1.05 var(--serif);
   text-transform: none;
   letter-spacing: -0.015em;
   margin: 26px 0;
@@ -737,64 +749,198 @@ kbd {
   margin: 0;
   font-size: 54px;
 }
+.map-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 30px;
+}
+.map-heading p {
+  font: 400 21px var(--hand);
+  color: #65523c;
+  max-width: 330px;
+  text-align: right;
+}
 .paper-map {
   display: grid;
-  grid-template-columns: 274px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 300px;
   grid-template-rows: minmax(0, 1fr);
-  align-items: center;
-  gap: 36px;
-  height: 440px;
-  margin-top: 24px;
+  gap: 28px;
+  height: 438px;
+  margin-top: 14px;
 }
-.paper-map img {
-  grid-column: 2;
-  grid-row: 1;
+.island-chart {
   width: 100%;
   height: 100%;
   min-height: 0;
-  object-fit: contain;
+  display: block;
+  overflow: visible;
   mix-blend-mode: multiply;
 }
+.chart-place-names {
+  font: 18px var(--display);
+  fill: #4d4735;
+  paint-order: stroke;
+  stroke: #e4dcc2;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.chart-label-lines {
+  fill: none;
+  stroke: #78694e;
+  stroke-width: 0.75;
+}
+.chart-rocks {
+  fill: #92856c99;
+  stroke: #6e6850;
+  stroke-width: 0.7;
+}
+.chart-place-names .chart-sea-name {
+  font: 18px var(--hand);
+  fill: #5d7b72;
+}
+.chart-stop {
+  color: #736749;
+}
+.chart-stop circle {
+  fill: #e7dec4;
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+.chart-stop text {
+  fill: currentColor;
+  font: 16px var(--display);
+}
+.chart-stop.restored {
+  color: #455d3b;
+}
+.chart-stop.restored circle {
+  fill: #d5d6b8;
+}
+.chart-stop path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.chart-stop.next {
+  color: #974d31;
+}
+.chart-stop .chart-target-ring {
+  fill: none;
+  stroke-dasharray: 3 3;
+  stroke-width: 1;
+}
+.chart-player circle {
+  fill: #f0e6c9;
+  stroke: #a14c33;
+  stroke-width: 1.2;
+}
+.chart-player path {
+  fill: #a14c33;
+  stroke: #f0e6c9;
+  stroke-width: 1;
+}
+.chart-player text {
+  font: 18px var(--hand);
+  fill: #873e28;
+  paint-order: stroke;
+  stroke: #e4dcc2;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.chart-compass {
+  color: #625139;
+}
+.chart-compass circle,
+.chart-compass path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+.chart-compass text {
+  fill: currentColor;
+  font: 22px var(--display);
+}
+.chart-scale path,
+.chart-legend path,
+.chart-legend circle {
+  fill: none;
+  stroke: #61563d;
+  stroke-width: 1;
+}
+.chart-scale text,
+.chart-legend text {
+  fill: #61563d;
+  font: 16px var(--display);
+}
+.chart-legend .chart-legend-restored {
+  fill: #d5d6b8;
+  stroke: #455d3b;
+}
+.chart-legend .chart-legend-check {
+  stroke: #455d3b;
+  stroke-width: 1.5;
+}
+.map-plan {
+  min-height: 0;
+  padding: 18px 0 0 24px;
+  border-left: 1px solid #796a4d55;
+}
+.map-plan h3 {
+  font: 400 28px/1.1 var(--display);
+  color: #523d2b;
+  margin-bottom: 18px;
+}
 .map-stops {
-  grid-column: 1;
-  grid-row: 1;
   padding: 0;
   margin: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  width: 100%;
 }
 .map-stops li {
   display: flex;
   align-items: center;
-  gap: 15px;
-  min-height: 74px;
-  font: 600 25px var(--display);
+  gap: 14px;
+  min-height: 78px;
+  font: 400 22px/1.15 var(--display);
   border-bottom: 1px solid #786b5044;
-  color: #6b604a;
+  color: #726750;
 }
 .map-stops li.current {
-  color: #81412a;
+  color: #863f2a;
 }
 .map-stops li.done {
-  color: #3f5037;
+  color: #415737;
 }
-.map-stops span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
+.map-stops li > span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 32px;
   border: 1px solid currentColor;
   border-radius: 49% 51% 47% 53%;
-  font: 12px var(--mono);
+  font: 20px var(--hand);
   flex-shrink: 0;
 }
-.map-stops li.current span {
+.map-stops li.current > span {
   border: 2px solid currentColor;
-  transform: rotate(-8deg);
+  transform: rotate(-6deg);
+}
+.map-stops small {
+  display: block;
+  margin-top: 5px;
+  font: 16px var(--hand);
+}
+.map-next {
+  margin-top: 20px;
+}
+.map-next p {
+  font: 18px/1.35 var(--display);
+}
+.map-next > span {
+  display: block;
+  margin-top: 12px;
+  font: 17px var(--hand);
+  color: #875135;
 }
 .archive-tabs {
   position: absolute;
@@ -812,9 +958,9 @@ kbd {
   align-items: center;
   justify-content: center;
   gap: 18px;
-  font: 600 23px var(--display);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font: 400 23px var(--display);
+  text-transform: none;
+  letter-spacing: 0.015em;
 }
 .archive-tabs button span {
   font: 13px var(--mono);
@@ -829,7 +975,7 @@ kbd {
   top: 236px;
   left: var(--content-left);
   width: var(--content-width);
-  height: 280px;
+  height: 300px;
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
   gap: 44px;
@@ -851,37 +997,37 @@ kbd {
 }
 .diagram-label {
   display: block;
-  font: 500 21px var(--display);
-  letter-spacing: 0.06em;
+  font: 400 21px var(--display);
+  letter-spacing: 0.015em;
 }
 .archive-record h3 {
-  font: 500 35px var(--serif);
+  font: 400 35px var(--serif);
   margin: 0 0 12px;
 }
 .notebook-evidence {
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 18px;
+  line-height: 1.4;
   width: 100%;
 }
 .archive-stats {
   display: flex;
   gap: 35px;
-  margin: 16px 0 12px;
+  margin: 10px 0 8px;
 }
 .archive-stats span {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  font: 12px var(--mono);
+  font: 18px var(--hand);
 }
 .archive-stats strong {
-  font: 600 25px var(--display);
+  font: 400 25px var(--display);
   color: #5a6442;
 }
 .evidence-log p {
   font:
-    13px/1.5 "DM Sans",
-    sans-serif;
+    16px/1.4 "IM Fell English",
+    serif;
   margin: 5px 0;
 }
 .personal-note {
@@ -893,7 +1039,7 @@ kbd {
   gap: 30px;
   align-items: center;
   font:
-    24px "Caveat",
+    24px "Kalam",
     cursive;
 }
 .personal-note input {
@@ -903,7 +1049,7 @@ kbd {
   border-bottom: 1px solid #76674680;
   padding: 8px 12px;
   font:
-    22px "Caveat",
+    22px "Kalam",
     cursive;
   color: #344832;
   background: #c6b38a12;
@@ -945,8 +1091,8 @@ kbd {
   top: 52px;
 }
 .repair-heading h1 {
-  font: 600 37px var(--display);
-  text-transform: uppercase;
+  font: 400 37px var(--display);
+  text-transform: none;
   letter-spacing: 0.04em;
   margin: 0;
   color: #f1e5c9;
@@ -959,8 +1105,8 @@ kbd {
   display: flex;
   gap: 12px;
   color: #393a2c;
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 20px;
+  line-height: 1.45;
 }
 .repair-layout {
   position: absolute;
@@ -993,7 +1139,7 @@ kbd {
   align-items: center;
   gap: 6px;
   height: 28px;
-  font: 500 20px var(--display);
+  font: 400 21px var(--display);
 }
 .board-tools button:disabled {
   opacity: 0.4;
@@ -1088,7 +1234,7 @@ kbd {
   fill: #ffe2aa;
 }
 .battery-volts {
-  font: 600 30px var(--display);
+  font: 400 30px var(--display);
   fill: #39423b;
 }
 .battery-caption {
@@ -1185,7 +1331,7 @@ kbd {
 }
 .connection-sketch text {
   font:
-    25px "Caveat",
+    25px "Kalam",
     cursive;
   fill: #f6dba0;
   stroke: #243930;
@@ -1223,8 +1369,8 @@ kbd {
 }
 .materials-label {
   display: block;
-  font: 500 19px var(--display);
-  text-transform: uppercase;
+  font: 400 19px var(--display);
+  text-transform: none;
   letter-spacing: 0.1em;
   margin-bottom: 8px;
 }
@@ -1241,7 +1387,7 @@ kbd {
   height: 59px;
   flex: 1;
   border: 1px solid #79674988;
-  font: 500 19px var(--display);
+  font: 400 19px var(--display);
 }
 .material-options button[aria-pressed="true"] {
   border: 2px solid #6a442a;
@@ -1316,11 +1462,11 @@ kbd {
   gap: 12px;
   padding-top: 13px;
   border-top: 1px solid #81745370;
-  font: 500 22px var(--serif);
+  font: 400 22px var(--serif);
 }
 .crayon-number {
   font:
-    56px/1 "Caveat",
+    56px/1 "Kalam",
     cursive;
   color: #966042;
 }
@@ -1346,7 +1492,7 @@ kbd {
   position: fixed;
   left: 60px;
   bottom: 77px;
-  font-size: 10px;
+  font-size: 15px;
   color: #efd2a0;
 }
 .repair-footer .text-button {
@@ -1450,4 +1596,64 @@ html[data-motion="reduce"] *::before,
 html[data-motion="reduce"] *::after {
   animation: none !important;
   transition: none !important;
+}
+
+/* The ink shares the paper's grain; the controls stay readable and unobscured. */
+.dialog:not(.repair-dialog) .screen-content > * {
+  mix-blend-mode: multiply;
+}
+.settings-dialog h2,
+.controls-dialog h2 {
+  margin-bottom: 22px;
+}
+.setting .setting-copy {
+  display: block;
+  text-align: left;
+}
+.setting-copy small {
+  display: block;
+  margin-top: 4px;
+  color: #706046;
+  font: 16px/1.2 var(--hand);
+}
+.setting-mark {
+  font: 26px var(--hand);
+  color: #765736;
+}
+.repair-instruction,
+.repair-actions {
+  mix-blend-mode: multiply;
+}
+.repair-actions legend {
+  font-size: 21px;
+  line-height: 1.2;
+}
+.repair-actions .choice {
+  font-size: 19px;
+  line-height: 1.25;
+}
+.rescue-radio {
+  height: 98px;
+  color: #75603d;
+}
+.rescue-radio svg {
+  height: 100%;
+  width: 240px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform: rotate(-3deg);
+}
+.ending-dialog {
+  --content-top: 116px;
+}
+.ending-dialog h2 {
+  font-size: 44px;
+  margin: 15px 0 24px;
+}
+.ending-dialog .rescue-message {
+  font-size: 22px;
+  line-height: 1.4;
 }

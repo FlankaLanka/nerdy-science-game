@@ -144,7 +144,7 @@ export const MISSIONS: Mission[] = [
     title: "A light that stays.",
     task: "Light both lamps. Keep B shining if A is disconnected.",
     intro:
-      "The ferry needs a dependable beacon. Build your own circuit so each lamp has a way to the battery.",
+      "The lighthouse radio needs reliable power so you can call for help. Build independent paths for its two lamps.",
     prediction: "When you test your circuit…",
     predictions: [
       { id: "both", text: "Both lamps light" },
@@ -173,9 +173,9 @@ export const MISSIONS: Mission[] = [
     discovery: "Another way home.",
     evidence:
       "Each parallel branch connects across the battery. Opening A’s branch leaves a complete path through B. That is why the backup stays on.",
-    restore: "Send the signal",
+    restore: "Power the radio",
     farewell:
-      "There. A light that stays. Someone out at sea is going to be very glad you were here.",
+      "The beacon is holding and the radio has power. Send a distress call from North Point.",
   },
 ];
 

@@ -502,7 +502,8 @@ export function buildWorkshop(floorY: number, materials: Materials) {
   return {
     root,
     obstacles,
-    signY: floorY + eave + 0.4,
+    signY: floorY + beamTop - 0.2,
+    signZ: W.z + postZ + 0.12,
     interiorLampY: floorY + 2.85,
     porchLampY: floorY + porchY - 0.42,
     porchLampZ: W.z + porchZ,

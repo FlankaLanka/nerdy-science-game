@@ -32,10 +32,6 @@
     "bytes": 252140
   },
   {
-    "file": "pip-v2.webp",
-    "bytes": 261380
-  },
-  {
     "file": "plaster-color.webp",
     "bytes": 382248
   },
@@ -74,9 +70,5 @@
   {
     "file": "wood-roughness.webp",
     "bytes": 6020
-  },
-  {
-    "file": "keepers-map.webp",
-    "bytes": 524694
   }
 ]

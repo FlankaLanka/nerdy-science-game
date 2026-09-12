@@ -1,6 +1,13 @@
 import { useEffect, useRef } from "react";
 
-export type Sound = "connect" | "test" | "success" | "fault" | "soft" | "step";
+export type Sound =
+  | "connect"
+  | "test"
+  | "success"
+  | "fault"
+  | "soft"
+  | "step"
+  | "signal";
 // Starting gains and envelopes; micro tests and tuning direction are in docs/design.md.
 export function useSound(enabled: boolean) {
   const state = useRef<{ context: AudioContext; master: GainNode } | null>(
@@ -51,6 +58,30 @@ export function useSound(enabled: boolean) {
     const audio = unlock();
     if (!audio) return;
     const { context, master } = audio;
+    if (kind === "signal") {
+      let start = context.currentTime;
+      for (const [i, length] of [1, 1, 1, 3, 3, 3, 1, 1, 1].entries()) {
+        const oscillator = context.createOscillator(),
+          gain = context.createGain();
+        oscillator.frequency.value = 660;
+        oscillator.type = "sine";
+        const end = start + length * 0.085;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.22, start + 0.008);
+        gain.gain.setValueAtTime(0.22, end - 0.008);
+        gain.gain.linearRampToValueAtTime(0, end);
+        oscillator.connect(gain);
+        gain.connect(master);
+        oscillator.start(start);
+        oscillator.stop(end + 0.01);
+        oscillator.onended = () => {
+          oscillator.disconnect();
+          gain.disconnect();
+        };
+        start = end + (i === 2 || i === 5 ? 0.25 : 0.085);
+      }
+      return;
+    }
     if (kind === "step") {
       const buffer = context.createBuffer(
         1,

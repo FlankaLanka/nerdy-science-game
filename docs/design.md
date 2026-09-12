@@ -1,6 +1,6 @@
 # SIGNAL: first-person design
 
-The playable world is the primary interface. The player walks between three broken electrical systems on a storm-darkened island. Approaching a cabinet and looking at it reveals an interaction prompt. Pressing E opens the instrument; closing it returns to the same place and orientation.
+The playable world is the primary interface. Stranded after a storm, the player restores three electrical systems to power the lighthouse radio and call for help. Approaching a cabinet and looking at it reveals an interaction prompt. Pressing E opens the instrument; closing it returns to the same place and orientation.
 
 ## Onboarding
 
@@ -36,7 +36,9 @@ These are tuning values for this prototype, not measured preferences. Beginner p
 | Harbor relay       | Restore the existing series circuit, predict a fault, remove A               | Paired jetty lamps illuminate                              |
 | Lighthouse control | Build two working lamps with an independent path for B; remove A to prove it | Lens and lighthouse lighting activate; beam sweeps the sea |
 
-The next location remains electrically locked until the previous repair is complete. Visiting a restored workshop or harbor shows its completed circuit. After the ending, the lighthouse offers a fresh practice board without changing the story evidence.
+The next location remains electrically locked until the previous repair is complete. Visiting a restored workshop or harbor shows its completed circuit. The final repair powers the radio; **Call for help** sends an in-game distress signal and shows the coastguard's reply. Closing the radio before calling leaves that action available at the lighthouse. Once the call is sent, the lighthouse offers a fresh practice board without changing the story evidence.
+
+The map is an accurate survey of the playable island, using the real coastline, contours, trees, coastal rocks, paths, workshop, jetty, and lighthouse. It shows the player's current position and facing, the next repair, distance, and which circuits have power. The sequence on the sheet explains the route to the radio. It has no fast travel; the player follows the chart's trails in the world. Menus and settings use aged printed lettering and handwritten annotations blended into the paper.
 
 Wires are ideal connections; lamps are equal resistive loads. Nodal analysis determines power. Source shorts trip a virtual fuse. Crossings join only at sockets. This intentionally simplified model omits lamp temperature and battery internal resistance. Immediate puzzle success does not establish durable learning; that requires human evaluation and later recall.
 
