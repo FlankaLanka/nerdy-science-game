@@ -20,6 +20,7 @@ import { GameViewport } from "./GameViewport";
 import { prepareInterface } from "./interfaceAssets";
 import { ShipMap } from "./ShipMap";
 import type { Player } from "./scene/navigation";
+import { SHIP_SYSTEMS, SHIP_TUNING } from "./shipSystems";
 
 const World = lazy(() => import("./World"));
 type Menu =
@@ -63,10 +64,16 @@ export default function App() {
   const [effect, setEffect] = useState<{
     id: number;
     kind: "boot" | "restore";
+    mission?: MissionId;
   } | null>(null);
   useEffect(() => {
     if (!effect) return;
-    const timer = setTimeout(() => setEffect(null), 1400);
+    const timer = setTimeout(
+      () => setEffect(null),
+      effect.kind === "restore"
+        ? SHIP_TUNING.restorationNoticeMs
+        : SHIP_TUNING.bootNoticeMs,
+    );
     return () => clearTimeout(timer);
   }, [effect]);
   const [subtitle, setSubtitle] = useState(""),
@@ -74,6 +81,7 @@ export default function App() {
   const [fullscreen, setFullscreen] = useState(!!document.fullscreenElement);
   const [displayNotice, setDisplayNotice] = useState("");
   const [mapPlayer, setMapPlayer] = useState<Player | null>(null);
+  const [transmitting, setTransmitting] = useState(false);
   useEffect(() => {
     const change = () => setFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", change);
@@ -103,6 +111,19 @@ export default function App() {
   const arrived = ready && kitReady && interfaceReady;
   const reducedMotion = state.reducedMotion || systemMotion;
   const playing = running && !menu && !active && !failed;
+  useEffect(() => {
+    if (!transmitting) return;
+    if (!allDone || state.distressSent) {
+      setTransmitting(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      dispatch({ type: "SEND_DISTRESS" });
+      setTransmitting(false);
+      sound.play("success");
+    }, SHIP_TUNING.transmissionMs);
+    return () => clearTimeout(timer);
+  }, [transmitting, allDone, state.distressSent]);
   useEffect(() => {
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(state));
@@ -145,7 +166,7 @@ export default function App() {
       dispatch({ type: "START" });
       dispatch({ type: "INTRO", step: 3 });
       setSubtitle(
-        "Asterion is running on reserve power. Restore the three systems and send a distress signal. Start at Engineering.",
+        "Flight recorder: a surge took out the primary bus. Start at the marked auxiliary console. Get the lights on, then find a way to call for rescue.",
       );
     }
     resume();
@@ -180,12 +201,13 @@ export default function App() {
   function complete() {
     if (!active) return;
     const id = active;
-    if (!practice && !state.completed.includes(id))
-      dispatch({ type: "COMPLETE", id, now: Date.now() });
+    const newlyRestored = !practice && !state.completed.includes(id);
+    if (newlyRestored) dispatch({ type: "COMPLETE", id, now: Date.now() });
     setActive(null);
     setPractice(null);
-    sound.play("success");
-    setEffect({ id: Date.now(), kind: "restore" });
+    sound.play(newlyRestored || practice ? "success" : "soft");
+    if (newlyRestored)
+      setEffect({ id: Date.now(), kind: "restore", mission: id });
     if (id === "beacon" && !practice && !allDone) {
       setRunning(false);
       setMenu("ending");
@@ -194,9 +216,9 @@ export default function App() {
         practice
           ? "Another working route. Nicely done."
           : id === "workshop"
-            ? "Auxiliary power restored. Follow the center passage to the Power relay."
+            ? "Auxiliary power restored. The relay bulkhead is released. Follow the illuminated power trunk forward."
             : id === "harbor"
-              ? "Distribution is online. Continue forward to Command and restore the distress transmitter."
+              ? "Reactor synchronized. Command access is released. Build a transmitter that can survive another failure."
               : "All systems holding. The ship is yours to explore.",
       );
       if (!failed) resume();
@@ -244,6 +266,7 @@ export default function App() {
             <World
               preview={!entered}
               distressSent={state.distressSent}
+              transmitting={transmitting}
               ref={world}
               playing={playing}
               completed={state.completed}
@@ -253,6 +276,8 @@ export default function App() {
               onPause={() => openMenu("pause")}
               onReady={() => setReady(true)}
               onStep={() => sound.play("step")}
+              onEnvironment={(event) => sound.play(event)}
+              onScan={() => sound.play("soft")}
               onError={() => {
                 setFailed(true);
                 setReady(true);
@@ -278,6 +303,14 @@ export default function App() {
             </span>
           </div>
         )}
+        {effect?.kind === "restore" && effect.mission && playing && (
+          <div className="recovery-notice" role="status">
+            <span>
+              SYSTEM COMMISSIONED / {SHIP_SYSTEMS[effect.mission].code}
+            </span>
+            <strong>{SHIP_SYSTEMS[effect.mission].restored}</strong>
+          </div>
+        )}
         {!entered && (
           <main className="title-overlay">
             <div className="title-topline">
@@ -294,9 +327,9 @@ export default function App() {
                 SIGNAL<span>DEAD ORBIT</span>
               </h1>
               <p className="title-story">
-                No contact. Failing systems.
+                One ship. No contact.
                 <br />
-                Bring the ship back to life.
+                You are the way back online.
               </p>
               <button
                 className="title-play"
@@ -326,6 +359,25 @@ export default function App() {
                   still work.
                 </p>
               )}
+            </div>
+            <div className="title-manifest" aria-hidden="true">
+              <span>EMERGENCY RECORD / AST–07</span>
+              <p>
+                Primary bus failure.
+                <br />
+                External communications lost.
+              </p>
+              <div>
+                <i /> MANUAL RECOVERY REQUIRED
+              </div>
+              <svg viewBox="0 0 240 112">
+                <path d="M8 78h28l8-28 12 52 12-73 12 49h47l8-14 9 14h85" />
+                <path
+                  className="manifest-baseline"
+                  d="M8 28h224M8 103h224M8 3v105M232 3v105"
+                />
+              </svg>
+              <small>A circuit adventure in deep space</small>
             </div>
             <div
               className="title-systems"
@@ -565,6 +617,10 @@ export default function App() {
                 <dd>M / J</dd>
               </div>
               <div>
+                <dt>Ship systems</dt>
+                <dd>Q</dd>
+              </div>
+              <div>
                 <dt>Fullscreen</dt>
                 <dd>F</dd>
               </div>
@@ -618,7 +674,7 @@ export default function App() {
               ASTERION / LONG-RANGE COMMUNICATIONS
             </span>
             <div
-              className={`rescue-radio ${state.distressSent ? "transmitting" : ""}`}
+              className={`rescue-radio ${state.distressSent || transmitting ? "transmitting" : ""}`}
               aria-hidden="true"
             >
               <svg viewBox="0 0 240 100">
@@ -632,13 +688,34 @@ export default function App() {
               </svg>
             </div>
             <h2>
-              {state.distressSent ? "Signal received." : "Transmitter online."}
+              {state.distressSent
+                ? "Signal received."
+                : transmitting
+                  ? "Reaching beyond the orbit."
+                  : "Transmitter online."}
             </h2>
             <p className="rescue-message">
               {state.distressSent
                 ? "“Asterion, this is Rescue Control. Your coordinates are locked. Hold position. We’re coming to get you.”"
-                : "Three systems restored. One way home. Your distress transmitter is ready to reach beyond this orbit."}
+                : transmitting
+                  ? "Carrier acquired. Sending vessel identity and position through the independent backup channel."
+                  : "Three systems restored. One way home. Your distress transmitter is ready to reach beyond this orbit."}
             </p>
+            <div
+              className={`transmission-strip ${transmitting ? "sending" : state.distressSent ? "acknowledged" : ""}`}
+              role="status"
+            >
+              <span>
+                {state.distressSent
+                  ? "RESCUE CONTROL / ACKNOWLEDGED"
+                  : transmitting
+                    ? "COM–03 / TRANSMITTING COORDINATES"
+                    : "COM–03 / BACKUP CHANNEL VERIFIED"}
+              </span>
+              <div>
+                <i />
+              </div>
+            </div>
             {state.distressSent ? (
               <button className="primary-action" onClick={resume}>
                 Keep exploring
@@ -647,12 +724,15 @@ export default function App() {
             ) : (
               <button
                 className="primary-action"
+                disabled={transmitting}
                 onClick={() => {
-                  dispatch({ type: "SEND_DISTRESS" });
+                  setTransmitting(true);
                   sound.play("signal");
                 }}
               >
-                Transmit distress signal
+                {transmitting
+                  ? "Sending coordinates…"
+                  : "Transmit distress signal"}
                 <Radio size={18} />
               </button>
             )}

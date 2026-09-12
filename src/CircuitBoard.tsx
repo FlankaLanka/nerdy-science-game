@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { RotateCcw, X } from "lucide-react";
+import { RotateCcw, Undo2, X } from "lucide-react";
 import { MATERIALS, wireKey } from "./missions";
 import type { Mission, Terminal, Wire } from "./missions";
 import type { Progress, MissionAction } from "./game";
@@ -7,6 +7,7 @@ import type { CircuitResult } from "./circuit";
 import { FULL_POWER } from "./circuit";
 import type { Sound } from "./audio";
 import { BenchScene } from "./BenchScene";
+import { SHIP_SYSTEMS } from "./shipSystems";
 
 export function cablePath(a: Terminal, b: Terminal): string {
   if (Math.abs(a.y - b.y) < 35)
@@ -61,6 +62,14 @@ export function CircuitBoard({
     setPointer(null);
     drag.current = null;
     skipClick.current = false;
+    if (active && lesson === 1) {
+      const frame = requestAnimationFrame(() =>
+        board.current
+          ?.querySelector<HTMLButtonElement>('[data-terminal="a2"]')
+          ?.focus({ preventScroll: true }),
+      );
+      return () => cancelAnimationFrame(frame);
+    }
   }, [active, mission.id, progress.phase, lesson]);
   useEffect(() => {
     setNotice("");
@@ -114,6 +123,19 @@ export function CircuitBoard({
     <div className={`circuit-area tutorial-${lesson}`}>
       <div className="board-topline">
         <div className="board-tools" hidden={lesson === 0}>
+          <button
+            disabled={!editable || !progress.history.length}
+            onClick={() => {
+              onAction({ type: "UNDO" });
+              setSelected(null);
+              setPointer(null);
+              play("soft");
+            }}
+            title="Undo last edit"
+          >
+            <Undo2 size={15} />
+            <span>Undo</span>
+          </button>
           <button
             onClick={() => {
               onAction({ type: "CLEAR" });
@@ -463,9 +485,7 @@ export function CircuitBoard({
                   )}
                 </g>
                 <text y="66" textAnchor="middle" className="component-label">
-                  {mission.id === "workshop"
-                    ? "AUXILIARY LAMP"
-                    : `LAMP ${l.id.toUpperCase()}`}
+                  {`${l.id.toUpperCase()} / ${l.id === "a" ? SHIP_SYSTEMS[mission.id].loadA : SHIP_SYSTEMS[mission.id].loadB}`.toUpperCase()}
                 </text>
                 <text
                   y="85"
@@ -476,9 +496,9 @@ export function CircuitBoard({
                     ? "disconnected"
                     : result
                       ? on
-                        ? "glowing"
-                        : "dark"
-                      : ""}
+                        ? "ENERGIZED"
+                        : "NO CURRENT"
+                      : "12 Ω / SERVICE LAMP"}
                 </text>
               </g>
             );

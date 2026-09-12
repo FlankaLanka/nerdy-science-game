@@ -3,7 +3,8 @@ import { Dialog } from "./Dialog";
 import { currentMission } from "./game";
 import type { GameState } from "./game";
 import { MISSIONS } from "./missions";
-import { DECK, FURNITURE, deckPoint } from "./scene/shipLayout";
+import { DECK, DOORWAYS, FURNITURE, deckPoint } from "./scene/shipLayout";
+import { SYSTEM_ORDER } from "./shipSystems";
 import { SITES } from "./scene/navigation";
 import type { Player } from "./scene/navigation";
 
@@ -24,7 +25,7 @@ export function ShipMap({
     : null;
   const notes = {
     workshop:
-      "Restore auxiliary power at the engineering console. Follow the cyan deck lights.",
+      "Restore auxiliary power at the marked engineering console. This releases the first bulkhead and restores deck lighting.",
     harbor:
       "Follow the center passage forward. The distribution console is to starboard of the reactor.",
     beacon:
@@ -125,6 +126,23 @@ export function ShipMap({
               );
             })}
           </g>
+          {DOORWAYS.map((z, index) => {
+            const [x, y] = deckPoint(0, z);
+            const released = state.completed.includes(SYSTEM_ORDER[index]);
+            return (
+              <g
+                key={z}
+                transform={`translate(${x} ${y})`}
+                className={`chart-bulkhead ${released ? "released" : "sealed"}`}
+                aria-label={`Bulkhead ${index + 1}: ${released ? "released" : "sealed"}`}
+              >
+                <path d={released ? "M-19-4v8m38-8v8" : "M-19 0h38"} />
+                <text x="28" y="3">
+                  {released ? "RELEASED" : "SEALED"}
+                </text>
+              </g>
+            );
+          })}
           <g className="chart-place-names">
             <text x="85" y="58">
               03 / COMMAND

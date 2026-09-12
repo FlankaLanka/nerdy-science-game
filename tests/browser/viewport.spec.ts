@@ -134,7 +134,7 @@ test("world, menus and repair steps share a 16:9 frame with no scrolling", async
   await page.getByRole("button", { name: "Test circuit", exact: true }).click();
   await page
     .getByRole("button", {
-      name: "A wire to just one end of the battery",
+      name: "A connection to the positive terminal only",
       exact: true,
     })
     .click();

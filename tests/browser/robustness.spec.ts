@@ -74,7 +74,7 @@ test("pre-first-person saves keep their repairs and start safely on the engineer
   await restored.close();
 });
 
-test("circuit activities expose reset without undo or coaching controls", async ({
+test("circuit edits can be undone or reset without coaching requests", async ({
   page,
 }) => {
   const requests: string[] = [];
@@ -83,11 +83,19 @@ test("circuit activities expose reset without undo or coaching controls", async 
   });
   await openWorkshop(page);
   await expect(
-    page.getByRole("button", { name: /^(Undo|Clear|Hint|Ask Pip)$/ }),
+    page.getByRole("button", { name: /^(Clear|Hint|Ask Pip)$/ }),
   ).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Reset", exact: true }),
   ).toBeDisabled();
+  await connect(page, "Lamp A right", "Bridge left");
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: /^Remove wire from/ }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Select the two circled sockets", { exact: false }),
+  ).toBeVisible();
   await connect(page, "Lamp A right", "Bridge left");
   await page.getByRole("button", { name: "Reset", exact: true }).click();
   await expect(

@@ -10,6 +10,9 @@ import type { Telemetry, WorldState } from "./scene/renderWorld";
 import { SITES, SPAWN } from "./scene/navigation";
 import type { Player } from "./scene/navigation";
 import type { MissionId } from "./missions";
+import { SHIP_SYSTEMS, SYSTEM_ORDER, systemStatus } from "./shipSystems";
+import { Activity, ArrowUpRight, Check, LockKeyhole } from "lucide-react";
+import { DOORWAYS } from "./scene/shipLayout";
 
 export type WorldHandle = {
   capture: () => void;
@@ -23,6 +26,8 @@ type Props = WorldState & {
   onReady: () => void;
   onError: () => void;
   onStep: () => void;
+  onEnvironment: (sound: "door" | "power") => void;
+  onScan: () => void;
 };
 
 export default forwardRef<WorldHandle, Props>(function World(props, ref) {
@@ -32,6 +37,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
   const controls = useRef<ReturnType<typeof renderWorld> | null>(null);
   const [hud, setHud] = useState<Telemetry | null>(null);
   const [stick, setStick] = useState({ x: 0, y: 0 });
+  const [systemsOpen, setSystemsOpen] = useState(false);
   const stickPointer = useRef<number | null>(null);
   const waypoint = useRef<HTMLDivElement>(null);
   const waypointDistance = useRef<HTMLSpanElement>(null);
@@ -65,6 +71,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
       interact: (id) => latest.current.onVisit(id),
       pause: () => latest.current.onPause(),
       step: () => latest.current.onStep(),
+      environment: (sound) => latest.current.onEnvironment(sound),
     });
     controls.current = world;
     return () => {
@@ -74,17 +81,46 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
   }, []);
   useEffect(() => {
     if (!props.playing) {
+      setSystemsOpen(false);
       controls.current?.stick(0, 0);
       setStick({ x: 0, y: 0 });
       stickPointer.current = null;
     }
   }, [props.playing]);
+  useEffect(() => {
+    const key = (event: KeyboardEvent) => {
+      if (
+        !latest.current.playing ||
+        event.repeat ||
+        event.code !== "KeyQ" ||
+        event.ctrlKey ||
+        event.metaKey
+      )
+        return;
+      event.preventDefault();
+      setSystemsOpen((open) => !open);
+      latest.current.onScan();
+    };
+    document.addEventListener("keydown", key);
+    return () => document.removeEventListener("keydown", key);
+  }, []);
   const focus = hud?.focus,
     complete = focus ? props.completed.includes(focus) : false;
   const next = (["workshop", "harbor", "beacon"] as MissionId[]).find(
     (id) => !props.completed.includes(id),
   );
   const available = focus === next || complete;
+  const current = next ? SHIP_SYSTEMS[next] : null;
+  const position = controls.current?.position();
+  const lockedDoor = position
+    ? DOORWAYS.findIndex(
+        (z, i) =>
+          !props.completed.includes(SYSTEM_ORDER[i]) &&
+          position.z > z &&
+          position.z - z < 5 &&
+          Math.abs(position.x) < 2.8,
+      )
+    : -1;
   function stopStick() {
     controls.current?.stick(0, 0);
     setStick({ x: 0, y: 0 });
@@ -102,7 +138,11 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
               <i />
               {props.completed.length === 3
                 ? "PRIMARY SYSTEMS ONLINE"
-                : "RESERVE POWER ACTIVE"}
+                : props.completed.includes("harbor")
+                  ? "REACTOR ONLINE / COMMS OFFLINE"
+                  : props.completed.includes("workshop")
+                    ? "AUXILIARY SUPPLY ONLINE"
+                    : "RESERVE POWER ACTIVE"}
             </span>
           </div>
           <div className="system-readout">
@@ -125,6 +165,90 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
               <kbd>M</kbd> DECK MAP <kbd>J</kbd> MISSION LOG
             </span>
           </div>
+          <aside className="objective-card" aria-label="Current objective">
+            <span className="eyebrow">
+              {props.distressSent ? "MISSION COMPLETE" : "RECOVERY OBJECTIVE"}
+              <span>{next ? SHIP_SYSTEMS[next].code : "COM–03"}</span>
+            </span>
+            <h2>
+              {props.distressSent
+                ? "Rescue has our coordinates."
+                : props.transmitting
+                  ? "Transmitting the distress signal"
+                  : (current?.goal ?? "Send the distress signal")}
+            </h2>
+            <p>
+              {props.distressSent
+                ? "Keep the transmitter online. Explore the restored ship."
+                : props.transmitting
+                  ? "Sending vessel identity and position. Awaiting rescue control’s acknowledgement."
+                  : (current?.consequence ??
+                    "Use the forward console to contact rescue control.")}
+            </p>
+            <span className="objective-location">
+              <ArrowUpRight size={13} />
+              {current?.destination ?? "Command deck · forward console"}
+            </span>
+          </aside>
+          {lockedDoor >= 0 && !focus && (
+            <div className="bulkhead-notice" role="status">
+              <LockKeyhole size={15} />
+              <span>
+                Bulkhead sealed
+                <small>
+                  {lockedDoor === 0
+                    ? "Restore auxiliary power to release this door."
+                    : "Restore distribution to release this door."}
+                </small>
+              </span>
+            </div>
+          )}
+          <button
+            className={`systems-toggle ${systemsOpen ? "active" : ""}`}
+            aria-expanded={systemsOpen}
+            aria-controls="ship-systems"
+            onClick={() => {
+              setSystemsOpen((open) => !open);
+              props.onScan();
+            }}
+          >
+            <Activity size={15} />
+            <kbd>Q</kbd> {systemsOpen ? "Close systems" : "Ship systems"}
+          </button>
+          {systemsOpen && (
+            <aside
+              id="ship-systems"
+              className="systems-panel"
+              aria-label="Ship systems"
+            >
+              <span className="eyebrow">POWER NETWORK / LIVE DIAGNOSTICS</span>
+              <ol>
+                {SYSTEM_ORDER.map((id, index) => {
+                  const status = systemStatus(id, props.completed);
+                  return (
+                    <li key={id} data-status={status}>
+                      <span className="network-node">
+                        {status === "ONLINE" ? (
+                          <Check size={14} />
+                        ) : (
+                          String(index + 1).padStart(2, "0")
+                        )}
+                      </span>
+                      <div>
+                        <strong>{SHIP_SYSTEMS[id].label}</strong>
+                        <small>{status}</small>
+                        {id === next && <p>{SHIP_SYSTEMS[id].fault}</p>}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+              <p className="network-caption">
+                Power flows forward. Restore each upstream feed to reach the
+                next system.
+              </p>
+            </aside>
+          )}
           <div
             className="compass"
             aria-label={`Facing ${Math.round(hud.heading)} degrees`}

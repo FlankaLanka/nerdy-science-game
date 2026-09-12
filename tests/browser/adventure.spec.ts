@@ -35,15 +35,17 @@ test("walk the ship, restore all three physical stations, and retain discoveries
   await expect(
     page.getByText("No current through the bridge.", { exact: false }),
   ).toBeVisible();
+  await expect(page.locator('[data-load="a"] strong')).toContainText("0.00");
   await page.getByRole("button", { name: "Copper", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Test circuit", exact: true }),
   ).toBeDisabled();
   await page.getByRole("button", { name: "Light up", exact: true }).click();
   await page.getByRole("button", { name: "Test circuit", exact: true }).click();
+  await expect(page.locator('[data-load="a"] strong')).toContainText("0.50");
   await page
     .getByRole("button", {
-      name: "A wire to just one end of the battery",
+      name: "A connection to the positive terminal only",
       exact: true,
     })
     .click();
@@ -79,6 +81,8 @@ test("walk the ship, restore all three physical stations, and retain discoveries
     .click();
   await page.getByRole("button", { name: "Test circuit", exact: true }).click();
   await page.getByRole("button", { name: "B stays on", exact: true }).click();
+  await expect(page.locator('[data-load="a"] strong')).toContainText("3.0");
+  await expect(page.locator('[data-load="b"] strong')).toContainText("0.25");
   await page
     .getByRole("button", { name: "Disconnect lamp A", exact: true })
     .click();
@@ -135,6 +139,8 @@ test("walk the ship, restore all three physical stations, and retain discoveries
   await expect(
     page.getByText("The backup held.", { exact: true }),
   ).toBeVisible();
+  await expect(page.locator('[data-load="a"] strong')).toContainText("0.00");
+  await expect(page.locator('[data-load="b"] strong')).toContainText("0.50");
   await page
     .getByRole("button", {
       name: "B has its own complete path to both battery ends",
@@ -153,6 +159,9 @@ test("walk the ship, restore all three physical stations, and retain discoveries
   await page
     .getByRole("button", { name: "Transmit distress signal", exact: true })
     .click();
+  await expect(
+    page.getByRole("button", { name: "Sending coordinates…", exact: true }),
+  ).toBeDisabled();
   await expect(
     page.getByText("Signal received.", { exact: true }),
   ).toBeVisible();

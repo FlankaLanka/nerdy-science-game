@@ -7,6 +7,8 @@ export type Sound =
   | "fault"
   | "soft"
   | "step"
+  | "door"
+  | "power"
   | "signal";
 // Starting gains and envelopes; micro tests and tuning direction are in docs/design.md.
 export function useSound(enabled: boolean) {
@@ -68,6 +70,65 @@ export function useSound(enabled: boolean) {
     const audio = unlock();
     if (!audio) return;
     const { context, master } = audio;
+    if (kind === "door" || kind === "power") {
+      // Starting envelopes: a servo hiss and low motor spin-up, never a startle cue.
+      const duration = kind === "door" ? 0.6 : 1.2;
+      const buffer = context.createBuffer(
+        1,
+        Math.ceil(context.sampleRate * duration),
+        context.sampleRate,
+      );
+      const samples = buffer.getChannelData(0);
+      for (let i = 0; i < samples.length; i++)
+        samples[i] =
+          (Math.random() * 2 - 1) * Math.sin((Math.PI * i) / samples.length);
+      const source = context.createBufferSource(),
+        filter = context.createBiquadFilter(),
+        gain = context.createGain();
+      source.buffer = buffer;
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(
+        kind === "door" ? 900 : 180,
+        context.currentTime,
+      );
+      filter.frequency.exponentialRampToValueAtTime(
+        kind === "door" ? 240 : 1100,
+        context.currentTime + duration,
+      );
+      gain.gain.value = kind === "door" ? 0.12 : 0.14;
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(master);
+      source.start();
+      source.onended = () => {
+        source.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      };
+      const motor = context.createOscillator(),
+        motorGain = context.createGain();
+      motor.type = "sine";
+      motor.frequency.setValueAtTime(
+        kind === "door" ? 100 : 42,
+        context.currentTime,
+      );
+      motor.frequency.exponentialRampToValueAtTime(
+        kind === "door" ? 65 : 120,
+        context.currentTime + duration,
+      );
+      motorGain.gain.setValueAtTime(0, context.currentTime);
+      motorGain.gain.linearRampToValueAtTime(0.13, context.currentTime + 0.08);
+      motorGain.gain.linearRampToValueAtTime(0, context.currentTime + duration);
+      motor.connect(motorGain);
+      motorGain.connect(master);
+      motor.start();
+      motor.stop(context.currentTime + duration);
+      motor.onended = () => {
+        motor.disconnect();
+        motorGain.disconnect();
+      };
+      return;
+    }
     if (kind === "signal") {
       let start = context.currentTime;
       for (const [i, length] of [1, 1, 1, 3, 3, 3, 1, 1, 1].entries()) {

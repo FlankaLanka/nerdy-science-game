@@ -3,6 +3,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { disposeScene } from "./art";
 import { buildSpaceship } from "./spaceship";
@@ -35,6 +36,7 @@ export type WorldState = {
   reducedMotion: boolean;
   sensitivity: number;
   distressSent: boolean;
+  transmitting: boolean;
   preview: boolean;
 };
 type Options = {
@@ -47,6 +49,7 @@ type Options = {
   interact: (id: MissionId) => void;
   pause: () => void;
   step: () => void;
+  environment: (sound: "door" | "power") => void;
 };
 const empty = {
   capture() {},
@@ -73,6 +76,7 @@ export function renderWorld(o: Options) {
   renderer.setPixelRatio(gamePixelRatio(coarse ? 1.35 : 1.65));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   const canvas = renderer.domElement;
@@ -85,8 +89,8 @@ export function renderWorld(o: Options) {
   o.container.prepend(canvas);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("#020711");
-  scene.add(new THREE.HemisphereLight("#b0d4ef", "#131c2b", 1.6));
-  const sun = new THREE.DirectionalLight("#9dd2ff", 2.2);
+  scene.add(new THREE.HemisphereLight("#abc4ce", "#151a24", 0.48));
+  const sun = new THREE.DirectionalLight("#a7ccdc", 0.75);
   sun.position.set(30, 18, -30);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -100,7 +104,7 @@ export function renderWorld(o: Options) {
   sun.shadow.normalBias = 0.035;
   sun.shadow.bias = -0.0002;
   scene.add(sun);
-  const fill = new THREE.DirectionalLight("#c5e7ee", 1.2);
+  const fill = new THREE.DirectionalLight("#b1c4c9", 0.18);
   fill.position.set(-10, 12, 20);
   scene.add(fill);
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -108,7 +112,7 @@ export function renderWorld(o: Options) {
   const environment = pmrem.fromScene(roomEnvironment, 0.04);
   roomEnvironment.dispose();
   scene.environment = environment.texture;
-  scene.environmentIntensity = 0.3;
+  scene.environmentIntensity = 0.25;
   const model = buildSpaceship(scene);
   let player = { ...SPAWN };
   try {
@@ -120,7 +124,13 @@ export function renderWorld(o: Options) {
   camera.rotation.order = "YXZ";
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.22, 0.4, 1.8);
+  const occlusion = new SSAOPass(scene, camera, 1, 1, 12);
+  occlusion.kernelRadius = 0.45;
+  occlusion.minDistance = 0.0002;
+  occlusion.maxDistance = 0.018;
+  occlusion.enabled = !coarse;
+  composer.addPass(occlusion);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.16, 0.32, 2.1);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
   let disposed = false,
@@ -279,6 +289,10 @@ export function renderWorld(o: Options) {
     composer.setSize(width, height);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+    occlusion.setSize(
+      Math.max(1, Math.round(width * 0.75)),
+      Math.max(1, Math.round(height * 0.75)),
+    );
   };
   const observer = new ResizeObserver(resize);
   observer.observe(o.container);
@@ -362,7 +376,16 @@ export function renderWorld(o: Options) {
       );
     } else camera.rotation.set(player.pitch, player.yaw, 0, "YXZ");
     camera.updateMatrixWorld();
-    model.update(dt, time, player, state.completed, state.reducedMotion);
+    for (const event of model.update(
+      dt,
+      time,
+      player,
+      state.completed,
+      state.reducedMotion,
+      state.playing,
+    ))
+      o.environment(event);
+    renderer.shadowMap.needsUpdate = !!model.root.userData.shadowsDirty;
     const next = ids.find((id) => !state.completed.includes(id)) ?? "beacon";
     composer.render();
     const site = SITES[next];
@@ -445,6 +468,7 @@ export function renderWorld(o: Options) {
       pmrem.dispose();
       composer.dispose();
       bloom.dispose();
+      occlusion.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
       canvas.remove();

@@ -3,11 +3,7 @@ import type { MissionId, Wire, Material } from "./missions.ts";
 import { outcomeId, sanitizeWires, solveCircuit } from "./circuit.ts";
 
 export type Phase =
-  | "build"
-  | "fault-ready"
-  | "fault-result"
-  | "reflect"
-  | "complete";
+  "build" | "fault-ready" | "fault-result" | "reflect" | "complete";
 export type Experiment = {
   type: "circuit" | "fault";
   wires: Wire[];
@@ -170,6 +166,7 @@ export function updateProgress(
         history: p.history.slice(0, -1),
         tested: false,
         prediction: null,
+        explanation: null,
       };
     }
     case "CLEAR":

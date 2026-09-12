@@ -10,11 +10,11 @@
 
 ## Rendering and effects
 
-The ship uses shared box geometry, metal materials, emissive light strips, point lights, and procedural signage. A deterministic starfield, shader planet, atmospheric shell, and geometry rings provide space outside the hull. Both graphics contexts use Three.js RoomEnvironment for procedural reflections, with no HDR or material image downloads. The main renderer adds restrained UnrealBloomPass and OutputPass. Each renderer and generated resource is disposed on teardown.
+The ship uses shared box geometry, metal materials, emissive light strips, point lights, and procedural signage. A deterministic starfield, shader planet, atmospheric shell, and geometry rings provide space outside the hull. Both graphics contexts use Three.js RoomEnvironment for procedural reflections, with no HDR or material image downloads. `shipArt.ts` builds deterministic surface grain, bevels and signs, then merges static geometry by material. `space.ts` owns the exterior. The main renderer adds contact occlusion, restrained bloom and output color conversion. Shadow maps update when doors or the viewing shield move rather than on every camera frame; contact occlusion is omitted on coarse-pointer devices. Each renderer and generated resource is disposed on teardown.
 
-Decorative environment time freezes under reduced motion. Doors and system lights become instantaneous in that mode. Hidden pages stop drawing; paused scenes retain their frame unless display, progress, or motion settings change. The title can animate its camera and instruments while visible.
+Decorative environment time freezes under reduced motion. Doors, the observation shield and system lights become instantaneous in that mode. Ship progression, objective copy, bulkhead authorization and tuning values share `shipSystems.ts`. The Q overlay and map show the same persistent network state. Hidden pages stop drawing; paused scenes retain their frame unless display, progress, or motion settings change. The title can animate its camera and instruments while visible.
 
-`BenchScene.tsx` keeps one renderer and three precompiled kits across every console opening. A prepared kit changes materials and lamp output only when the simulation result changes. A disabled WebGL context exposes the existing SVG components and native socket buttons. Source materials and sign fonts are bundled or procedural, avoiding a mid-repair texture swap.
+`BenchScene.tsx` keeps one renderer and three precompiled kits across every console opening. A prepared kit changes materials and service-lamp output only when the simulation result changes. `ServiceReadout.tsx` derives load current from measured voltage / resistance and displays source voltage and power without invented telemetry. A disabled WebGL context exposes the existing SVG components and native socket buttons. Source materials and sign fonts are bundled or procedural, avoiding a mid-repair texture swap.
 
 `game.css` owns the fixed frame, responsive scale, instrument panels, startup/repair effects, touch layout, and reduced-motion overrides. `Dialog.tsx` uses native modal dialogs and restores focus on close. Dialogs occupy the same scaled 16:9 frame and reopen above the browser's fullscreen top layer when necessary.
 
@@ -23,6 +23,8 @@ Decorative environment time freezes under reduced motion. Doors and system light
 `solveCircuit` merges ideal wire connections, rejects a source short, and solves Kirchhoff current equations for reachable resistive nodes. Floating networks have no source of energy. Only valid source-to-source routes through powered loads receive active cable styling. Crossings join only at sockets.
 
 The reducer records predictions before testing, requires valid physical results before progress, preserves original explanations after corrections, and sanitizes saved socket IDs, wires, materials, choices, and experiments. Mission IDs remain `workshop`, `harbor`, and `beacon` as stable internal identifiers for the existing simulation; their visible locations are Engineering, Power relay, and Command deck. The UI makes no coaching requests; the optional server API remains separately validated.
+
+The final transmission is an authored, cancellable-in-view sending state: its timer survives closing the console, while reset or teardown cancels an unfinished packet. Only the acknowledgement is persisted. No external communications are sent.
 
 The ship uses `signal.dead-orbit.v1` for evidence/progress and `signal.dead-orbit.player.v1` for position. It never reads or mutates the lighthouse save keys. Invalid positions return to Engineering. Unavailable storage leaves a playable tab and a visible save notice.
 

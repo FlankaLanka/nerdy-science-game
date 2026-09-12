@@ -80,23 +80,26 @@ export const MISSIONS: Mission[] = [
     ],
     question: "What does the lamp need to light?",
     explanations: [
-      { id: "near", text: "To be close to the battery" },
+      {
+        id: "near",
+        text: "Voltage across the lamp, even with an open return path",
+      },
       {
         id: "loop",
         text: "A conducting path through the lamp, joining both battery ends",
       },
-      { id: "one", text: "A wire to just one end of the battery" },
+      { id: "one", text: "A connection to the positive terminal only" },
     ],
     answer: "loop",
     misconception: {
-      near: "Distance is not the deciding factor. Trace the connected path through the lamp and back to the battery.",
-      one: "One connection leaves a gap. Follow the path from one battery end, through the lamp, to the other end.",
+      near: "An open return prevents steady current. Trace a complete path through the lamp and back to the source.",
+      one: "One connection leaves a gap. Current needs a return path to the negative terminal.",
     },
     discovery: "A complete conducting loop.",
     evidence:
       "The lamp lights when a conducting loop connects it to both battery terminals. Polymer and glass leave the bridge open in our model.",
     restore: "Restore auxiliary power",
-    farewell: "That’s our first light. Power relay is just down the path.",
+    farewell: "Deck lighting restored. The relay bulkhead is released.",
   },
   {
     id: "harbor",
@@ -122,13 +125,13 @@ export const MISSIONS: Mission[] = [
     explanations: [
       { id: "used", text: "Lamp A used up all the current" },
       { id: "loop", text: "Removing A opened their only complete path" },
-      { id: "battery", text: "Removing a lamp always empties the battery" },
+      { id: "battery", text: "Disconnecting A reversed the battery polarity" },
     ],
     answer: "loop",
     misconception: {
       used: "Current is not used up by the first lamp. Removing it made a gap in the one path both lamps shared.",
       battery:
-        "The battery is still there. Look for the gap made when lamp A was removed.",
+        "The source polarity is unchanged. Disconnecting A opened the shared route, reducing both load currents to zero.",
     },
     discovery: "One path. Shared failure.",
     evidence:
@@ -156,8 +159,8 @@ export const MISSIONS: Mission[] = [
     fixed: [],
     question: "Why can B keep shining without A?",
     explanations: [
-      { id: "store", text: "B stored some light for later" },
-      { id: "bigger", text: "B became a stronger lamp" },
+      { id: "store", text: "B is running on stored charge after isolation" },
+      { id: "bigger", text: "Disconnecting A increased the source voltage" },
       {
         id: "branch",
         text: "B has its own complete path to both battery ends",
@@ -166,9 +169,9 @@ export const MISSIONS: Mission[] = [
     answer: "branch",
     misconception: {
       store:
-        "B is still receiving energy from the battery. Trace its connected path while A is missing.",
+        "The test load has no energy store. B still receives power through a connected branch of the source.",
       bigger:
-        "It is the same lamp. What changed is the way the two lamps connect to the battery.",
+        "The source stays at 6 V. B’s independent path preserves its voltage and current when the other branch opens.",
     },
     discovery: "Independent paths.",
     evidence:

@@ -5,6 +5,7 @@ import { initialState, reducer } from "../src/game.ts";
 // Build a valid completed fixture through the same physical tests as gameplay.
 // The browser adventure test separately verifies the actual unseeded playthrough.
 let restoredShip = reducer(initialState(), { type: "START" });
+const checkpoints = {};
 const wiring = {
   workshop: [["a2", "m1"]],
   harbor: [["b2", "n"]],
@@ -29,6 +30,7 @@ for (const id of ["workshop", "harbor", "beacon"]) {
   }
   send({ type: "EXPLAIN", value: id === "beacon" ? "branch" : "loop" });
   restoredShip = reducer(restoredShip, { type: "COMPLETE", id, now: 1 });
+  checkpoints[id] = JSON.stringify(restoredShip);
 }
 
 const baseURL = process.env.SIGNAL_REVIEW_URL || "http://127.0.0.1:5174";
@@ -41,9 +43,12 @@ const errors = [];
 const views = [
   ["title", null],
   ["engineering", { x: -4, z: 20, yaw: 0, pitch: 0.015 }],
+  ["restored-engineering", { x: -4, z: 20, yaw: 0, pitch: 0.015 }],
   ["observation", { x: 1, z: 16, yaw: -0.75, pitch: 0.08 }],
   ["reactor", { x: 0, z: 1, yaw: 0.65, pitch: 0.08 }],
+  ["restored-reactor", { x: 0, z: 1, yaw: 0.65, pitch: 0.08 }],
   ["command", { x: 0, z: -17.5, yaw: -0.16, pitch: 0.06 }],
+  ["restored-observatory", { x: 0, z: -17.5, yaw: -0.16, pitch: 0.06 }],
   ["circuit", { x: -4, z: 13.5, yaw: 0, pitch: 0 }],
   ["rescue", { x: 0, z: -20.5, yaw: 0, pitch: 0 }],
 ];
@@ -70,10 +75,15 @@ try {
           ),
         player,
       );
-    if (name === "rescue")
+    if (name === "rescue" || name === "restored-observatory")
       await page.addInitScript(
         (save) => localStorage.setItem("signal.dead-orbit.v1", save),
         JSON.stringify(restoredShip),
+      );
+    if (name === "restored-engineering" || name === "restored-reactor")
+      await page.addInitScript(
+        (save) => localStorage.setItem("signal.dead-orbit.v1", save),
+        checkpoints[name === "restored-engineering" ? "workshop" : "harbor"],
       );
     await page.goto(baseURL);
     await page.locator(".title-play:enabled").waitFor({ timeout: 60000 });
@@ -90,6 +100,19 @@ try {
       await page
         .getByRole("dialog", { name: "Engineering circuit", exact: true })
         .waitFor();
+      await page.screenshot({ path: `${directory}/circuit.png` });
+      await page
+        .getByRole("button", { name: "Lamp A right", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Bridge left", exact: true })
+        .click();
+      await page.getByRole("button", { name: "Copper", exact: true }).click();
+      await page.getByRole("button", { name: "Light up", exact: true }).click();
+      await page
+        .getByRole("button", { name: "Test circuit", exact: true })
+        .click();
+      await page.screenshot({ path: `${directory}/circuit-live.png` });
     }
     if (name === "rescue") {
       await page.screenshot({ path: `${directory}/restored-command.png` });
@@ -101,14 +124,21 @@ try {
       await page
         .getByRole("button", { name: "Transmit distress signal", exact: true })
         .click();
+      await page.screenshot({ path: `${directory}/transmitting.png` });
+      await page.getByText("Signal received.", { exact: true }).waitFor();
     }
-    await page.screenshot({ path: `${directory}/${name}.png` });
+    if (name !== "circuit")
+      await page.screenshot({ path: `${directory}/${name}.png` });
     if (name === "engineering") {
       await page.keyboard.press("m");
       await page
         .getByRole("dialog", { name: "Deck map", exact: true })
         .waitFor();
       await page.screenshot({ path: `${directory}/deck-map.png` });
+      await page.keyboard.press("Escape");
+      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.keyboard.press("q");
+      await page.screenshot({ path: `${directory}/ship-systems.png` });
     }
     reports.push({
       name,

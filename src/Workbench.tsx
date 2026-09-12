@@ -8,6 +8,8 @@ import type { Progress, MissionAction } from "./game";
 import { solveCircuit } from "./circuit";
 import type { Sound } from "./audio";
 import { SITES } from "./scene/navigation";
+import { SHIP_SYSTEMS } from "./shipSystems";
+import { ServiceReadout } from "./ServiceReadout";
 
 type Props = {
   id: MissionId;
@@ -49,7 +51,8 @@ export function Workbench({
     if (id === "workshop" && lesson <= 1 && action.type === "WIRE") onLesson(2);
     if (id === "workshop" && lesson === 2 && action.type === "MATERIAL")
       onLesson(3);
-    if (action.type === "TEST") play("test");
+    if (action.type === "TEST")
+      play(solveCircuit(id, p.wires, p.material).short ? "fault" : "test");
     if (action.type === "FAULT_TEST")
       play(
         id === "beacon" && solveCircuit(id, p.wires, p.material, "a").lamps.b.on
@@ -64,7 +67,7 @@ export function Workbench({
   const faultFailed = removed && id === "beacon" && !result?.lamps.b.on;
   const reflection = p.phase === "reflect" || (removed && !faultFailed);
   const guided = id === "workshop" && lesson < 4 && p.phase === "build";
-  const stage = guided ? Math.max(1, lesson) : 4;
+  const stage = guided ? (!p.wires.length ? 1 : Math.max(2, lesson)) : 4;
   let instruction =
     id === "harbor"
       ? "Reconnect B’s loose end to battery −."
@@ -83,7 +86,9 @@ export function Workbench({
       ? "Short circuit. Remove the wire bypassing the lamps."
       : id === "workshop" && p.material !== "copper"
         ? "No current through the bridge. Try a conducting material."
-        : "The path is still open. Check both battery connections.";
+        : id === "harbor" && result?.count === 2
+          ? "A bypass changed the supplied series circuit. Remove it so the fault test measures the shared route."
+          : "The path is still open. Check both battery connections.";
   if (p.phase === "fault-ready")
     instruction = "Both lamps work. What happens if we disconnect A?";
   if (faultFailed)
@@ -99,18 +104,18 @@ export function Workbench({
     instruction = "Circuit restored. Ready to bring the power online.";
   const shortAnswers: Record<string, Record<string, string>> = {
     workshop: {
-      near: "A nearby battery",
+      near: "Voltage, even with an open return",
       loop: "A complete conducting loop",
-      one: "One battery connection",
+      one: "Only a connection to positive",
     },
     harbor: {
-      used: "A used up the current",
+      used: "A consumed B’s share of current",
       loop: "Their only path was broken",
-      battery: "The battery emptied",
+      battery: "Removing A reversed the polarity",
     },
     beacon: {
-      store: "B stored some light",
-      bigger: "B became stronger",
+      store: "B runs on stored charge after isolation",
+      bigger: "Removing A increases the source voltage",
       branch: "B has its own complete path",
     },
   };
@@ -130,6 +135,10 @@ export function Workbench({
           <span className="station-system">{SITES[id].system}</span>
         </h1>
       </div>
+      <p className="service-purpose">
+        <span>{SHIP_SYSTEMS[id].code}</span>
+        {SHIP_SYSTEMS[id].consequence}
+      </p>
       <div className="repair-instruction" role="status">
         <span className="eyebrow">
           {success || done ? "DIAGNOSTIC COMPLETE" : "REPAIR PROTOCOL"}
@@ -137,6 +146,35 @@ export function Workbench({
         <span key={instruction}>{instruction}</span>
       </div>
       <div className="repair-layout">
+        <ol className="commissioning-steps" aria-label="Commissioning sequence">
+          {[
+            "Connect",
+            "Energize",
+            ...(id === "workshop" ? [] : ["Isolate"]),
+            "Commission",
+          ].map((label, i) => {
+            const step =
+              p.phase === "build"
+                ? p.prediction || p.tested
+                  ? 1
+                  : 0
+                : p.phase === "fault-ready"
+                  ? 2
+                  : id === "workshop"
+                    ? 2
+                    : 3;
+            return (
+              <li
+                key={label}
+                className={i === step ? "current" : i < step ? "done" : ""}
+                aria-current={i === step ? "step" : undefined}
+              >
+                <span>{String(i + 1).padStart(2, "0")}</span>
+                {label}
+              </li>
+            );
+          })}
+        </ol>
         <CircuitBoard
           active={open}
           onReady={onReady}
@@ -183,6 +221,11 @@ export function Workbench({
               <span>
                 {stage === 1 ? "Connect the loose ends" : "Find a conductor"}
               </span>
+              <p>
+                {stage === 1
+                  ? "A surge opened the auxiliary circuit. Reconnect the lamp to the replaceable conductor insert."
+                  : "The insert must carry current back to the source. Compare materials, then verify the result on the instruments."}
+              </p>
             </div>
           )}
           {p.phase === "fault-ready" && (
@@ -249,20 +292,28 @@ export function Workbench({
             </fieldset>
           )}
           {(success || done) && (
-            <button
-              className="primary-action restore-action"
-              onClick={onComplete}
-            >
-              {done
-                ? "Back to the ship"
-                : practice
-                  ? "Finish circuit"
-                  : mission.restore}
-              <ArrowRight size={18} />
-            </button>
+            <div className="commission-result">
+              <span>READY FOR SERVICE</span>
+              <p>
+                {id === "harbor" ? "Re-seat test module A. " : ""}
+                {SHIP_SYSTEMS[id].consequence}
+              </p>
+              <button
+                className="primary-action restore-action"
+                onClick={onComplete}
+              >
+                {done
+                  ? "Back to the ship"
+                  : practice
+                    ? "Finish circuit"
+                    : mission.restore}
+                <ArrowRight size={18} />
+              </button>
+            </div>
           )}
         </section>
       </div>
+      <ServiceReadout id={id} result={result} removed={removed} />
       <footer className="repair-footer">
         {!saved && (
           <span role="status">

@@ -109,12 +109,12 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
     const nickel = mat("#aeb9b6", { metalness: 0.88, roughness: 0.3 });
     const dark = mat("#101d20", { metalness: 0.35, roughness: 0.4 });
     const ceramic = new THREE.MeshPhysicalMaterial({
-      color: "#bdd7e5",
+      color: "#748d98",
       roughness: 0.2,
       clearcoat: 0.8,
       clearcoatRoughness: 0.15,
     });
-    const enamel = mat("#0d1d2f", { metalness: 0.2, roughness: 0.65 });
+    const enamel = mat("#152329", { metalness: 0.2, roughness: 0.65 });
     const polymer = mat("#dadfe6", { metalness: 0, roughness: 0.7 });
     function mesh(
       g: THREE.BufferGeometry,
@@ -204,19 +204,19 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
     const glowTexture = new THREE.CanvasTexture(glowCanvas);
     for (const lamp of mission.lamps) {
       const { x, y: z } = lamp;
+      // Plug-in resistive service lamps: bolted cartridges with protected lenses.
+      // Their electrical behavior is still the same explicit 12-ohm test load.
       box(152, 6, 14, brass, x, 6, z, 3);
-      box(103, 5, 90, dark, x, 5, z, 16);
-      cyl(42, 12, ceramic, x, 15, z);
-      cyl(33, 6, ceramic, x, 24, z);
-      cyl(24, 7, brass, x, 30, z);
-      cyl(18, 4, dark, x, 34, z);
-      for (const dx of [-29, 29]) {
-        cyl(3.6, 2, nickel, x + dx, 27, z);
-        box(4, 1, 1, dark, x + dx, 28.2, z, 0.2);
-      }
+      box(124, 12, 105, dark, x, 8, z, 5);
+      box(110, 12, 91, ceramic, x, 18, z, 5);
+      box(92, 3, 73, dark, x, 25, z, 3);
+      for (const dx of [-49, 49])
+        for (const dz of [-38, 38]) {
+          cyl(3.1, 2, nickel, x + dx, 26, z + dz);
+          box(3, 1, 0.8, dark, x + dx, 27.1, z + dz, 0.2);
+        }
       const group = new THREE.Group();
-      group.position.set(x - 360, 33, z - 230);
-      group.rotation.x = -0.55;
+      group.position.set(x - 360, 26, z - 230);
       scene.add(group);
       const local = (
         g: THREE.BufferGeometry,
@@ -229,61 +229,33 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
         group.add(b);
         return b;
       };
-      local(new THREE.CylinderGeometry(14, 14, 19, 48), nickel, 8);
-      for (let i = 0; i < 5; i++) {
-        const ring = local(
-          new THREE.TorusGeometry(14, 1.6, 6, 48),
-          brass,
-          i * 3 + 1,
-        );
-        ring.rotation.x = Math.PI / 2;
+      local(rounded(81, 7, 64, 3), brass, 4);
+      local(rounded(72, 3, 55, 2), dark, 9);
+      const filament = mat("#31595a", {
+        emissive: "#8cffe0",
+        emissiveIntensity: 0,
+        metalness: 0.2,
+        roughness: 0.3,
+      });
+      // Diffused lamp segments leave a distinct unlit cartridge silhouette.
+      for (let k = 0; k < 5; k++) {
+        const bar = local(rounded(51, 2, 5, 1), filament, 13);
+        bar.position.z = -20 + k * 10;
       }
       const glass = new THREE.MeshPhysicalMaterial({
-        color: "#b9d1ce",
-        metalness: 0,
-        roughness: 0.09,
-        transmission: 0.85,
-        thickness: 2,
-        ior: 1.46,
+        color: "#a2dfd4",
+        roughness: 0.16,
         transparent: true,
-        opacity: 0.32,
-        clearcoat: 0.5,
-        side: THREE.DoubleSide,
+        opacity: 0.17,
+        clearcoat: 0.6,
         depthWrite: false,
       });
-      const profile = [
-        [0, 16],
-        [12, 16],
-        [14, 22],
-        [15, 28],
-        [21, 35],
-        [27, 43],
-        [29, 52],
-        [27, 63],
-        [20, 71],
-        [10, 76],
-        [0, 78],
-      ].map(([r, y]) => new THREE.Vector2(r, y));
-      const envelope = local(new THREE.LatheGeometry(profile, 64), glass, 0);
-      envelope.castShadow = false;
-      const filament = mat("#eace9d", {
-        emissive: "#ffb44d",
-        emissiveIntensity: 0,
-        metalness: 0.5,
-        roughness: 0.28,
-      });
-      const points = [
-        new THREE.Vector3(-7, 17, 0),
-        new THREE.Vector3(-7, 45, 0),
-        new THREE.Vector3(-4, 41, 0),
-        new THREE.Vector3(0, 47, 0),
-        new THREE.Vector3(4, 41, 0),
-        new THREE.Vector3(7, 45, 0),
-        new THREE.Vector3(7, 17, 0),
-      ];
-      const path = new THREE.CatmullRomCurve3(points);
-      local(new THREE.TubeGeometry(path, 38, 0.7, 5, false), filament, 0);
-      const light = new THREE.PointLight("#ffb852", 0, 330, 2);
+      local(rounded(70, 2, 55, 3), glass, 16).castShadow = false;
+      for (const xx of [-30, 30]) {
+        const rail = local(rounded(2, 3, 51, 0.5), nickel, 17);
+        rail.position.x = xx;
+      }
+      const light = new THREE.PointLight("#8ef1d2", 0, 330, 2);
       light.position.set(x - 360, 85, z - 260);
       scene.add(light);
       const glow = new THREE.Sprite(
@@ -383,8 +355,8 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
           : THREE.MathUtils.lerp(bulb.level, target, Math.min(1, dt * 8));
       animating ||= unsettled && !reduced;
       bulb.group.visible = !(p.removed && bulb.id === "a");
-      bulb.filament.emissiveIntensity = bulb.level * 12;
-      bulb.light.intensity = bulb.level * 22000;
+      bulb.filament.emissiveIntensity = bulb.level * 4;
+      bulb.light.intensity = bulb.level * 13000;
       bulb.glass.emissive.set("#67ffe0");
       bulb.glass.emissiveIntensity = bulb.level * 0.65;
       (bulb.glow.material as THREE.SpriteMaterial).opacity = bulb.level * 0.78;

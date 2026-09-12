@@ -90,6 +90,9 @@ export const FURNITURE = [
   { x: 6.4, z: 21.5, width: 2, depth: 2 },
   { x: -7, z: -20, width: 2.6, depth: 1.3 },
   { x: 7, z: -20, width: 2.6, depth: 1.3 },
+  { x: 3.4, z: -8.7, width: 1.62, depth: 0.64 },
+  { x: 5.2, z: -8.7, width: 1.62, depth: 0.64 },
+  { x: 7, z: -8.7, width: 1.62, depth: 0.64 },
 ] as const;
 
 export function insideDeck(x: number, z: number) {

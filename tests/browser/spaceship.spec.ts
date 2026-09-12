@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { begin, hold, position, walkTo } from "./helpers";
+import {
+  begin,
+  hold,
+  position,
+  walkTo,
+  aimAt,
+  workshopRepair,
+} from "./helpers";
 
 test("ship saves are isolated from the preserved lighthouse adventure", async ({
   page,
@@ -32,7 +39,7 @@ test("ship saves are isolated from the preserved lighthouse adventure", async ({
 
 test.describe("animated ship", () => {
   test.use({ reducedMotion: "no-preference" });
-  test("launch effects release the view, doors open on approach, and reduced motion remains usable", async ({
+  test("bulkheads telegraph their repair requirement, release after commissioning, and remain usable with reduced motion", async ({
     page,
   }) => {
     test.setTimeout(90000);
@@ -41,6 +48,21 @@ test.describe("animated ship", () => {
     await expect(overlay).toHaveCSS("pointer-events", "none");
     await expect(overlay).toHaveCount(0, { timeout: 4000 });
     await walkTo(page, 0, 16);
+    await walkTo(page, 0, 7.5);
+    await hold(page, "w", 1500);
+    expect((await position(page)).z).toBeGreaterThan(5.8);
+    await expect(page.locator(".bulkhead-notice")).toContainText(
+      "Restore auxiliary power",
+    );
+    await walkTo(page, 0, 14);
+    await walkTo(page, -4, 13.5);
+    await aimAt(page, -4, 11);
+    await page.keyboard.press("e");
+    await workshopRepair(page);
+    await expect(page.locator(".objective-card")).toContainText(
+      "Commission the distribution bus",
+    );
+    await walkTo(page, 0, 14);
     await walkTo(page, 0, 0);
     const p = await position(page);
     expect(p.z).toBeLessThan(1);
@@ -62,6 +84,26 @@ test.describe("animated ship", () => {
     await hold(page, "w", 250);
     expect((await position(page)).z).toBeLessThan(p.z);
   });
+});
+
+test("systems view explains the active fault and can be closed without losing movement", async ({
+  page,
+}) => {
+  await begin(page);
+  await expect(page.getByLabel("Current objective")).toContainText(
+    "release the relay bulkhead",
+  );
+  await page.keyboard.press("q");
+  await expect(
+    page.getByRole("complementary", { name: "Ship systems" }),
+  ).toContainText("conductor insert");
+  await expect(
+    page.locator('#ship-systems [data-status="NO FEED"]'),
+  ).toHaveCount(2);
+  await page.keyboard.press("q");
+  await expect(page.locator("#ship-systems")).toHaveCount(0);
+  await hold(page, "w", 400);
+  expect((await position(page)).z).toBeLessThan(19);
 });
 
 test("a saved doorway position resumes inside the open bulkhead", async ({
