@@ -84,7 +84,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
   }, [props.playing]);
   return (
     <>
-      <div className="world" ref={host} />
+      <div className="world" ref={host} aria-hidden={props.preview || undefined} />
       {props.playing && hud && (
         <div className="world-hud">
           <span

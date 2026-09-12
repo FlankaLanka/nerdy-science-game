@@ -9,6 +9,26 @@ const output = "artifacts/station",
 await fs.mkdir(output, { recursive: true });
 const shots = [
   { name: "title", index: 0, title: true },
+  {
+    name: "title-phone",
+    index: 0,
+    title: true,
+    viewport: { width: 390, height: 844 },
+    touch: true,
+  },
+  {
+    name: "title-wide",
+    index: 0,
+    title: true,
+    viewport: { width: 2560, height: 1080 },
+  },
+  {
+    name: "title-landscape",
+    index: 0,
+    title: true,
+    viewport: { width: 844, height: 390 },
+    touch: true,
+  },
   { name: "wake-dark", index: 0, pose: { x: -10, z: 23, yaw: 0, pitch: 0 } },
   {
     name: "wake-powered",
@@ -55,7 +75,9 @@ try {
       state = chamberFixture(shot.completed ?? shot.index);
     if (shot.example) state.rooms[shot.index] = solvedCircuit(shot.index);
     const page = await browser.newPage({
-        viewport: { width: 1440, height: 900 },
+        viewport: shot.viewport ?? { width: 1440, height: 900 },
+        isMobile: shot.touch ?? false,
+        hasTouch: shot.touch ?? false,
         reducedMotion: "reduce",
       }),
       errors = [];

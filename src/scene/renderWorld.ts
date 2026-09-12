@@ -311,7 +311,7 @@ export function renderWorld(o: Options) {
       circuits = state.circuits;
       revision++;
     }
-    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.completed.join()}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}`;
+    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.preview}:${state.completed.join()}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}`;
     if (
       !state.playing &&
       (!state.preview || state.reducedMotion) &&
@@ -369,14 +369,36 @@ export function renderWorld(o: Options) {
       player.z,
     );
     if (state.preview) {
-      camera.position.set(-8.2, 1.9, 23);
-      camera.rotation.set(
-        -0.025,
-        0.28 + (state.reducedMotion ? 0 : Math.sin(time * 0.12) * 0.015),
-        0,
-        "YXZ",
+      // A separate orbital composition, using the existing exterior and textures.
+      // Its pose never enters player navigation, progression, or the save file.
+      const portrait = camera.aspect <= 0.85;
+      camera.fov = portrait
+        ? Math.max(
+            82,
+            THREE.MathUtils.radToDeg(
+              2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(21)) / camera.aspect),
+            ),
+          )
+        : 54;
+      camera.position.set(-37, 12, 82);
+      camera.lookAt(-170, 22, 60);
+      camera.rotation.z = -0.12;
+      camera.setViewOffset(
+        width,
+        height,
+        -width * (portrait ? 0.2 : 0.25),
+        height * (portrait ? 0.16 : 0.02),
+        width,
+        height,
       );
-    } else camera.rotation.set(player.pitch, player.yaw, 0, "YXZ");
+    } else {
+      camera.fov = 68;
+      camera.clearViewOffset();
+      camera.rotation.set(player.pitch, player.yaw, 0, "YXZ");
+    }
+    // Warm the station passes before enabling Begin, then omit them in space.
+    occlusion.enabled = !coarse && (!state.preview || !ready);
+    bloom.enabled = !state.preview || !ready;
     camera.updateMatrixWorld();
     for (const event of model.update(
       dt,
@@ -392,6 +414,7 @@ export function renderWorld(o: Options) {
     composer.render();
     if (!ready) {
       ready = true;
+      stillFrame = ""; // Redraw the reduced-motion title without the warmed passes.
       o.ready();
     }
     if (now - lastHud > 100) {

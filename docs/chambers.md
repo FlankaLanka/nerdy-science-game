@@ -41,6 +41,27 @@ Only selected components reveal live V and I, starting in Balance. Ratings remai
 
 The map uses the same room and doorway coordinates as rendering and collision. It marks the player, powered chambers and locked chambers. It provides orientation without teleportation or another progress panel.
 
+## Start screen
+
+An orbital view gives the title its own composition. The existing Earth, atmosphere and star textures supply the image; no second renderer, video, downloaded artwork or extra post-processing is introduced. Contact occlusion and fixture bloom warm once before Begin is enabled, then are disabled for the orbital camera and restored for walking. The preview never changes the player's position, discovered rooms or save data.
+
+Response: Begin / Continue accepts keyboard, pointer and touch input as soon as the renderer is ready. Clarity: one primary action and a brief tagline. Satisfaction: an existing soft sound and a short reveal into the station. Fit: restrained lettering, an original orbital insignia and the same exterior seen through the windows. Motivation: a small reserve-power indicator reflects restored chambers.
+
+Loading → ready enables the primary button. Activating it immediately enters walking, or the circuit fallback when WebGL is unavailable. The visual fade neither captures input nor delays control. Pause, notebook and movement work during it. New run returns to the orbital camera; sound and motion preferences persist. Reduced motion removes both title and arrival animations. Sound is a preference on the title; audio begins only when the player starts.
+
+| Starting values | Microtest / pass condition | Adjustment if it fails |
+| --- | --- | --- |
+| 1.1 s title entrance, 14 px travel; 0.65 s station reveal; 0.18 s button feedback | Start repeatedly with keyboard, click and touch; no delayed input or covered controls after the reveal. Reduced motion must show the final state immediately. | Shorten the visual duration or remove travel; never add an input lock. |
+| 54° landscape lens; minimum 82° portrait lens; portrait breakpoint 0.85 aspect | Inspect desktop, ultrawide, portrait phone, small phone, tablet and landscape phone. Title, action and station label must remain legible and inside the viewport. | Reframe the planet and reduce its projected size before reducing text or hit areas. |
+| CSS spacing / type scale; 248 × 62 px primary action, 220 × 58 px in portrait; 44 px sound control | Tab to both controls, activate with Enter, tap on phone, and run the title contrast/name checks. | Increase clearance or contrast; retain the primary action's visual priority. |
+| Retained DPR caps and assets; title omits SSAO and bloom | Profile the animated title and the first room after entering. Compare local frame intervals with the existing renderer samples. | Reduce rendering work; do not add decorative passes or larger textures. |
+
+Review: `npm run review -- title title-phone title-wide title-landscape`. Stress / abuse checks: repeat entry, reload Continue, reset from pause, and press movement keys on the title; no duplicate start, altered saved pose or unlocked chamber. Skill check: returning players can resume with keyboard alone. Readability checks include reduced motion and WebGL failure.
+
+**ASSUMPTION:** A quiet orbital composition communicates the setting without a paragraph of exposition. **IMPACT:** The first impression depends on atmosphere and a clear action. **IF WRONG:** Players see a generic space menu. **VALIDATE:** In a first-time playtest, ask what the setting and immediate goal appear to be before explaining the game.
+
+Implementation verification (2026-09-12): production build and five existing browser scenarios passed, covering the first repair, notebook, touch, WebGL fallback and saved progress. Additional browser checks passed for keyboard entry, mute persistence, saved player position, reset, input during the reveal, reduced motion and viewport fit. Desktop and phone title accessibility scans reported no violations. Production Chromium/Metal samples at 1280 × 720 measured 16.7 ms median and p90 intervals for the animated title, walking and circuit dragging; these local samples do not establish performance on school devices.
+
 ## Physical model boundaries
 
 Modified nodal analysis applies KCL at contacts and voltage constraints across sources. Electrical islands without a source remain unpowered. Loads obey Ohm's law. Wires and closed contacts have a small finite resistance so directly shorting a source has a defined current and trips its virtual fuse. The total source power includes load and lead losses.

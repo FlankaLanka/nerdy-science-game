@@ -34,6 +34,12 @@ async function sample(page) {
 }
 try {
   for (const scene of [
+    {
+      name: "title",
+      pose: { x: -10, z: 23, yaw: 0, pitch: 0 },
+      count: 0,
+      title: true,
+    },
     { name: "wake", pose: { x: -10, z: 23, yaw: 0, pitch: 0 }, count: 0 },
     {
       name: "earth",
@@ -64,7 +70,9 @@ try {
       },
     );
     await page.goto(process.env.REVIEW_URL ?? "http://localhost:5176");
-    await page.getByRole("button", { name: /^(Begin|Continue)$/ }).click();
+    const start = page.getByRole("button", { name: /^(Begin|Continue)$/ });
+    await start.waitFor();
+    if (!scene.title) await start.click();
     if (scene.kit) {
       await page.getByRole("button", { name: "Use circuit bench" }).waitFor();
       await page.keyboard.press("e");
@@ -73,7 +81,7 @@ try {
     await page.waitForTimeout(1500);
     const stationary = await sample(page);
     let moving;
-    if (!scene.kit) {
+    if (!scene.kit && !scene.title) {
       await page.keyboard.down("ArrowRight");
       moving = await sample(page);
       await page.keyboard.up("ArrowRight");

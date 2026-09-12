@@ -204,8 +204,10 @@ export default function App() {
     return () => window.removeEventListener("keydown", key);
   }, [leaveBench, pause]);
   function begin() {
+    if (!ready || started) return;
     setStarted(true);
     sound.unlock();
+    sound.play("soft");
     dispatch({ type: "VISIT", id: "wake" });
     if (failed) openBench(CHAMBERS[Math.min(unlockedIndex(state), 5)].id);
     else world.current?.capture();
@@ -241,7 +243,9 @@ export default function App() {
     setStarted(false);
   }
   return (
-    <main className={`game ${reduced ? "reduced-motion" : ""}`}>
+    <main
+      className={`game ${started ? "has-started" : ""} ${reduced ? "reduced-motion" : ""}`}
+    >
       <Suspense fallback={null}>
         <World
           ref={world}
@@ -271,23 +275,59 @@ export default function App() {
         />
       </Suspense>
       {!started && (
-        <div className="title-screen">
-          <div className="title-mark" aria-hidden="true">
-            A<span>◦</span>
+        <section className="title-screen" aria-labelledby="game-title">
+          <header className="title-identity">
+            <svg
+              className="station-insignia"
+              viewBox="0 0 40 40"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path d="M10 29 20 7l10 22M14 22h12" />
+              <path d="M5 18a16 16 0 0 0 26 14M35 22A16 16 0 0 0 9 8" />
+              <circle cx="34" cy="12" r="2" />
+            </svg>
+            <span>Deep space research station</span>
+          </header>
+          <div className="title-content">
+            <h1 id="game-title">ASTERION</h1>
+            <p className="title-tagline">Restore the light.</p>
+            <button className="begin-button" disabled={!ready} onClick={begin}>
+              <span>
+                {!ready ? "Loading…" : state.visited.length ? "Continue" : "Begin"}
+              </span>
+              <ChevronRight aria-hidden="true" />
+            </button>
           </div>
-          <p className="station-kicker">DEEP SPACE RESEARCH STATION</p>
-          <h1>ASTERION</h1>
-          <p className="title-tagline">Restore the light.</p>
-          <button className="begin-button" disabled={!ready} onClick={begin}>
-            {!ready
-              ? "Connecting…"
-              : state.visited.length
-                ? "Continue"
-                : "Begin"}
-            <ChevronRight />
-          </button>
-          <span className="title-footer">A CIRCUIT EXPLORATION</span>
-        </div>
+          <footer className="title-footer">
+            <span className="title-power">
+              <span className="power-cells" aria-hidden="true">
+                {CHAMBERS.map((c) => (
+                  <i
+                    key={c.id}
+                    className={completed.includes(c.id) ? "powered" : ""}
+                  />
+                ))}
+              </span>
+              {completed.length === CHAMBERS.length
+                ? "Power restored"
+                : "Reserve power"}
+            </span>
+            <button
+              className="title-sound icon-button"
+              aria-label={state.sound ? "Mute sound" : "Enable sound"}
+              aria-pressed={!state.sound}
+              title={state.sound ? "Mute sound" : "Enable sound"}
+              onClick={() => dispatch({ type: "SOUND" })}
+            >
+              {state.sound ? (
+                <Volume2 aria-hidden="true" />
+              ) : (
+                <VolumeX aria-hidden="true" />
+              )}
+            </button>
+          </footer>
+        </section>
       )}
       {started && active === null && (
         <header className="game-chrome">
