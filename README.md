@@ -28,6 +28,8 @@ The default address is **http://127.0.0.1:5174**. Set `PORT` to change it. No ac
 
 The station has two service loops around a central hub. After emergency lighting, either wing can be explored first. The map shows commissioning dependencies and lets the player track an available repair. Later equipment can be inspected and tested early. Working systems remain available for practice without overwriting their recorded commissioning evidence.
 
+Nine window banks open the hull to a continuous view of textured Earth, Moon, Saturn and the Milky Way, with nearby station solar wings. Command has a three-sided observation gallery. The celestial view is composed for the fictional setting; it is not an orbital-scale simulation. Texture attribution is available in Settings → Asset credits.
+
 ## Learning progression
 
 | Equipment          | Investigation                                                |
@@ -76,9 +78,11 @@ Review captures go to ignored `artifacts/station/`. Only current, useful views a
 - `src/circuit.ts`, `game.ts`, `CircuitBoard.tsx`, `BenchScene.tsx`: the three wiring investigations and their validated legacy data.
 - `src/scene/shipLayout.ts`: shared hull, collision, furniture and map coordinates.
 - `src/scene/spaceship.ts`: authored pressure-wall kit, machinery, four local lights and powered fixtures.
+- `src/scene/space.ts`: textured celestial bodies, atmosphere, star field and instanced solar wings.
 - `src/scene/renderWorld.ts`: rendering, controls, cached shadows and telemetry.
 - `src/ShipMap.tsx`, `Notebook.tsx`: navigation and learning evidence.
 - `public/materials/`: three licensed 1K runtime PBR maps; see [asset provenance](docs/assets.md).
+- `public/space/`: seven licensed 2K space maps, served locally; attribution in `public/credits.html`.
 - `server/`: optional foundational-circuit coaching API. The game does not call it.
 
 `main` preserves the cleaned lighthouse baseline at `0f3007f`. The spaceship work is on `codex/spaceship-dead-orbit`. The prior three-room spaceship is preserved at `0421e7b`. Nothing has been pushed or deployed.

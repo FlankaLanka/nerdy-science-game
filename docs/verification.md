@@ -1,6 +1,29 @@
 # Asterion verification
 
-Verified locally on September 11, 2026, on `codex/spaceship-dead-orbit`.
+Verified locally on September 12, 2026, on `codex/spaceship-dead-orbit`.
+
+## Doorways and orbital exterior follow-up
+
+The doorway audit originally found coincident frame/ceiling faces and coplanar wall-stiffener ends at exposed reveals. The revised construction separates those surfaces and keeps ceiling services clear of the header and leaf travel. The old overlapping observation-wall infills were removed. Doors now have explicit seam, frame and threshold clearances with colliders following their leaves.
+
+Nine window banks provide 32 actual hull openings. The exterior contains textured Earth, Moon, Saturn and the Milky Way, with clouds, night-side lighting, an atmosphere, ring shadows and instanced solar wings. Engineering cylinders and Distribution racks were moved to the aft walls to clear the views. The existing repair cabinets and circulation routes remain in place. No floor writing or additional world signs were introduced.
+
+| Check                  | Result                                                                                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`             | 45 unit tests passed after the final layout change                                                                                |
+| `npm run build`        | TypeScript and production build passed                                                                                            |
+| Selected browser suite | All 15 tests in `architecture`, `adventure`, `spaceship` and `touch` passed in 3.1 minutes                                        |
+| Doorway geometry       | 4,680 sampled sight lines: both approaches to six frames, plus four door-opening amounts; no visible parallel faces within 0.5 mm |
+| Windows and collision  | All 32 panes have an unobstructed outward ray through the hull; all reject an exterior player position                            |
+| Texture lifetime       | All seven exterior textures, including shared shader uniforms, disposed exactly once                                              |
+
+The full adventure again completes all eight repairs using ordinary movement. The door passes both motion modes and safe doorway resume. Touch movement and the first repair pass at all three existing phone viewports. One stale map assertion was updated from the old objective sentence to the compact “Series interlock” heading; map tracking then passed with the final layout.
+
+Twelve focused doorway/window views supplement the room and instrument captures in ignored `artifacts/station/`. Visual inspection caught ceiling services cutting through the introductory door, ceiling haunches masking windows, and equipment blocking side views; those were corrected before final verification. Scene captures had no page or HTTP errors. The geometry sampling is a regression check for the reviewed areas, not an exhaustive proof for every viewing angle in the entire station.
+
+With the final exterior and layout, isolated 120-frame local Chromium/Metal samples at 1280 × 720 measured **16.7 ms median** for both stationary and moving Hub and Earth-window views. Earth-view p90 was **16.7 ms**; Hub p90 was **16.7–16.8 ms**. This remains approximately 60 fps on this machine. No extra lights, shadow maps or fullscreen postprocess were introduced. Transparent window and ring surfaces use a single pass. These samples do not establish minimum-spec GPU performance or cold-load speed.
+
+The seven space maps add **3,201,408 bytes** to the locally served assets; together with the existing metal maps the total is **5,439,155 bytes**. Attribution is provided in Settings → Asset credits and [asset provenance](assets.md). The credits link was checked within the settings panel, opens the local attribution page, and that page fits a 390 px viewport without horizontal overflow. Celestial sizes and positions are composed for the fictional setting, not an orbital-scale model.
 
 ## World readability follow-up
 
@@ -40,7 +63,7 @@ Automated WCAG A/AA checks pass on all five advanced instrument panels, the foun
 
 ## Visual review
 
-Fourteen current captures are retained in ignored `artifacts/station/`: title, engineering, hub, materials, life support, reserve, command, the first wiring repair, all five advanced instrument panels, and the station map. They were inspected for compartment continuity, readable equipment identities, panel clipping, chart visibility and schematic correctness. The review caught and corrected ceiling transitions, disconnected pipe runs, a chart/guide overlap and a capacitor-label collision. The final isolated series schematic displays a physically open route.
+The campaign review produced fourteen captures in ignored `artifacts/station/`: title, engineering, hub, materials, life support, reserve, command, the first wiring repair, all five advanced instrument panels, and the station map. The doorway/window follow-up extends that set to 26 views. The campaign captures were inspected for compartment continuity, readable equipment identities, panel clipping, chart visibility and schematic correctness. That review caught and corrected ceiling transitions, disconnected pipe runs, a chart/guide overlap and a capacitor-label collision. The final isolated series schematic displays a physically open route.
 
 `npm run review -- storage-instruments wiring-instruments` updates selected views and preserves other review results. Fixtures are produced through the real reducers; the separate full adventure verifies player interaction and travel. No captures are runtime assets. Superseded captures from `artifacts/spaceship/` were removed.
 

@@ -19,6 +19,63 @@ for (const shot of [
   { name: "title", pose: { x: -3, z: 24, yaw: 0, pitch: 0 }, title: true },
   { name: "engineering", pose: { x: -2, z: 24, yaw: 0, pitch: 0 } },
   {
+    name: "door-closed",
+    pose: { x: 0.65, z: 15.4, yaw: 0.17, pitch: 0.18 },
+  },
+  {
+    name: "door-open",
+    pose: { x: 0.65, z: 15.4, yaw: 0.17, pitch: 0.18 },
+    state: snapshots.workshop,
+  },
+  {
+    name: "doorway-materials",
+    pose: { x: -4.5, z: 10.5, yaw: 1.45, pitch: 0.12 },
+    state: snapshots.workshop,
+  },
+  {
+    name: "window-engineering",
+    pose: { x: -3.8, z: 22, yaw: 1.12, pitch: 0.12 },
+  },
+  {
+    name: "window-materials",
+    pose: { x: -15.5, z: 11, yaw: 1.12, pitch: 0.12 },
+    state: snapshots.workshop,
+  },
+  {
+    name: "window-distribution",
+    pose: { x: 15.5, z: 13.5, yaw: -1.35, pitch: 0.1 },
+    state: snapshots.harbor,
+  },
+  {
+    name: "window-engineering-starboard",
+    pose: { x: 3.8, z: 22, yaw: -1.2, pitch: 0.12 },
+  },
+  {
+    name: "window-life-support",
+    pose: { x: -14, z: -8, yaw: 0, pitch: 0.08 },
+    state: snapshots.power,
+  },
+  {
+    name: "window-reserve",
+    pose: { x: 14, z: -8, yaw: 0, pitch: 0.08 },
+    state: snapshots.storage,
+  },
+  {
+    name: "window-command",
+    pose: { x: 0, z: -20.5, yaw: 0, pitch: 0.07 },
+    state: complete,
+  },
+  {
+    name: "window-command-port",
+    pose: { x: -4, z: -15.7, yaw: 1.35, pitch: 0.1 },
+    state: complete,
+  },
+  {
+    name: "window-command-starboard",
+    pose: { x: 4, z: -15.7, yaw: -1.35, pitch: 0.1 },
+    state: complete,
+  },
+  {
     name: "wiring-instruments",
     pose: { x: -3, z: 22.5, yaw: 0, pitch: 0 },
     panel: true,
@@ -167,7 +224,7 @@ for (const shot of [
   }
   await page.screenshot({ path: `${output}/${shot.name}.png` });
   let timing = null;
-  if (shot.name === "hub") {
+  if (shot.name === "hub" || shot.name === "window-command-port") {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.waitForTimeout(500);
     const sample = () =>

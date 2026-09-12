@@ -912,6 +912,11 @@ kbd {
   bottom: calc(var(--footer-bottom) + 56px);
   color: #ffc499;
 }
+.settings-dialog .screen-content > .asset-credits {
+  left: auto;
+  right: calc(1280px - var(--content-right));
+  color: #a9c0cf;
+}
 .control-list {
   width: 100%;
   margin: 0;

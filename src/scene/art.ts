@@ -34,6 +34,10 @@ export function disposeScene(scene: THREE.Scene) {
         materials.add(m);
         for (const v of Object.values(m))
           if (v instanceof THREE.Texture) textures.add(v);
+        if (m instanceof THREE.ShaderMaterial)
+          for (const uniform of Object.values(m.uniforms))
+            if (uniform.value instanceof THREE.Texture)
+              textures.add(uniform.value);
       }
     }
   });

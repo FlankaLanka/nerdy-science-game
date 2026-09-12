@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { ACTIVITIES, available } from "../activities";
 import type { ActivityId } from "../activities";
-import { DECK, FURNITURE } from "./shipLayout";
+import { DECK, FURNITURE, PORTALS, windowAt } from "./shipLayout";
 import { shipArt, surface } from "./shipArt";
 import type { Obstacle, Player } from "./navigation";
 import { buildSpace } from "./space";
@@ -62,6 +62,15 @@ export function buildSpaceship(scene: THREE.Scene) {
     setStatus: (state: "ready" | "offline" | "online") => void;
   }[] = [];
   const fans: { g: THREE.Group; id: ActivityId }[] = [];
+  const glass = new THREE.MeshBasicMaterial({
+    color: "#9baeb2",
+    transparent: true,
+    opacity: 0.035,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    forceSinglePass: true,
+    toneMapped: false,
+  });
   const dynamic = (x: number, y: number, z: number) => {
     const g = new THREE.Group();
     g.position.set(x, y, z);
@@ -113,13 +122,69 @@ export function buildSpaceship(scene: THREE.Scene) {
     g.position.set(x, 0, z);
     g.rotation.y = rotation;
     root.add(g);
+    const window = windowAt(x, z, rotation);
+    if (window) {
+      const { sill, head } = window;
+      g.name = `window / ${window.id}`;
+      // Build around the opening; no hidden full wall remains behind its glass.
+      box(0, sill / 2, 0, w, sill, 0.3, charcoal, g);
+      box(0, (head + h) / 2, 0, w, h - head, 0.3, charcoal, g);
+      bevel(
+        0,
+        sill / 2,
+        0.2,
+        w - 0.2,
+        Math.max(0.2, sill - 0.16),
+        0.16,
+        ivory,
+        0.04,
+        g,
+      );
+      for (const side of [-1, 1])
+        bevel(
+          side * (w / 2 - 0.09),
+          (sill + head) / 2,
+          0.17,
+          0.14,
+          head - sill + 0.24,
+          0.5,
+          steel,
+          0.025,
+          g,
+        );
+      for (const y of [sill, head]) {
+        bevel(0, y, 0.21, w - 0.04, 0.17, 0.58, frame, 0.025, g);
+        box(
+          0,
+          y + (y === sill ? 0.105 : -0.105),
+          0.24,
+          w - 0.3,
+          0.025,
+          0.2,
+          rubber,
+          g,
+        );
+      }
+      const pane = mesh(
+        new THREE.PlaneGeometry(w - 0.31, head - sill - 0.23),
+        glass,
+        0,
+        (sill + head) / 2,
+        -0.035,
+        g,
+      );
+      pane.castShadow = pane.receiveShadow = false;
+      pane.name = "pressure glass";
+      return;
+    }
     box(0, h / 2, 0, w, h, 0.3, charcoal, g);
     bevel(0, 1.85, 0.19, w - 0.14, 2.25, 0.18, ivory, 0.07, g);
     bevel(0, 0.42, 0.25, w - 0.1, 0.66, 0.25, frame, 0.04, g);
     box(0, 1.05, 0.33, w - 0.14, 0.06, 0.06, ochre, g);
     box(0, 3.02, 0.25, w - 0.12, 0.16, 0.23, frame, g);
     for (const side of [-1, 1]) {
-      box(side * (w / 2 - 0.055), h / 2, 0.25, 0.11, h, 0.35, steel, g);
+      // End faces sit inside the shell boundary, including at exposed doorway reveals.
+      box(side * (w / 2 - 0.085), h / 2, 0.25, 0.11, h - 0.04, 0.35, steel, g);
       for (const y of [0.83, 2.88]) bolt(side * (w / 2 - 0.22), y, 0.304, g);
     }
     for (let y = 3.28; y < h - 0.18; y += 0.24)
@@ -178,6 +243,15 @@ export function buildSpaceship(scene: THREE.Scene) {
       t += width;
     }
   }
+  // Reserve the header and leaf travel volume before placing ceiling services.
+  const clearsPortal = (x: number, z: number, w: number, d: number) =>
+    PORTALS.every((p) => {
+      const turned = Math.abs(Math.sin(p.rotation)) > 0.5;
+      return (
+        Math.abs(p.x - x) > (w + (turned ? 0.8 : 3.9)) / 2 ||
+        Math.abs(p.z - z) > (d + (turned ? 3.9 : 0.8)) / 2
+      );
+    });
   for (const room of DECK) {
     const x0 = room.x - room.width / 2,
       x1 = room.x + room.width / 2,
@@ -231,13 +305,15 @@ export function buildSpaceship(scene: THREE.Scene) {
       room.color,
     );
     for (const dx of [-0.5, 0.5])
-      tube(
-        [room.x + dx, room.height - 0.55, z0],
-        [room.x + dx, room.height - 0.55, z1],
-        0.07,
-        dx > 0 ? copper : steel,
-      );
+      if (clearsPortal(room.x + dx, room.z, 0.14, room.depth))
+        tube(
+          [room.x + dx, room.height - 0.55, z0],
+          [room.x + dx, room.height - 0.55, z1],
+          0.07,
+          dx > 0 ? copper : steel,
+        );
     for (let z = z0 + 1; z < z1; z += 3) {
+      if (!clearsPortal(room.x, z, room.width, 0.45)) continue;
       box(room.x, room.height - 0.2, z, room.width, 0.3, 0.3, frame);
       box(
         room.x,
@@ -251,32 +327,43 @@ export function buildSpaceship(scene: THREE.Scene) {
       for (const dx of [-0.5, 0.5])
         box(room.x + dx, room.height - 0.52, z, 0.22, 0.25, 0.14, charcoal);
     }
-    const lamp = emission(room.color, 1);
     const lx = room.x + (room.width > 8 ? room.width * 0.22 : 0),
       lz = room.z;
-    bevel(lx, room.height - 0.32, lz, 1.45, 0.22, 0.52, rubber, 0.04);
-    box(lx, room.height - 0.445, lz, 1.2, 0.02, 0.32, lamp);
-    fixtures.push({
-      x: lx,
-      y: room.height - 0.75,
-      z: lz,
-      system: room.system,
-      color: new THREE.Color(room.color),
-      material: lamp,
-    });
+    if (clearsPortal(lx, lz, 1.45, 0.52)) {
+      const lamp = emission(room.color, 1);
+      bevel(lx, room.height - 0.32, lz, 1.45, 0.22, 0.52, rubber, 0.04);
+      box(lx, room.height - 0.445, lz, 1.2, 0.02, 0.32, lamp);
+      fixtures.push({
+        x: lx,
+        y: room.height - 0.75,
+        z: lz,
+        system: room.system,
+        color: new THREE.Color(room.color),
+        material: lamp,
+      });
+    }
     if (room.width > 6) {
       // Structural haunches soften the rectangular silhouette at ceiling junctions.
       for (const side of [-1, 1]) {
-        const o = box(
-          room.x + side * (room.width / 2 - 0.35),
-          room.height - 0.45,
-          room.z,
-          0.65,
-          0.8,
-          room.depth,
-          frame,
-        );
-        o.rotation.z = side * 0.24;
+        for (let z = z0; z < z1; z += 2) {
+          const length = Math.min(2, z1 - z);
+          const window = windowAt(
+            room.x + (side * room.width) / 2,
+            z + length / 2,
+            (-side * Math.PI) / 2,
+          );
+          if (window && window.head > room.height - 1) continue;
+          const o = box(
+            room.x + side * (room.width / 2 - 0.35),
+            room.height - 0.45,
+            z + length / 2,
+            0.65,
+            0.8,
+            length,
+            frame,
+          );
+          o.rotation.z = side * 0.24;
+        }
       }
     }
   }
@@ -288,25 +375,19 @@ export function buildSpaceship(scene: THREE.Scene) {
     for (const side of [-1, 1]) {
       const turned = Math.abs(Math.sin(rotation)) > 0.5;
       obstacles.push({
-        x: x + side * 1.85 * Math.cos(rotation),
-        z: z - side * 1.85 * Math.sin(rotation),
-        width: turned ? 0.75 : 0.34,
-        depth: turned ? 0.34 : 0.75,
+        x: x + side * 1.76 * Math.cos(rotation),
+        z: z - side * 1.76 * Math.sin(rotation),
+        width: turned ? 0.7 : 0.28,
+        depth: turned ? 0.28 : 0.7,
       });
-      bevel(side * 1.85, 1.45, 0, 0.34, 2.9, 0.75, steel, 0.09, g);
-      box(side * 1.61, 1.4, 0.12, 0.075, 2.5, 0.55, rubber, g);
-      box(side * 1.7, 0.8, 0.41, 0.055, 1, 0.025, amber, g);
+      bevel(side * 1.76, 1.4, 0, 0.28, 2.8, 0.7, steel, 0.045, g);
+      box(side * 1.76, 0.9, 0.38, 0.055, 0.75, 0.022, amber, g);
     }
-    bevel(0, 3.02, 0, 4, 0.5, 0.8, frame, 0.08, g);
-    label(name, "", 0, 3.05, 0.43, 1.95, 0.19, "#a4afa0", 0, false, g);
-    box(0, 0.02, 0, 3.4, 0.04, 0.75, rubber, g);
+    bevel(0, 2.99, 0, 3.8, 0.38, 0.7, frame, 0.045, g);
+    label(name, "", 0, 3.01, 0.385, 1.95, 0.15, "#a4afa0", 0, false, g);
+    box(0, 0.012, 0, 3.24, 0.024, 0.7, rubber, g);
   }
-  portal(0, 13, 0, "HUB");
-  portal(-8, 10, Math.PI / 2, "MATERIALS");
-  portal(8, 10, -Math.PI / 2, "DISTRIBUTION");
-  portal(0, -11, 0, "COMMAND");
-  portal(-14, 2.8, 0, "LIFE SUPPORT");
-  portal(14, 2.8, 0, "RESERVE");
+  PORTALS.forEach((p) => portal(p.x, p.z, p.rotation, p.name));
   const door = dynamic(0, 0, 13);
   const leaves: THREE.Group[] = [];
   const doorColliders: Obstacle[] = [];
@@ -315,22 +396,22 @@ export function buildSpaceship(scene: THREE.Scene) {
     door.add(leaf);
     leaf.position.x = side * 2.6;
     leaves.push(leaf);
-    bevel(0, 1.45, 0, 1.65, 2.9, 0.22, ivory, 0.06, leaf);
-    box(0, 0.48, 0.14, 1.5, 0.45, 0.08, frame, leaf);
+    bevel(0, 1.4, 0, 1.58, 2.72, 0.22, ivory, 0.045, leaf);
+    box(0, 0.43, 0.165, 1.42, 0.44, 0.07, frame, leaf);
     box(side * 0.57, 1.3, 0.15, 0.15, 0.5, 0.06, charcoal, leaf);
     for (const y of [1, 1.2, 2.2])
-      box(0, y, 0.135, 1.35, 0.035, 0.01, frame, leaf);
+      box(0, y, 0.15, 1.35, 0.035, 0.016, frame, leaf);
     const obstacle: Obstacle = {
       x: side * 2.6,
       z: 13,
-      width: 1.65,
+      width: 1.58,
       depth: 0.3,
     };
     doorColliders.push(obstacle);
     obstacles.push(obstacle);
   }
   const hatchStatus = emission("#d1af78", 0.7);
-  box(1.85, 1.96, 13.41, 0.1, 0.3, 0.03, hatchStatus);
+  box(1.76, 1.96, 13.38, 0.1, 0.3, 0.03, hatchStatus);
   // The cabinet silhouette and inset display identify serviceable equipment.
   // Its name and instructions appear only in the nearby interaction / repair UI.
   for (const a of ACTIVITIES) {
@@ -408,7 +489,7 @@ export function buildSpaceship(scene: THREE.Scene) {
       box(0.38, 0.3 + i * 0.43, 0.48, 0.06, 0.24, 0.035, steel, g);
     }
   }
-  for (const z of [10, 12, 14]) rack(18.3, z, -Math.PI / 2);
+  for (const x of [11.5, 14, 16.5]) rack(x, 16.3, Math.PI);
   for (const z of [-3, -5, -7]) rack(17.6, z, -Math.PI / 2);
   // Materials: work surfaces, specimens, oscilloscope, storage cabinets.
   bevel(-17.3, 0.89, 11, 1.25, 0.16, 5, steel, 0.04);
@@ -425,19 +506,19 @@ export function buildSpaceship(scene: THREE.Scene) {
       i % 2 ? copper : steel,
     );
   // Engineering: reserve cells, oxygen cylinders, tool lockers.
-  for (const z of [20, 21.5, 23]) {
-    mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.8, 20), green, 3.6, 1.12, z);
+  for (const x of [1.2, 2.8, 4.4]) {
+    mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.8, 20), green, x, 1.12, 25);
     for (const y of [0.38, 1.58]) {
       const t = mesh(
         new THREE.TorusGeometry(0.56, 0.04, 5, 24),
         steel,
-        3.6,
+        x,
         y,
-        z,
+        25,
       );
       t.rotation.x = Math.PI / 2;
     }
-    box(3.6, 2.1, z, 0.25, 0.25, 0.2, steel);
+    box(x, 2.1, 25, 0.25, 0.25, 0.2, steel);
   }
   for (const x of [-4.6, -3.2, -1.8]) {
     bevel(x, 1.2, 25.4, 1.2, 2.4, 0.75, ivory, 0.06);
@@ -465,7 +546,7 @@ export function buildSpaceship(scene: THREE.Scene) {
     fan(-17.55, z);
     bevel(-17.8, 0.6, z, 1.2, 1.2, 1.8, green, 0.08);
   }
-  // Command: two angled navigation desks, inset monitors and an observation aperture.
+  // Command: two angled navigation desks behind a wraparound observation gallery.
   for (const side of [-1, 1]) {
     const g = new THREE.Group();
     g.position.set(side * 5.9, 0, -18);
@@ -477,31 +558,9 @@ export function buildSpaceship(scene: THREE.Scene) {
       instrument("orbit", 0, 1.47, z + 0.17, 1, 0.44, g);
     }
   }
-  // Window glass is an inset luminous deep-space screen; original exterior remains behind the hull.
-  const space = buildSpace(scene);
-  const glass = new THREE.MeshBasicMaterial({
-    color: "#284b58",
-    transparent: true,
-    opacity: 0.18,
-    depthWrite: false,
+  const space = buildSpace(scene, () => {
+    root.userData.textureRevision = (root.userData.textureRevision ?? 0) + 1;
   });
-  mesh(new THREE.PlaneGeometry(8.6, 2.1), glass, 0, 2.35, -22.73);
-  for (const x of [-4.5, 0, 4.5]) box(x, 2.35, -22.64, 0.12, 2.35, 0.18, steel);
-  box(0, 3.52, -22.65, 9.2, 0.18, 0.3, frame);
-  box(0, 1.18, -22.65, 9.2, 0.18, 0.3, frame);
-  // Replace the opaque forward wall panels in the observation opening with the exterior view.
-  const remove: THREE.Object3D[] = [];
-  root.children.forEach((g) => {
-    if (
-      g.position.z === -23 &&
-      Math.abs(g.position.x) < 4.1 &&
-      g instanceof THREE.Group
-    )
-      remove.push(g);
-  });
-  remove.forEach((g) => g.removeFromParent());
-  box(0, 0.57, -23, 9, 1.14, 0.3, charcoal);
-  box(0, 4.25, -23, 9, 1.5, 0.3, charcoal);
   const pools = Array.from({ length: 4 }, () => {
     const l = new THREE.PointLight("#e1d9c2", 0, 14, 2);
     root.add(l);
@@ -558,7 +617,7 @@ export function buildSpaceship(scene: THREE.Scene) {
       if (initialized && playing && old < 0.02 && opening > 0.02)
         events.push("door");
       for (let i = 0; i < 2; i++) {
-        const x = (i ? 1 : -1) * (0.835 + opening * 1.8);
+        const x = (i ? 1 : -1) * (0.8 + opening * 1.8);
         leaves[i].position.x = x;
         doorColliders[i].x = x;
       }
@@ -589,7 +648,7 @@ export function buildSpaceship(scene: THREE.Scene) {
       });
       if (playing && !reduced)
         for (const f of fans) if (online.has(f.id)) f.g.rotation.z += dt * 1.6;
-      if (!reduced) space.rotation.y = time * 0.0007;
+      space.update(time, reduced);
       if (root.userData.textureRevision !== textureRevision) {
         textureRevision = root.userData.textureRevision;
         root.userData.shadowsDirty = true;

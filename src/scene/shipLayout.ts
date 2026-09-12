@@ -189,12 +189,116 @@ export const SHIP_SITES = Object.fromEntries(
   { x: number; z: number; name: string; color: string; system: string }
 >;
 export const DOORWAYS = [13] as const;
+export const PORTALS = [
+  { x: 0, z: 13, rotation: 0, name: "HUB" },
+  { x: -8, z: 10, rotation: Math.PI / 2, name: "MATERIALS" },
+  { x: 8, z: 10, rotation: -Math.PI / 2, name: "DISTRIBUTION" },
+  { x: 0, z: -11, rotation: 0, name: "COMMAND" },
+  { x: -14, z: 2.8, rotation: 0, name: "LIFE SUPPORT" },
+  { x: 14, z: 2.8, rotation: 0, name: "RESERVE" },
+] as const;
+/** Actual hull apertures. Ranges align with the two-metre structural bays. */
+export const WINDOW_BANKS = [
+  {
+    id: "engineering-port",
+    x: -6,
+    z: 21,
+    rotation: Math.PI / 2,
+    width: 6,
+    sill: 1.05,
+    head: 3.3,
+  },
+  {
+    id: "engineering-starboard",
+    x: 6,
+    z: 21,
+    rotation: -Math.PI / 2,
+    width: 6,
+    sill: 1.05,
+    head: 3.3,
+  },
+  {
+    id: "materials",
+    x: -19,
+    z: 12,
+    rotation: Math.PI / 2,
+    width: 6,
+    sill: 1.65,
+    head: 3.25,
+  },
+  {
+    id: "distribution",
+    x: 19,
+    z: 12,
+    rotation: -Math.PI / 2,
+    width: 6,
+    sill: 1.05,
+    head: 3.3,
+  },
+  {
+    id: "life-support",
+    x: -14,
+    z: -11,
+    rotation: 0,
+    width: 6,
+    sill: 1.05,
+    head: 3.3,
+  },
+  {
+    id: "reserve",
+    x: 14,
+    z: -11,
+    rotation: 0,
+    width: 6,
+    sill: 1.05,
+    head: 3.3,
+  },
+  {
+    id: "command-forward",
+    x: 0,
+    z: -23,
+    rotation: 0,
+    width: 12,
+    sill: 0.95,
+    head: 3.7,
+  },
+  {
+    id: "command-port",
+    x: -8,
+    z: -17,
+    rotation: Math.PI / 2,
+    width: 8,
+    sill: 1.05,
+    head: 3.6,
+  },
+  {
+    id: "command-starboard",
+    x: 8,
+    z: -17,
+    rotation: -Math.PI / 2,
+    width: 8,
+    sill: 1.05,
+    head: 3.6,
+  },
+] as const;
+export function windowAt(x: number, z: number, rotation: number) {
+  return WINDOW_BANKS.find((w) => {
+    if (Math.abs(w.rotation - rotation) > 0.001) return false;
+    const dx = x - w.x,
+      dz = z - w.z;
+    return (
+      Math.abs(dx * Math.sin(rotation) + dz * Math.cos(rotation)) < 0.001 &&
+      Math.abs(dx * Math.cos(rotation) - dz * Math.sin(rotation)) <
+        w.width / 2 - 0.001
+    );
+  });
+}
 export const FURNITURE = [
   { x: -17.3, z: 11, width: 1.5, depth: 5 },
-  { x: 18.3, z: 12, width: 1, depth: 5.5 },
+  { x: 14, z: 16.3, width: 6.5, depth: 1 },
   { x: -3.2, z: 25.4, width: 4, depth: 0.8 },
   { x: -1.5, z: 4.5, radius: 1.7 },
-  { x: 3.6, z: 21.5, width: 2, depth: 5 },
+  { x: 2.8, z: 25, width: 4.4, depth: 1.3 },
   { x: -17.7, z: -5, width: 1, depth: 7 },
   { x: 17.6, z: -5, width: 1.4, depth: 7 },
   { x: -5.9, z: -18, width: 1.6, depth: 3 },

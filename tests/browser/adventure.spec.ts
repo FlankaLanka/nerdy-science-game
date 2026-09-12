@@ -205,7 +205,7 @@ test("map tracking chooses either unlocked wing and changes the world objective"
     .getByRole("button", { name: /03 Distribution TRACK REPAIR/ })
     .click();
   await expect(page.getByLabel("Current objective")).toContainText(
-    "shared interlock",
+    "Series interlock",
   );
 });
 test("keyboard wiring, undo, cancellation and reload preserve the editable circuit", async ({

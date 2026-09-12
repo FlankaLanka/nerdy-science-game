@@ -623,6 +623,14 @@ export default function App() {
             <button className="text-button" onClick={() => setMenu("reset")}>
               Start a new adventure
             </button>
+            <a
+              className="text-button asset-credits"
+              href="/credits.html"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Asset credits ↗
+            </a>
           </Dialog>
         )}
         {menu === "controls" && (
