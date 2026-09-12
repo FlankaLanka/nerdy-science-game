@@ -178,9 +178,7 @@ export default function App() {
     if (!state.started) {
       dispatch({ type: "START" });
       dispatch({ type: "INTRO", step: 3 });
-      setSubtitle(
-        "Maintenance recorder: the station lost its primary feed. Get the emergency lights on at the console ahead. Then explore the two service wings and bring our systems back online.",
-      );
+      setSubtitle("The lights are out. Try the console ahead.");
     }
     resume();
   }

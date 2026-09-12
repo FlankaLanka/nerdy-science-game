@@ -10,7 +10,8 @@ export function buildSpaceship(scene: THREE.Scene) {
   const root = new THREE.Group();
   root.name = "Asterion / maintenance station";
   scene.add(root);
-  const { box, bevel, rod, mesh, label, floorLabel, batch } = shipArt(root);
+  const { box, bevel, rod, mesh, label, instrument, batch, disposeDisplays } =
+    shipArt(root);
   const obstacles: Obstacle[] = FURNITURE.map((f) => ({ ...f }));
   const mat = (color: string, metalness = 0.35, roughness = 0.65) =>
     new THREE.MeshStandardMaterial({ color, metalness, roughness });
@@ -56,7 +57,10 @@ export function buildSpaceship(scene: THREE.Scene) {
     color: THREE.Color;
     material: THREE.MeshStandardMaterial;
   }[] = [];
-  const signs: { id: ActivityId; paint: (text: string) => void }[] = [];
+  const readouts: {
+    id: ActivityId;
+    setStatus: (state: "ready" | "offline" | "online") => void;
+  }[] = [];
   const fans: { g: THREE.Group; id: ActivityId }[] = [];
   const dynamic = (x: number, y: number, z: number) => {
     const g = new THREE.Group();
@@ -261,32 +265,6 @@ export function buildSpaceship(scene: THREE.Scene) {
       material: lamp,
     });
     if (room.width > 6) {
-      floorLabel(
-        room.name.toUpperCase(),
-        "MAINTENANCE / " + activityCode(room.system),
-        room.x,
-        room.z + room.depth / 2 - 1.4,
-        4,
-        0.65,
-        room.color,
-      );
-      label(
-        room.name.toUpperCase(),
-        "ASTERION · TECHNICAL OPERATIONS",
-        room.x,
-        3.1,
-        z0 + 0.38,
-        Math.min(4.6, room.width - 2),
-        0.52,
-        room.color,
-      );
-      for (const dx of [-1.8, 1.8])
-        tube(
-          [room.x + dx, 3.38, z0 + 0.3],
-          [room.x + dx, room.height, z0 + 0.3],
-          0.025,
-          steel,
-        );
       // Structural haunches soften the rectangular silhouette at ceiling junctions.
       for (const side of [-1, 1]) {
         const o = box(
@@ -302,13 +280,7 @@ export function buildSpaceship(scene: THREE.Scene) {
       }
     }
   }
-  function portal(
-    x: number,
-    z: number,
-    rotation: number,
-    name: string,
-    sub: string,
-  ) {
+  function portal(x: number, z: number, rotation: number, name: string) {
     const g = new THREE.Group();
     g.position.set(x, 0, z);
     g.rotation.y = rotation;
@@ -326,15 +298,15 @@ export function buildSpaceship(scene: THREE.Scene) {
       box(side * 1.7, 0.8, 0.41, 0.055, 1, 0.025, amber, g);
     }
     bevel(0, 3.02, 0, 4, 0.5, 0.8, frame, 0.08, g);
-    label(name, sub, 0, 3.05, 0.43, 3.15, 0.32, "#c7d6bf", 0, true, g);
+    label(name, "", 0, 3.05, 0.43, 1.95, 0.19, "#a4afa0", 0, false, g);
     box(0, 0.02, 0, 3.4, 0.04, 0.75, rubber, g);
   }
-  portal(0, 13, 0, "STATION HUB", "AUXILIARY POWER REQUIRED");
-  portal(-8, 10, Math.PI / 2, "MATERIALS", "SENSOR CALIBRATION");
-  portal(8, 10, -Math.PI / 2, "DISTRIBUTION", "INTERLOCK CIRCUITS");
-  portal(0, -11, 0, "COMMAND", "COMMUNICATIONS ARRAY");
-  portal(-14, 2.8, 0, "LIFE SUPPORT", "WEST SERVICE GALLERY");
-  portal(14, 2.8, 0, "RESERVE VAULT", "EAST SERVICE GALLERY");
+  portal(0, 13, 0, "HUB");
+  portal(-8, 10, Math.PI / 2, "MATERIALS");
+  portal(8, 10, -Math.PI / 2, "DISTRIBUTION");
+  portal(0, -11, 0, "COMMAND");
+  portal(-14, 2.8, 0, "LIFE SUPPORT");
+  portal(14, 2.8, 0, "RESERVE");
   const door = dynamic(0, 0, 13);
   const leaves: THREE.Group[] = [];
   const doorColliders: Obstacle[] = [];
@@ -357,18 +329,10 @@ export function buildSpaceship(scene: THREE.Scene) {
     doorColliders.push(obstacle);
     obstacles.push(obstacle);
   }
-  const hatch = label(
-    "POWER ISOLATED",
-    "REPAIR ENGINEERING AUXILIARY",
-    0,
-    2.36,
-    13.2,
-    2.35,
-    0.42,
-    "#e4bb7f",
-  );
-  signs.push({ id: "workshop", paint: (t) => hatch.paint(t) });
-  // One readable, physical instrument cabinet at each repair site.
+  const hatchStatus = emission("#d1af78", 0.7);
+  box(1.85, 1.96, 13.41, 0.1, 0.3, 0.03, hatchStatus);
+  // The cabinet silhouette and inset display identify serviceable equipment.
+  // Its name and instructions appear only in the nearby interaction / repair UI.
   for (const a of ACTIVITIES) {
     const g = new THREE.Group();
     g.position.set(a.x, 0, a.z);
@@ -377,20 +341,8 @@ export function buildSpaceship(scene: THREE.Scene) {
     bevel(0, 0.58, 0, 1.65, 1.16, 0.85, charcoal, 0.1, g);
     bevel(0, 1.36, -0.12, 1.72, 0.76, 0.62, ivory, 0.07, g);
     bevel(0, 1.43, 0.225, 1.16, 0.5, 0.08, rubber, 0.04, g);
-    const readout = label(
-      a.code,
-      "LOCAL DIAGNOSTICS",
-      0,
-      1.44,
-      0.277,
-      1.03,
-      0.36,
-      a.color,
-      0,
-      true,
-      g,
-    );
-    signs.push({ id: a.id, paint: readout.paint });
+    const readout = instrument("service", 0, 1.44, 0.277, 1.03, 0.36, g);
+    readouts.push({ id: a.id, setStatus: readout.setStatus });
     box(0, 1.05, 0.39, 1.5, 0.09, 0.4, steel, g);
     for (let i = 0; i < 7; i++)
       bevel(
@@ -408,22 +360,6 @@ export function buildSpaceship(scene: THREE.Scene) {
       for (const y of [0.19, 0.91]) bolt(x, y, 0.438, g);
     for (let j = 0; j < 5; j++)
       box(0, 0.34 + j * 0.075, 0.436, 0.95, 0.023, 0.025, steel, g);
-    for (const x of [-0.68, 0.68])
-      box(x, 1.8, -0.14, 0.04, 0.48, 0.045, steel, g);
-    label(
-      a.system.toUpperCase(),
-      "PRESS E · SERVICE EQUIPMENT",
-      0,
-      1.92,
-      -0.06,
-      2,
-      0.36,
-      a.color,
-      0,
-      true,
-      g,
-    );
-    floorLabel(a.code, "SERVICE CLEARANCE", a.x, a.z + 1.1, 1.5, 0.4, a.color);
     tube(
       [a.x - 0.62, 0.28, a.z - 0.2],
       [a.x - 0.62, 0.12, a.z - 1.3],
@@ -450,16 +386,6 @@ export function buildSpaceship(scene: THREE.Scene) {
     tube([hx + side * 1.6, 0.4, hz], [hx + side * 1.6, 4.5, hz], 0.13, frame);
     tube([hx + side * 1.6, 4.5, hz], [hx + side * 1.6, 4.5, -1.5], 0.13, frame);
   }
-  label(
-    "THERMAL EXCHANGE",
-    "CENTRAL SERVICES / 07",
-    hx,
-    2.1,
-    hz + 1.34,
-    1.5,
-    0.42,
-    "#d6c5a4",
-  );
   function rack(x: number, z: number, rotation = 0) {
     const g = new THREE.Group();
     g.position.set(x, 0, z);
@@ -489,7 +415,7 @@ export function buildSpaceship(scene: THREE.Scene) {
   for (const z of [9, 13]) {
     box(-17.3, 0.43, z, 1.1, 0.86, 0.12, frame);
     bevel(-17.2, 1.3, z, 0.8, 0.6, 0.6, ivory, 0.04);
-    label("SAMPLE", "ρ · L · A", -17.2, 1.34, z + 0.31, 0.63, 0.3, "#b8d3b1");
+    instrument("wave", -17.2, 1.34, z + 0.31, 0.63, 0.3);
   }
   for (let i = 0; i < 6; i++)
     tube(
@@ -516,17 +442,6 @@ export function buildSpaceship(scene: THREE.Scene) {
   for (const x of [-4.6, -3.2, -1.8]) {
     bevel(x, 1.2, 25.4, 1.2, 2.4, 0.75, ivory, 0.06);
     box(x + 0.38, 1.2, 24.98, 0.05, 0.3, 0.09, steel);
-    label(
-      "AST / 07",
-      "CREW EQUIPMENT",
-      x,
-      1.8,
-      24.99,
-      0.8,
-      0.25,
-      "#b9bca7",
-      Math.PI,
-    );
   }
   function fan(x: number, z: number) {
     const g = dynamic(x, 2, z);
@@ -559,19 +474,7 @@ export function buildSpaceship(scene: THREE.Scene) {
     bevel(0, 0.9, 0, 1.5, 0.6, 2.8, frame, 0.1, g);
     for (const z of [-0.75, 0.65]) {
       bevel(0, 1.45, z, 1.25, 0.72, 0.3, ivory, 0.07, g);
-      label(
-        "NAV / ASTERION",
-        "PASSIVE TELEMETRY",
-        0,
-        1.47,
-        z + 0.17,
-        1,
-        0.44,
-        "#9cb7a6",
-        0,
-        true,
-        g,
-      );
+      instrument("orbit", 0, 1.47, z + 0.17, 1, 0.44, g);
     }
   }
   // Window glass is an inset luminous deep-space screen; original exterior remains behind the hull.
@@ -599,16 +502,6 @@ export function buildSpaceship(scene: THREE.Scene) {
   remove.forEach((g) => g.removeFromParent());
   box(0, 0.57, -23, 9, 1.14, 0.3, charcoal);
   box(0, 4.25, -23, 9, 1.5, 0.3, charcoal);
-  label(
-    "OBSERVATION / NO CONTACT",
-    "RESTORE COMMUNICATIONS TO REQUEST ASSISTANCE",
-    0,
-    3.92,
-    -22.76,
-    5.8,
-    0.43,
-    "#bbc6b5",
-  );
   const pools = Array.from({ length: 4 }, () => {
     const l = new THREE.PointLight("#e1d9c2", 0, 14, 2);
     root.add(l);
@@ -622,6 +515,7 @@ export function buildSpaceship(scene: THREE.Scene) {
   return {
     root,
     obstacles,
+    dispose: disposeDisplays,
     update(
       dt: number,
       time: number,
@@ -636,14 +530,16 @@ export function buildSpaceship(scene: THREE.Scene) {
       if (initialized && playing && completed.some((id) => !previous.has(id)))
         events.push("power");
       if (completed.join() !== [...previous].join() || !initialized) {
-        for (const s of signs)
-          s.paint(
+        for (const s of readouts)
+          s.setStatus(
             online.has(s.id)
-              ? "ONLINE / " + activityCode(s.id)
+              ? "online"
               : available(s.id, completed)
-                ? "SERVICE / " + activityCode(s.id)
-                : "INSPECT / " + activityCode(s.id),
+                ? "ready"
+                : "offline",
           );
+        hatchStatus.color.set(online.has("workshop") ? "#91b7a0" : "#d1af78");
+        hatchStatus.emissive.copy(hatchStatus.color);
       }
       const authorized =
         online.has("workshop") ||
@@ -704,5 +600,3 @@ export function buildSpaceship(scene: THREE.Scene) {
     },
   };
 }
-const activityCode = (id: ActivityId) =>
-  ACTIVITIES.find((a) => a.id === id)!.code;

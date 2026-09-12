@@ -140,24 +140,13 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
       {props.playing && hud && (
         <div className="game-hud">
           <div className="deck-readout">
-            <span className="eyebrow">ASTERION / DECK 07</span>
             <strong>{hud.section}</strong>
-            <span className="deck-status">
-              <i />
-              {props.completed.length === ACTIVITY_IDS.length
-                ? "PRIMARY SYSTEMS ONLINE"
-                : props.completed.includes("harbor")
-                  ? "REACTOR ONLINE / COMMS OFFLINE"
-                  : props.completed.includes("workshop")
-                    ? "AUXILIARY SUPPLY ONLINE"
-                    : "RESERVE POWER ACTIVE"}
-            </span>
           </div>
           <div className="system-readout">
             <span>
               {props.distressSent
-                ? "RESCUE SIGNAL ACKNOWLEDGED"
-                : `${props.completed.length} / ${ACTIVITY_IDS.length} SYSTEMS ONLINE`}
+                ? "SIGNAL RECEIVED"
+                : `${props.completed.length} / ${ACTIVITY_IDS.length} RESTORED`}
             </span>
             <div>
               {ACTIVITY_IDS.map((id) => (
@@ -170,33 +159,20 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
               ))}
             </div>
             <span className="hud-shortcuts">
-              <kbd>M</kbd> DECK MAP <kbd>J</kbd> MISSION LOG
+              <kbd>M</kbd> MAP <kbd>J</kbd> LOG
             </span>
           </div>
           <aside className="objective-card" aria-label="Current objective">
-            <span className="eyebrow">
-              {props.distressSent ? "MISSION COMPLETE" : "RECOVERY OBJECTIVE"}
-              <span>{SHIP_SYSTEMS[next ?? "beacon"].code}</span>
-            </span>
             <h2>
               {props.distressSent
                 ? "Rescue has our coordinates."
                 : props.transmitting
                   ? "Transmitting the distress signal"
-                  : (current?.goal ?? "Send the distress signal")}
+                  : (current?.label ?? "Send the distress signal")}
             </h2>
-            <p>
-              {props.distressSent
-                ? "Keep the transmitter online. Explore the restored ship."
-                : props.transmitting
-                  ? "Sending vessel identity and position. Awaiting rescue control’s acknowledgement."
-                  : current
-                    ? current.consequence.split(". ")[0] + "."
-                    : "Use the forward console to contact rescue control."}
-            </p>
             <span className="objective-location">
               <ArrowUpRight size={13} />
-              {current?.destination ?? "Command deck · forward console"}
+              {current?.destination ?? "Command"}
             </span>
           </aside>
           {lockedDoor >= 0 && !focus && (

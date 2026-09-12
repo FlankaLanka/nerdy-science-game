@@ -2,6 +2,16 @@
 
 Verified locally on September 11, 2026, on `codex/spaceship-dead-orbit`.
 
+## World readability follow-up
+
+The subsequent visual simplification removes all 17 floor labels, cabinet banners, repeated compartment signs and decorative text plates. Six short doorway names remain. Shared graphic displays preserve repair-state feedback without words; the walking HUD presents a compact objective and location.
+
+The production build and 11 relevant browser checks passed after this change: map placement and waypoint tracking, save isolation, the first repair and physical door in both motion modes, optional network interaction, safe doorway resume, three touch viewports, and transmission while walking. No physics or campaign rule changed, so the broader circuit results below remain the preceding campaign verification.
+
+Seven world/title captures were refreshed and inspected. The same local 1280 × 720 stationary and moving samples each retained 16.7 ms median and p90 frame intervals. The small objective text received stronger local shadow/contrast after inspecting the bright reserve room. Updated captures replace the older views in place.
+
+## Campaign rebuild checks
+
 | Check                  | Result                                                            |
 | ---------------------- | ----------------------------------------------------------------- |
 | `npm test`             | 45 unit tests passed                                              |

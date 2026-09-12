@@ -466,6 +466,7 @@ export function renderWorld(o: Options) {
       canvas.removeEventListener("pointercancel", up);
       canvas.removeEventListener("webglcontextlost", lost);
       disposeScene(scene);
+      model.dispose();
       environment.dispose();
       pmrem.dispose();
       composer.dispose();
