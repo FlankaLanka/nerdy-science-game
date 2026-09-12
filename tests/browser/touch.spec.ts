@@ -56,7 +56,7 @@ for (const viewport of [
         touchPoints: [{ x: center.x, y: center.y - box.width * (38 / 140) }],
       });
       const prompt = page.getByRole("button", {
-        name: "Repair Keeper’s workshop",
+        name: "Repair Engineering",
         exact: true,
       });
       await prompt.waitFor();
@@ -66,18 +66,15 @@ for (const viewport of [
       });
       await prompt.tap();
       await page
-        .getByRole("dialog", { name: "Keeper’s workshop circuit", exact: true })
+        .getByRole("dialog", { name: "Engineering circuit", exact: true })
         .waitFor();
       await page.locator(".circuit-board.with-depth").waitFor();
-      await page.screenshot({
-        path: `docs/screenshots/fps-touch-${viewport.width}.png`,
-      });
       await workshopRepair(page);
       await page.getByRole("button", { name: "Pause game", exact: true }).tap();
-      await page.getByRole("button", { name: /^Island map/ }).tap();
+      await page.getByRole("button", { name: /^Deck map/ }).tap();
       await expect(
         page.locator('.map-stops [aria-current="step"]'),
-      ).toContainText("Harbor relay");
+      ).toContainText("Power relay");
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,

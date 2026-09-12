@@ -43,11 +43,11 @@ export type GameState = {
   finishedAt: number | null;
   distressSent: boolean;
 };
-export const SAVE_KEY = "signal.lighthouse.v1";
+export const SAVE_KEY = "signal.dead-orbit.v1";
 export function initialProgress(): Progress {
   return {
     wires: [],
-    material: "wood",
+    material: "polymer",
     phase: "build",
     history: [],
     prediction: null,
@@ -157,7 +157,7 @@ export function updateProgress(
     case "MATERIAL":
       return p.phase === "build" &&
         id === "workshop" &&
-        ["copper", "wood", "glass"].includes(action.material) &&
+        ["copper", "polymer", "glass"].includes(action.material) &&
         action.material !== p.material
         ? edit(p.wires, action.material)
         : p;
@@ -372,9 +372,9 @@ export function restoreState(raw: string | null): GameState {
       if (!saved || typeof saved !== "object") continue;
       const p = initialProgress();
       p.wires = sanitizeWires(mission.id, saved.wires);
-      p.material = ["wood", "glass", "copper"].includes(saved.material)
+      p.material = ["polymer", "glass", "copper"].includes(saved.material)
         ? saved.material
-        : "wood";
+        : "polymer";
       p.prediction = mission.predictions.some((c) => c.id === saved.prediction)
         ? saved.prediction
         : null;
@@ -412,11 +412,11 @@ export function restoreState(raw: string | null): GameState {
             )
               return [];
             const wires = sanitizeWires(mission.id, e.wires);
-            const material: Material = ["wood", "glass", "copper"].includes(
+            const material: Material = ["polymer", "glass", "copper"].includes(
               e.material as string,
             )
               ? (e.material as Material)
-              : "wood";
+              : "polymer";
             const result = solveCircuit(
               mission.id,
               wires,

@@ -18,7 +18,7 @@ import { Dialog } from "./Dialog";
 import { useSound } from "./audio";
 import { GameViewport } from "./GameViewport";
 import { prepareInterface } from "./interfaceAssets";
-import { IslandMap } from "./IslandMap";
+import { ShipMap } from "./ShipMap";
 import type { Player } from "./scene/navigation";
 
 const World = lazy(() => import("./World"));
@@ -60,6 +60,15 @@ export default function App() {
   const [practice, setPractice] = useState<Progress | null>(null),
     [saved, setSaved] = useState(true),
     [page, setPage] = useState(0);
+  const [effect, setEffect] = useState<{
+    id: number;
+    kind: "boot" | "restore";
+  } | null>(null);
+  useEffect(() => {
+    if (!effect) return;
+    const timer = setTimeout(() => setEffect(null), 1400);
+    return () => clearTimeout(timer);
+  }, [effect]);
   const [subtitle, setSubtitle] = useState(""),
     [sensitivity, setSensitivity] = useState(1);
   const [fullscreen, setFullscreen] = useState(!!document.fullscreenElement);
@@ -131,11 +140,12 @@ export default function App() {
     world.current?.capture();
   }
   function begin() {
+    setEffect({ id: Date.now(), kind: "boot" });
     if (!state.started) {
       dispatch({ type: "START" });
       dispatch({ type: "INTRO", step: 3 });
       setSubtitle(
-        "The storm cut the power. Get the lighthouse radio working so we can call for help. Start at the workshop.",
+        "Asterion is running on reserve power. Restore the three systems and send a distress signal. Start at Engineering.",
       );
     }
     resume();
@@ -148,9 +158,7 @@ export default function App() {
   }
   function visit(id: MissionId) {
     if (!state.completed.includes(id) && id !== next) {
-      setSubtitle(
-        `This line is dead. We need to repair the ${next === "workshop" ? "workshop" : "harbor"} first.`,
-      );
+      setSubtitle(`No incoming power. Repair ${SITES[next].name} first.`);
       return;
     }
     world.current?.release();
@@ -177,6 +185,7 @@ export default function App() {
     setActive(null);
     setPractice(null);
     sound.play("success");
+    setEffect({ id: Date.now(), kind: "restore" });
     if (id === "beacon" && !practice && !allDone) {
       setRunning(false);
       setMenu("ending");
@@ -185,10 +194,10 @@ export default function App() {
         practice
           ? "Another working route. Nicely done."
           : id === "workshop"
-            ? "The supply is back. Follow the coastal path to the harbor relay."
+            ? "Auxiliary power restored. Follow the center passage to the Power relay."
             : id === "harbor"
-              ? "Power is reaching North Point. Head uphill and repair the lighthouse radio’s supply."
-              : "The power is holding.",
+              ? "Distribution is online. Continue forward to Command and restore the distress transmitter."
+              : "All systems holding. The ship is yours to explore.",
       );
       if (!failed) resume();
     }
@@ -230,9 +239,10 @@ export default function App() {
       <div
         className={`game ${active ? "inspecting" : ""} ${!entered ? "title-screen" : ""}`}
       >
-        {!failed && (
+        {interfaceReady && !failed && (
           <Suspense fallback={null}>
             <World
+              preview={!entered}
               distressSent={state.distressSent}
               ref={world}
               playing={playing}
@@ -252,24 +262,54 @@ export default function App() {
           </Suspense>
         )}
         <div className="lens-vignette" aria-hidden="true" />
+        <div className="visor-grid" aria-hidden="true" />
+        {effect && (
+          <div
+            key={effect.id}
+            className={`world-transition transition-${effect.kind}`}
+            aria-hidden="true"
+          >
+            <i />
+            <i />
+            <span>
+              {effect.kind === "boot"
+                ? "NEURAL LINK ESTABLISHED"
+                : "SYSTEM RESTORED"}
+            </span>
+          </div>
+        )}
         {!entered && (
           <main className="title-overlay">
+            <div className="title-topline">
+              <span className="ship-wordmark">◈ ASTERION</span>
+              <span>
+                DECK 07 <i /> {allDone ? "SYSTEMS RESTORED" : "RESERVE POWER"}
+              </span>
+            </div>
             <div className="title-content">
+              <div className="title-kicker">
+                <span className="status-dot" /> DEEP SPACE RESEARCH VESSEL
+              </div>
               <h1>
-                SIGNAL<span>THE LAST LIGHTHOUSE</span>
+                SIGNAL<span>DEAD ORBIT</span>
               </h1>
+              <p className="title-story">
+                No contact. Failing systems.
+                <br />
+                Bring the ship back to life.
+              </p>
               <button
                 className="title-play"
                 disabled={!arrived}
                 onClick={begin}
               >
                 {!arrived
-                  ? "Arriving on the island…"
+                  ? "Establishing uplink…"
                   : failed
                     ? "Play circuit puzzles"
                     : state.started
                       ? "Continue"
-                      : "Enter the island"}
+                      : "Board the Asterion"}
                 <ArrowRight size={20} />
               </button>
               <button
@@ -287,6 +327,31 @@ export default function App() {
                 </p>
               )}
             </div>
+            <div
+              className="title-systems"
+              aria-label={`${state.completed.length} of 3 systems restored`}
+            >
+              {(["workshop", "harbor", "beacon"] as MissionId[]).map(
+                (id, index) => (
+                  <div
+                    key={id}
+                    className={state.completed.includes(id) ? "online" : ""}
+                  >
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <i />
+                    <p>
+                      {SITES[id].name}
+                      <small>
+                        {state.completed.includes(id) ? "ONLINE" : "OFFLINE"}
+                      </small>
+                    </p>
+                  </div>
+                ),
+              )}
+            </div>
+            <span className="title-footer-code">
+              VESSEL ID / AST–07 <b>•</b> MANUAL RECOVERY PROTOCOL
+            </span>
             {displayNotice && (
               <p className="display-notice" role="status">
                 {displayNotice}
@@ -314,8 +379,7 @@ export default function App() {
               <main className="graphics-fallback">
                 <h1>Circuit mode</h1>
                 <p>
-                  3D graphics are unavailable. Continue the island’s repairs
-                  here.
+                  3D graphics are unavailable. Continue the ship’s repairs here.
                 </p>
                 <button className="primary-action" onClick={() => visit(next)}>
                   {allDone
@@ -354,10 +418,10 @@ export default function App() {
                 <ArrowRight size={18} />
               </button>
               <button onClick={() => setMenu("map")}>
-                Island map <kbd>M</kbd>
+                Deck map <kbd>M</kbd>
               </button>
               <button onClick={() => setMenu("journal")}>
-                Field notes <kbd>J</kbd>
+                Mission log <kbd>J</kbd>
               </button>
               <button onClick={() => setMenu("settings")}>Settings</button>
               <button onClick={() => setMenu("controls")}>Controls</button>
@@ -379,7 +443,7 @@ export default function App() {
           </Dialog>
         )}
         {menu === "map" && (
-          <IslandMap
+          <ShipMap
             state={state}
             player={failed ? null : mapPlayer}
             onClose={back}
@@ -396,11 +460,11 @@ export default function App() {
         )}
         {menu === "settings" && (
           <Dialog title="Settings" onClose={back} className="settings-dialog">
-            <h2>Field settings</h2>
+            <h2>Ship settings</h2>
             <label className="setting">
               <span>
                 <span className="setting-copy">
-                  Sound<small>Waves, footsteps & equipment</small>
+                  Sound<small>Ship ambience, footsteps & equipment</small>
                 </span>
               </span>
               <input
@@ -412,16 +476,16 @@ export default function App() {
             </label>
             <label className="setting">
               <span className="setting-copy">
-                Reduce camera motion
+                Reduce motion
                 <small>
                   {systemMotion
                     ? "Your device prefers a steady view"
-                    : "A steady view on the island paths"}
+                    : "Steady camera and minimal visual effects"}
                 </small>
               </span>
               <input
                 type="checkbox"
-                aria-label="Reduce camera motion"
+                aria-label="Reduce motion"
                 checked={reducedMotion}
                 disabled={systemMotion}
                 onChange={() => dispatch({ type: "MOTION" })}
@@ -448,22 +512,22 @@ export default function App() {
             >
               <span className="setting-copy">
                 {fullscreen ? "Exit fullscreen" : "Fullscreen"}
-                <small>Let the island fill the view</small>
+                <small>Let the ship fill the view</small>
               </span>
               <span className="setting-mark">↗</span>
             </button>
             <button
               className="setting"
-              aria-label="Return to the path"
+              aria-label="Return to Engineering"
               onClick={() => {
                 world.current?.reset();
-                setSubtitle("Back at the workshop path.");
+                setSubtitle("Back on the engineering deck.");
                 resume();
               }}
             >
               <span className="setting-copy">
-                Return to the path
-                <small>Find your footing by the workshop</small>
+                Return to Engineering
+                <small>Return safely to the starting compartment</small>
               </span>
               <span className="setting-mark">↶</span>
             </button>
@@ -474,10 +538,10 @@ export default function App() {
         )}
         {menu === "controls" && (
           <Dialog title="Controls" onClose={back} className="controls-dialog">
-            <h2>Finding your feet</h2>
+            <h2>Flight controls</h2>
             <dl className="control-list">
               <div>
-                <dt>Walk the island</dt>
+                <dt>Move through the ship</dt>
                 <dd>W A S D / ↑ ↓</dd>
               </div>
               <div>
@@ -497,7 +561,7 @@ export default function App() {
                 <dd>Esc / Tab</dd>
               </div>
               <div>
-                <dt>Map / journal</dt>
+                <dt>Deck map / mission log</dt>
                 <dd>M / J</dd>
               </div>
               <div>
@@ -550,22 +614,30 @@ export default function App() {
             className="ending-dialog"
             onClose={resume}
           >
-            <div className="rescue-radio" aria-hidden="true">
+            <span className="eyebrow">
+              ASTERION / LONG-RANGE COMMUNICATIONS
+            </span>
+            <div
+              className={`rescue-radio ${state.distressSent ? "transmitting" : ""}`}
+              aria-hidden="true"
+            >
               <svg viewBox="0 0 240 100">
-                <path d="M54 36h132v53H54zM71 48h53v25H71zM81 53v15m9-15v15m9-15v15m9-15v15M163 37l17-31M54 62H36m-9-12q-15 12 0 24m174-24q15 12 0 24" />
-                <circle cx="153" cy="59" r="10" />
-                <path d="M170 78h6m-21 0h6m-20 0h6" />
+                <g transform="translate(120 50)">
+                  <circle className="signal-orbit" r="42" />
+                  <circle r="29" />
+                  <path d="M-52 0h30m44 0h30M0-50v28m0 44v28" />
+                  <path d="M0-17 14 8 0 3-14 8Z" />
+                  <circle className="signal-pulse" r="18" />
+                </g>
               </svg>
             </div>
             <h2>
-              {state.distressSent
-                ? "Help is on the way."
-                : "The radio has power."}
+              {state.distressSent ? "Signal received." : "Transmitter online."}
             </h2>
             <p className="rescue-message">
               {state.distressSent
-                ? "“Bramble Island, we have your position. Keep the lighthouse lit. We’re on our way.”"
-                : "The lighthouse is shining. The radio is alive. Time to let someone know you’re here."}
+                ? "“Asterion, this is Rescue Control. Your coordinates are locked. Hold position. We’re coming to get you.”"
+                : "Three systems restored. One way home. Your distress transmitter is ready to reach beyond this orbit."}
             </p>
             {state.distressSent ? (
               <button className="primary-action" onClick={resume}>
@@ -580,7 +652,7 @@ export default function App() {
                   sound.play("signal");
                 }}
               >
-                Call for help
+                Transmit distress signal
                 <Radio size={18} />
               </button>
             )}
@@ -591,7 +663,7 @@ export default function App() {
                 setMenu("journal");
               }}
             >
-              Open field notes
+              Open mission log
             </button>
           </Dialog>
         )}

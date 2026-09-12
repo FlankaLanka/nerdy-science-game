@@ -7,7 +7,7 @@ import {
   movePlayer,
   restorePlayer,
   SPAWN,
-  terrainHeight,
+  SITES,
 } from "../src/scene/navigation.ts";
 import type { Obstacle } from "../src/scene/navigation.ts";
 
@@ -32,42 +32,49 @@ test("first-person movement follows camera heading and normalizes diagonal speed
 });
 
 test("walls block walking and sprinting, allow sliding, and cannot be tunnelled through", () => {
-  const wall: Obstacle[] = [{ x: -3, z: 14.8, width: 4, depth: 0.1 }];
+  const wall: Obstacle[] = [{ x: -4, z: 19.3, width: 4, depth: 0.1 }];
   let p = { ...SPAWN };
   for (let i = 0; i < 20; i++) p = movePlayer(p, 0, 1, 0.1, true, wall);
-  assert.ok(p.z >= 15.15);
+  assert.ok(p.z >= 19.65);
   const slide = movePlayer(p, 1, 1, 0.1, true, wall);
   assert.ok(slide.x > p.x);
-  assert.ok(slide.z >= 15.15);
+  assert.ok(slide.z >= 19.65);
   const lagged = movePlayer(SPAWN, 0, 1, 25, true, wall);
-  assert.ok(lagged.z >= 15.15);
+  assert.ok(lagged.z >= 19.65);
 });
 
-test("water is out of bounds while the jetty remains walkable above it", () => {
+test("the entire player remains inside the hull while passage connections stay walkable", () => {
   assert.equal(canWalk(45, 0, []), false);
-  assert.equal(canWalk(0, 36, []), false);
-  assert.equal(canWalk(32, 14, []), true);
-  assert.ok(groundHeight(32, 14) > terrainHeight(32, 14));
-  assert.equal(canWalk(32, 18, []), false);
+  assert.equal(canWalk(0, 25, []), false);
+  assert.equal(canWalk(8, 14, []), false);
+  assert.equal(canWalk(3, 5.5, []), false);
+  for (let z = -28; z < 23; z += 0.1) assert.equal(canWalk(0, z, []), true);
+  for (const site of Object.values(SITES)) {
+    assert.equal(canWalk(site.x, site.z + 2, []), true);
+    assert.equal(groundHeight(site.x, site.z), 0);
+  }
 });
 
 test("a repair requires proximity, looking at the cabinet, and an unobstructed approach", () => {
-  const p = { x: -3, z: 5.7, yaw: 0, pitch: 0 };
+  const p = { x: -4, z: 13.5, yaw: 0, pitch: 0 };
   assert.equal(focusedSite(SPAWN, []), null);
   assert.equal(focusedSite(p, []), "workshop");
   assert.equal(focusedSite({ ...p, yaw: Math.PI }, []), null);
   assert.equal(focusedSite({ ...p, pitch: 1 }, []), null);
-  assert.equal(focusedSite(p, [{ x: -3, z: 4.6, width: 4, depth: 0.3 }]), null);
   assert.equal(
-    focusedSite({ ...p, z: 2.04, yaw: Math.PI }, [
-      { x: -3, z: 2.5, width: 3, depth: 0.3 },
-      { x: -3, z: 3.2, width: 1.05, depth: 0.6 },
+    focusedSite(p, [{ x: -4, z: 12.2, width: 4, depth: 0.3 }]),
+    null,
+  );
+  assert.equal(
+    focusedSite({ ...p, z: 9.8, yaw: Math.PI }, [
+      { x: -4, z: 10.2, width: 3, depth: 0.3 },
+      { x: -4, z: 11, width: 1.05, depth: 0.6 },
     ]),
     null,
   );
 });
 
-test("player saves resume safely and reject sea, obstacles, and malformed values", () => {
+test("player saves resume safely and reject out-of-hull coordinates, obstacles, and malformed values", () => {
   const p = { x: 2, z: 10, yaw: 2, pitch: 0.1 };
   assert.deepEqual(restorePlayer(JSON.stringify(p), []), p);
   for (const raw of [

@@ -39,14 +39,14 @@ test("drag look and keyboard movement work when pointer lock is denied", async (
   ).toBeVisible();
 });
 
-test("pre-first-person saves keep their repairs and start safely on the path", async ({
+test("pre-first-person saves keep their repairs and start safely on the engineering deck", async ({
   page,
 }) => {
   await openWorkshop(page);
   await workshopRepair(page);
   await page.keyboard.press("Tab");
   const legacy = await page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem("signal.lighthouse.v1")!);
+    const state = JSON.parse(localStorage.getItem("signal.dead-orbit.v1")!);
     delete state.intro;
     delete state.lesson;
     return JSON.stringify(state);
@@ -55,8 +55,8 @@ test("pre-first-person saves keep their repairs and start safely on the path", a
   const restored = await page.context().newPage();
   await page.close();
   await restored.addInitScript((save) => {
-    localStorage.removeItem("signal.lighthouse.player.v1");
-    localStorage.setItem("signal.lighthouse.v1", save);
+    localStorage.removeItem("signal.dead-orbit.player.v1");
+    localStorage.setItem("signal.dead-orbit.v1", save);
   }, legacy);
   await restored.goto("/");
   await restored
@@ -65,12 +65,12 @@ test("pre-first-person saves keep their repairs and start safely on the path", a
   await restored.keyboard.press("m");
   await expect(
     restored.locator('.map-stops [aria-current="step"]'),
-  ).toContainText("Harbor relay");
+  ).toContainText("Power relay");
   await restored.keyboard.press("Escape");
   await restored.getByRole("button", { name: "Resume", exact: true }).click();
   const p = await position(restored);
-  expect(p.x).toBe(-3);
-  expect(p.z).toBe(15.5);
+  expect(p.x).toBe(-4);
+  expect(p.z).toBe(20);
   await restored.close();
 });
 
@@ -115,14 +115,14 @@ test("WebGL failure offers explicit circuit mode instead of a broken world", asy
     .getByRole("button", { name: "Play circuit puzzles", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Repair Keeper’s workshop", exact: true })
+    .getByRole("button", { name: "Repair Engineering", exact: true })
     .click();
   await connect(page, "Lamp A right", "Bridge left");
   await page.getByRole("button", { name: "Copper", exact: true }).click();
   await page.getByRole("button", { name: "Light up", exact: true }).click();
   await page.getByRole("button", { name: "Test circuit", exact: true }).click();
   await expect(
-    page.getByText("There’s our spark.", { exact: true }),
+    page.getByText("Auxiliary path confirmed.", { exact: true }),
   ).toBeVisible();
 });
 
@@ -131,8 +131,8 @@ test("blocked storage leaves repairs playable and reports the save limitation", 
 }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
-      "signal.lighthouse.player.v1",
-      JSON.stringify({ x: -3, z: 5.6, yaw: 0, pitch: 0 }),
+      "signal.dead-orbit.player.v1",
+      JSON.stringify({ x: -4, z: 13.5, yaw: 0, pitch: 0 }),
     );
     Storage.prototype.setItem = () => {
       throw new Error("blocked");
@@ -149,7 +149,7 @@ test("blocked storage leaves repairs playable and reports the save limitation", 
   await page.getByRole("button", { name: "Light up", exact: true }).click();
   await page.getByRole("button", { name: "Test circuit", exact: true }).click();
   await expect(
-    page.getByText("There’s our spark.", { exact: true }),
+    page.getByText("Auxiliary path confirmed.", { exact: true }),
   ).toBeVisible();
 });
 

@@ -141,7 +141,7 @@ test("malformed saves cannot unlock future repairs or preserve invented outcomes
           {
             type: "circuit",
             wires: [],
-            material: "wood",
+            material: "polymer",
             prediction: "on",
             outcome: "on",
             matched: true,

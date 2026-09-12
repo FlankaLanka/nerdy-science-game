@@ -1,5 +1,5 @@
 export type MissionId = "workshop" | "harbor" | "beacon";
-export type Material = "copper" | "wood" | "glass";
+export type Material = "copper" | "polymer" | "glass";
 export type Wire = [string, string];
 export type Terminal = { id: string; label: string; x: number; y: number };
 export type Lamp = {
@@ -57,11 +57,11 @@ export const MISSIONS: Mission[] = [
   {
     id: "workshop",
     number: "01",
-    place: "The workshop",
-    title: "One small spark.",
-    task: "Bring the workshop lamp back to life.",
+    place: "Engineering",
+    title: "Auxiliary power.",
+    task: "Restore the auxiliary lighting supply.",
     intro:
-      "The storm broke a connection. Choose a bridge material, then join the empty sockets with a wire.",
+      "A surge broke the auxiliary power circuit. Choose a bridge material, then join the empty sockets with a wire.",
     prediction: "When you test it, the lamp will…",
     predictions: [
       { id: "on", text: "Light up" },
@@ -92,18 +92,18 @@ export const MISSIONS: Mission[] = [
       near: "Distance is not the deciding factor. Trace the connected path through the lamp and back to the battery.",
       one: "One connection leaves a gap. Follow the path from one battery end, through the lamp, to the other end.",
     },
-    discovery: "A path all the way around.",
+    discovery: "A complete conducting loop.",
     evidence:
-      "The lamp lights when a conducting loop connects it to both battery terminals. Dry wood and glass leave the bridge open in our model.",
-    restore: "Light the workshop",
-    farewell: "That’s our first light. The harbor is just down the path.",
+      "The lamp lights when a conducting loop connects it to both battery terminals. Polymer and glass leave the bridge open in our model.",
+    restore: "Restore auxiliary power",
+    farewell: "That’s our first light. Power relay is just down the path.",
   },
   {
     id: "harbor",
     number: "02",
-    place: "The harbor",
-    title: "In the same boat.",
-    task: "Reconnect both harbor lamps. Then test a broken lamp.",
+    place: "Power relay",
+    title: "Shared power.",
+    task: "Reconnect both relay indicators. Then isolate a failed module.",
     intro:
       "These lamps share one route. Reconnect the loose end to the battery, then we’ll see how they depend on each other.",
     prediction: "When you test this circuit…",
@@ -130,21 +130,21 @@ export const MISSIONS: Mission[] = [
       battery:
         "The battery is still there. Look for the gap made when lamp A was removed.",
     },
-    discovery: "One loop. A shared fate.",
+    discovery: "One path. Shared failure.",
     evidence:
       "In the tested series circuit, both lamps shared one path. Removing A broke that path, so B also went out. The battery was not empty.",
-    restore: "Restore the harbor",
+    restore: "Restore distribution",
     farewell:
-      "The harbor is glowing. But the lighthouse needs a backup that won’t go dark with its neighbor.",
+      "Distribution restored. Command needs independent backup power for the transmitter.",
   },
   {
     id: "beacon",
     number: "03",
-    place: "The lighthouse",
-    title: "A light that stays.",
+    place: "Command deck",
+    title: "A signal that survives.",
     task: "Light both lamps. Keep B shining if A is disconnected.",
     intro:
-      "The lighthouse radio needs reliable power so you can call for help. Build independent paths for its two lamps.",
+      "The distress transmitter needs power that survives a component failure. Build independent paths for its two lamps.",
     prediction: "When you test your circuit…",
     predictions: [
       { id: "both", text: "Both lamps light" },
@@ -170,12 +170,12 @@ export const MISSIONS: Mission[] = [
       bigger:
         "It is the same lamp. What changed is the way the two lamps connect to the battery.",
     },
-    discovery: "Another way home.",
+    discovery: "Independent paths.",
     evidence:
       "Each parallel branch connects across the battery. Opening A’s branch leaves a complete path through B. That is why the backup stays on.",
-    restore: "Power the radio",
+    restore: "Power the transmitter",
     farewell:
-      "The beacon is holding and the radio has power. Send a distress call from North Point.",
+      "The transmitter is holding. Send a distress signal from Command.",
   },
 ];
 
@@ -187,6 +187,6 @@ export function wireKey(w: Wire): string {
 }
 export const MATERIALS: { id: Material; name: string; short: string }[] = [
   { id: "copper", name: "Copper strip", short: "Copper" },
-  { id: "wood", name: "Dry wood", short: "Dry wood" },
+  { id: "polymer", name: "Polymer", short: "Polymer" },
   { id: "glass", name: "Glass strip", short: "Glass" },
 ];

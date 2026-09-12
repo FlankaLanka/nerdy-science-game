@@ -95,6 +95,36 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
       <div className="world" ref={host} />
       {props.playing && hud && (
         <div className="game-hud">
+          <div className="deck-readout">
+            <span className="eyebrow">ASTERION / DECK 07</span>
+            <strong>{hud.section}</strong>
+            <span className="deck-status">
+              <i />
+              {props.completed.length === 3
+                ? "PRIMARY SYSTEMS ONLINE"
+                : "RESERVE POWER ACTIVE"}
+            </span>
+          </div>
+          <div className="system-readout">
+            <span>
+              {props.distressSent
+                ? "RESCUE SIGNAL ACKNOWLEDGED"
+                : `${props.completed.length} / 3 SYSTEMS ONLINE`}
+            </span>
+            <div>
+              {["workshop", "harbor", "beacon"].map((id) => (
+                <i
+                  key={id}
+                  className={
+                    props.completed.includes(id as MissionId) ? "online" : ""
+                  }
+                />
+              ))}
+            </div>
+            <span className="hud-shortcuts">
+              <kbd>M</kbd> DECK MAP <kbd>J</kbd> MISSION LOG
+            </span>
+          </div>
           <div
             className="compass"
             aria-label={`Facing ${Math.round(hud.heading)} degrees`}
@@ -130,7 +160,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
                 focus === "beacon" &&
                 props.completed.length === 3 &&
                 !props.distressSent
-                  ? "Use lighthouse radio"
+                  ? "Use distress transmitter"
                   : `${complete ? "Inspect" : available ? "Repair" : "Inspect locked"} ${SITES[focus].name}`
               }
             >
@@ -139,7 +169,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
                 {focus === "beacon" &&
                 props.completed.length === 3 &&
                 !props.distressSent
-                  ? "Use lighthouse radio"
+                  ? "Use distress transmitter"
                   : complete
                     ? `Inspect ${SITES[focus].name}`
                     : available
@@ -190,7 +220,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
               ? `${SITES[focus].name}. Press E to interact.`
               : next
                 ? `${Math.round(hud.distance)} meters to ${SITES[next].name}`
-                : "All island power restored"}
+                : "All ship systems restored"}
           </span>
         </div>
       )}

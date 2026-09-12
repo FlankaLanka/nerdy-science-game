@@ -43,9 +43,9 @@ export function parseCoachContext(value: unknown): CoachContext | null {
   return {
     mission,
     wires: sanitizeWires(mission, input.wires),
-    material: ["copper", "wood", "glass"].includes(input.material as string)
+    material: ["copper", "polymer", "glass"].includes(input.material as string)
       ? (input.material as Material)
-      : "wood",
+      : "polymer",
     phase: input.phase as Phase,
     prediction: definition.predictions.some((c) => c.id === input.prediction)
       ? (input.prediction as string)
@@ -92,15 +92,15 @@ export function fieldGuide(ctx: CoachContext): string {
         : "Your wire made a conducting path around the bridge. That is a real working circuit too. Trace how it connects the lamp to both battery ends.";
     if (ctx.material !== "copper")
       return ctx.hints > 1
-        ? "The dry wood and glass strips do not conduct in our model. Try copper, then connect the lamp’s loose socket to the bridge’s loose socket."
-        : "A wire needs a material that conducts. What do you expect from a metal strip compared with dry wood or glass? Try one material while keeping your wires the same.";
+        ? "The polymer and glass strips do not conduct in our model. Try copper, then connect the lamp’s loose socket to the bridge’s loose socket."
+        : "A wire needs a material that conducts. What do you expect from a metal strip compared with polymer or glass? Try one material while keeping your wires the same.";
     return ctx.hints > 1
       ? "One wire runs from the battery to the lamp. The return route needs a connection from the lamp’s free socket to the bridge’s free socket. Tap those two sockets."
       : "Start at the battery’s + socket. Trace through the lamp and the copper bridge, back to −. Where is the gap?";
   }
   if (ctx.mission === "harbor") {
     if (base.count === 2 && fault.lamps.b.on)
-      return "You created an extra route. For this harbor experiment, keep the existing single loop and remove the bypass. Connect the loose end of B back to the battery’s − socket.";
+      return "You created an extra route. For this distribution experiment, keep the existing single loop and remove the bypass. Connect the loose end of B back to the battery’s − socket.";
     return ctx.hints > 1
       ? "The existing cables go from + through A, then B. Connect B’s free socket to the battery’s − socket to complete that one loop."
       : "Follow the existing cable from + through A and B. Where should the loose end go to complete the route?";
@@ -141,7 +141,7 @@ export function coachFacts(ctx: CoachContext) {
         ? ctx.material
         : "not present in this experiment",
     wireMaterial:
-      "Every wire is an ideal conductor. The material selector changes ONLY the workshop bridge; it never changes a wire or a lamp.",
+      "Every wire is an ideal conductor. The material selector changes ONLY the engineering bridge; it never changes a wire or a lamp.",
     disconnectedLamp:
       ctx.phase === "fault-result"
         ? "A is physically removed, leaving an open gap between its sockets."

@@ -10,7 +10,7 @@ import {
   workshopRepair,
 } from "./helpers";
 
-test("walk the island, restore all three physical stations, and retain discoveries", async ({
+test("walk the ship, restore all three physical stations, and retain discoveries", async ({
   page,
 }) => {
   test.setTimeout(240000);
@@ -18,17 +18,13 @@ test("walk the island, restore all three physical stations, and retain discoveri
   page.on("pageerror", (e) => errors.push(e.message));
   await begin(page);
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.screenshot({ path: "docs/screenshots/fps-world.png" });
   await page.keyboard.down("w");
   await page
-    .getByRole("button", { name: "Repair Keeper’s workshop", exact: true })
+    .getByRole("button", { name: "Repair Engineering", exact: true })
     .waitFor();
   await page.keyboard.up("w");
-  await page.screenshot({ path: "docs/screenshots/fps-interact.png" });
   await page.keyboard.press("e");
-  await page
-    .getByRole("dialog", { name: "Keeper’s workshop circuit" })
-    .waitFor();
+  await page.getByRole("dialog", { name: "Engineering circuit" }).waitFor();
   await expect(
     page.getByRole("button", { name: "Test circuit", exact: true }),
   ).toHaveCount(0);
@@ -61,23 +57,21 @@ test("walk the island, restore all three physical stations, and retain discoveri
     })
     .click();
   await page
-    .getByRole("button", { name: "Light the workshop", exact: true })
+    .getByRole("button", { name: "Restore auxiliary power", exact: true })
     .click();
   await expect(
     page.getByRole("button", {
-      name: "Inspect Keeper’s workshop",
+      name: "Inspect Engineering",
       exact: true,
     }),
   ).toBeVisible();
-  await walkTo(page, -3, 8.5);
-  await walkTo(page, 21, 8.5);
-  await aimAt(page, 21, 12);
-  await page.keyboard.down("w");
-  await page
-    .getByRole("button", { name: "Repair Harbor relay", exact: true })
-    .waitFor();
-  await page.keyboard.up("w");
-  await page.screenshot({ path: "docs/screenshots/fps-harbor.png" });
+  await walkTo(page, 0, 14);
+  await walkTo(page, 0, 0);
+  await walkTo(page, 4, -0.5);
+  await aimAt(page, 4, -3);
+  await expect(
+    page.getByRole("button", { name: "Repair Power relay", exact: true }),
+  ).toBeVisible();
   await page.keyboard.press("e");
   await connect(page, "Lamp B right", "Battery negative");
   await page
@@ -98,22 +92,17 @@ test("walk the island, restore all three physical stations, and retain discoveri
     })
     .click();
   await page
-    .getByRole("button", { name: "Restore the harbor", exact: true })
+    .getByRole("button", { name: "Restore distribution", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "Inspect Harbor relay", exact: true }),
+    page.getByRole("button", { name: "Inspect Power relay", exact: true }),
   ).toBeVisible();
-  await walkTo(page, 11, 8);
-  await walkTo(page, 11, -13.7);
-  await aimAt(page, 11, -16.3);
-  await page.keyboard.down("w");
+  await walkTo(page, 0, 0);
+  await walkTo(page, 0, -20.5);
+  await aimAt(page, 0, -23);
   await expect(
-    page.getByRole("button", {
-      name: "Repair Lighthouse control",
-      exact: true,
-    }),
+    page.getByRole("button", { name: "Repair Command deck", exact: true }),
   ).toBeVisible();
-  await page.keyboard.up("w");
   await page.keyboard.press("e");
   await connect(page, "Battery positive", "Lamp A left");
   await connect(page, "Lamp A right", "Lamp B left");
@@ -146,7 +135,6 @@ test("walk the island, restore all three physical stations, and retain discoveri
   await expect(
     page.getByText("The backup held.", { exact: true }),
   ).toBeVisible();
-  await page.screenshot({ path: "docs/screenshots/fps-backup.png" });
   await page
     .getByRole("button", {
       name: "B has its own complete path to both battery ends",
@@ -154,22 +142,22 @@ test("walk the island, restore all three physical stations, and retain discoveri
     })
     .click();
   await page
-    .getByRole("button", { name: "Power the radio", exact: true })
+    .getByRole("button", { name: "Power the transmitter", exact: true })
     .click();
   await expect(
     page.getByRole("dialog", { name: "Signal restored", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("The radio has power.", { exact: true }),
+    page.getByText("Transmitter online.", { exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Call for help", exact: true })
+    .getByRole("button", { name: "Transmit distress signal", exact: true })
     .click();
   await expect(
-    page.getByText("Help is on the way.", { exact: true }),
+    page.getByText("Signal received.", { exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Open field notes", exact: true })
+    .getByRole("button", { name: "Open mission log", exact: true })
     .click();
   await page
     .getByLabel("A note to yourself", { exact: false })
@@ -197,7 +185,7 @@ test("walk the island, restore all three physical stations, and retain discoveri
   await page.keyboard.press("e");
   await expect(
     page.getByRole("dialog", {
-      name: "Lighthouse control circuit",
+      name: "Command deck circuit",
       exact: true,
     }),
   ).toBeVisible();
@@ -220,18 +208,18 @@ test("pause, mouse release, wall collision, map, and safe restart preserve progr
   expect(after.z).toBeLessThan(start.z - 2);
   await hold(page, "w", 3500);
   const wall = await position(page);
-  expect(wall.z).toBeGreaterThanOrEqual(3.7);
+  expect(wall.z).toBeGreaterThanOrEqual(11.65);
   await page.keyboard.press("m");
   await expect(
-    page.getByRole("dialog", { name: "Island map", exact: true }),
+    page.getByRole("dialog", { name: "Deck map", exact: true }),
   ).toBeVisible();
   const stopped = await page.evaluate(() =>
-    localStorage.getItem("signal.lighthouse.player.v1"),
+    localStorage.getItem("signal.dead-orbit.player.v1"),
   );
   await hold(page, "w", 300);
   expect(
     await page.evaluate(() =>
-      localStorage.getItem("signal.lighthouse.player.v1"),
+      localStorage.getItem("signal.dead-orbit.player.v1"),
     ),
   ).toBe(stopped);
   await expect(
@@ -270,7 +258,7 @@ test("keyboard socket selection, reset, closing a panel and reloading retain the
   await page.keyboard.press("Escape");
   await expect(
     page.getByRole("dialog", {
-      name: "Keeper’s workshop circuit",
+      name: "Engineering circuit",
       exact: true,
     }),
   ).toBeVisible();
@@ -302,17 +290,17 @@ test("locked stations cannot be repaired before they have incoming power", async
 }) => {
   await page.addInitScript(() =>
     localStorage.setItem(
-      "signal.lighthouse.player.v1",
-      JSON.stringify({ x: 21, z: 14.2, yaw: 0, pitch: 0 }),
+      "signal.dead-orbit.player.v1",
+      JSON.stringify({ x: 4, z: -0.5, yaw: 0, pitch: 0 }),
     ),
   );
   await begin(page);
   await page
-    .getByRole("button", { name: "Inspect locked Harbor relay", exact: true })
+    .getByRole("button", { name: "Inspect locked Power relay", exact: true })
     .waitFor();
   await page.keyboard.press("e");
   await expect(
-    page.getByText("This line is dead.", { exact: false }),
+    page.getByText("No incoming power.", { exact: false }),
   ).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
@@ -345,17 +333,17 @@ test("coaching API validates requests and labels authored answers", async ({
   expect((await answer.json()).source).toBe("field-guide");
 });
 
-test("first repair restores the environment and marks the harbor on the map", async ({
+test("first repair restores the environment and marks the Power relay on the map", async ({
   page,
 }) => {
   await openWorkshop(page);
   await workshopRepair(page);
   await page.keyboard.press("m");
   await expect(page.locator('.map-stops [aria-current="step"]')).toContainText(
-    "Harbor relay",
+    "Power relay",
   );
   const completed = await page.evaluate(
-    () => JSON.parse(localStorage.getItem("signal.lighthouse.v1")!).completed,
+    () => JSON.parse(localStorage.getItem("signal.dead-orbit.v1")!).completed,
   );
   expect(completed).toEqual(["workshop"]);
 });

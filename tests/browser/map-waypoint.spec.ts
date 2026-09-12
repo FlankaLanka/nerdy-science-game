@@ -9,10 +9,10 @@ test("the chart locates the actual player and physical repair stations", async (
   await hold(page, "ArrowRight", 250);
   await page.keyboard.press("m");
   await expect(
-    page.getByRole("dialog", { name: "Island map", exact: true }),
+    page.getByRole("dialog", { name: "Deck map", exact: true }),
   ).toBeVisible();
   const player = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("signal.lighthouse.player.v1")!),
+    JSON.parse(localStorage.getItem("signal.dead-orbit.player.v1")!),
   );
   await expect(page.locator(".chart-player")).toHaveAttribute(
     "data-world-x",
@@ -28,18 +28,18 @@ test("the chart locates the actual player and physical repair stations", async (
   );
   await expect(page.locator('.chart-stop[data-site="harbor"]')).toHaveAttribute(
     "data-world-x",
-    "21",
+    "4",
   );
   await expect(page.locator('.chart-stop[data-site="beacon"]')).toHaveAttribute(
     "data-world-z",
-    "-16.3",
+    "-23",
   );
   await expect(page.locator('.map-stops [aria-current="step"]')).toContainText(
-    "Keeper’s workshop",
+    "Engineering",
   );
-  await expect(page.locator(".paper-map img")).toHaveCount(0);
+  await expect(page.locator(".deck-map img")).toHaveCount(0);
   const bounds = await page.evaluate(() => ({
-    chart: document.querySelector(".island-chart")!.getBoundingClientRect()
+    chart: document.querySelector(".ship-chart")!.getBoundingClientRect()
       .bottom,
     back: document
       .querySelector("dialog[open] .dialog-close")!

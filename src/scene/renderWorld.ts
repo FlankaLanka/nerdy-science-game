@@ -1,12 +1,12 @@
 import * as THREE from "three";
-import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
-import { Water } from "three/addons/objects/Water.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { disposeScene } from "./art";
-import { buildIsland } from "./island";
+import { buildSpaceship } from "./spaceship";
+import { deckSection } from "./shipLayout";
 import {
   focusedSite,
   groundHeight,
@@ -20,7 +20,6 @@ import type { MissionId } from "../missions";
 import { gamePixelRatio } from "../viewport";
 import { projectWaypoint } from "./waypoint";
 import type { Waypoint } from "./waypoint";
-import { WATER_LEVEL } from "./islandLayout";
 
 export type Telemetry = {
   focus: MissionId | null;
@@ -28,6 +27,7 @@ export type Telemetry = {
   heading: number;
   moved: boolean;
   locked: boolean;
+  section: string;
 };
 export type WorldState = {
   playing: boolean;
@@ -35,6 +35,7 @@ export type WorldState = {
   reducedMotion: boolean;
   sensitivity: number;
   distressSent: boolean;
+  preview: boolean;
 };
 type Options = {
   container: HTMLDivElement;
@@ -73,40 +74,42 @@ export function renderWorld(o: Options) {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.08;
+  renderer.toneMappingExposure = 1.0;
   const canvas = renderer.domElement;
   canvas.setAttribute(
     "aria-label",
-    "First-person view of Bramble Island. WASD to move, mouse or arrow keys to look, E to interact.",
+    "First-person view of the research ship Asterion. WASD to move, mouse or arrow keys to look, E to interact.",
   );
   canvas.setAttribute("role", "img");
   canvas.tabIndex = -1;
   o.container.prepend(canvas);
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#758a91");
-  scene.fog = new THREE.FogExp2("#7c9293", 0.006);
-  scene.add(new THREE.HemisphereLight("#c4d8e0", "#373d2b", 1.45));
-  const sun = new THREE.DirectionalLight("#ffcf95", 2.6);
-  sun.position.set(-30, 35, 30);
+  scene.background = new THREE.Color("#020711");
+  scene.add(new THREE.HemisphereLight("#b0d4ef", "#131c2b", 1.6));
+  const sun = new THREE.DirectionalLight("#9dd2ff", 2.2);
+  sun.position.set(30, 18, -30);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.left = -42;
-  sun.shadow.camera.right = 42;
-  sun.shadow.camera.top = 44;
-  sun.shadow.camera.bottom = -40;
-  sun.shadow.camera.far = 140;
-  sun.shadow.normalBias = 0.045;
+  Object.assign(sun.shadow.camera, {
+    left: -26,
+    right: 26,
+    top: 45,
+    bottom: -35,
+    far: 140,
+  });
+  sun.shadow.normalBias = 0.035;
   sun.shadow.bias = -0.0002;
   scene.add(sun);
-  const fill = new THREE.DirectionalLight("#a2bed0", 0.55);
-  fill.position.set(20, 20, -30);
+  const fill = new THREE.DirectionalLight("#c5e7ee", 1.2);
+  fill.position.set(-10, 12, 20);
   scene.add(fill);
-  const manager = new THREE.LoadingManager();
-  const texturesReady = new Promise<void>((resolve) => {
-    manager.onLoad = resolve;
-  });
-  manager.itemStart("island-setup");
-  const model = buildIsland(scene, manager);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const roomEnvironment = new RoomEnvironment();
+  const environment = pmrem.fromScene(roomEnvironment, 0.04);
+  roomEnvironment.dispose();
+  scene.environment = environment.texture;
+  scene.environmentIntensity = 0.3;
+  const model = buildSpaceship(scene);
   let player = { ...SPAWN };
   try {
     player = restorePlayer(localStorage.getItem(PLAYER_KEY), model.obstacles);
@@ -115,31 +118,11 @@ export function renderWorld(o: Options) {
   }
   const camera = new THREE.PerspectiveCamera(68, 1, 0.08, 650);
   camera.rotation.order = "YXZ";
-  const normal = new THREE.TextureLoader(manager).load(
-    "/art/water-normal.webp",
-  );
-  normal.wrapS = normal.wrapT = THREE.RepeatWrapping;
-  const water = new Water(new THREE.PlaneGeometry(1500, 1500), {
-    textureWidth: coarse ? 256 : 512,
-    textureHeight: coarse ? 256 : 512,
-    waterNormals: normal,
-    sunDirection: sun.position.clone().normalize(),
-    sunColor: 0xd8b486,
-    waterColor: 0x274b50,
-    distortionScale: 3.2,
-    fog: true,
-  });
-  water.rotation.x = -Math.PI / 2;
-  water.position.y = WATER_LEVEL;
-  scene.add(water);
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.12, 0.4, 2.5);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.22, 0.4, 1.8);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  let sky: THREE.DataTexture | null = null,
-    environment: THREE.WebGLRenderTarget | null = null;
   let disposed = false,
     frame = 0,
     last = performance.now(),
@@ -312,8 +295,14 @@ export function renderWorld(o: Options) {
     if (document.hidden) return;
     if (wasPlaying && !state.playing) release();
     wasPlaying = state.playing;
-    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.completed.join()}:${state.reducedMotion}`;
-    if (!state.playing && ready && stillFrame === frameKey) return;
+    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.completed.join()}:${state.reducedMotion}:${state.distressSent}`;
+    if (
+      !state.playing &&
+      (!state.preview || state.reducedMotion) &&
+      ready &&
+      stillFrame === frameKey
+    )
+      return;
     stillFrame = state.playing ? "" : frameKey;
     let walking = false;
     if (state.playing) {
@@ -355,7 +344,7 @@ export function renderWorld(o: Options) {
       }
     }
     if (!state.reducedMotion) time += dt;
-    model.wind.value = time;
+
     camera.position.set(
       player.x,
       groundHeight(player.x, player.z) +
@@ -363,38 +352,18 @@ export function renderWorld(o: Options) {
         (walking && !state.reducedMotion ? Math.sin(time * 11) * 0.022 : 0),
       player.z,
     );
-    camera.rotation.set(player.pitch, player.yaw, 0, "YXZ");
+    if (state.preview) {
+      camera.position.set(-1, 2.15, 21);
+      camera.rotation.set(
+        -0.025,
+        -0.2 + (state.reducedMotion ? 0 : Math.sin(time * 0.12) * 0.015),
+        0,
+        "YXZ",
+      );
+    } else camera.rotation.set(player.pitch, player.yaw, 0, "YXZ");
     camera.updateMatrixWorld();
-    for (const g of model.lightGroups) {
-      const target = state.completed.includes(g.id) ? 1 : 0;
-      g.material.emissiveIntensity = THREE.MathUtils.lerp(
-        g.material.emissiveIntensity,
-        target * 5,
-        state.reducedMotion || !state.playing ? 1 : Math.min(1, dt * 1.6),
-      );
-      if (g.light)
-        g.light.intensity =
-          (g.material.emissiveIntensity / 5) * g.light.userData.power;
-    }
+    model.update(dt, time, player, state.completed, state.reducedMotion);
     const next = ids.find((id) => !state.completed.includes(id)) ?? "beacon";
-    for (const id of ids) {
-      const mat = model.indicators[id],
-        complete = state.completed.includes(id);
-      mat.emissive.set(
-        complete ? "#89dfb4" : id === next ? "#ffd393" : "#634e3d",
-      );
-      mat.emissiveIntensity = complete
-        ? 1.5
-        : id === next
-          ? 1.3 + Math.sin(time * 2) * 0.25
-          : 0.1;
-    }
-    model.beamMaterial.opacity = state.completed.includes("beacon") ? 0.035 : 0;
-    model.beamPivot.rotation.y = time * 0.16;
-    model.boat.position.y = -0.3 + Math.sin(time * 0.8) * 0.09;
-    model.boat.rotation.z = Math.sin(time * 0.65) * 0.025;
-    model.pip.rotation.y = Math.sin(time * 0.45) * 0.1;
-    water.material.uniforms.time.value = time * 0.42;
     composer.render();
     const site = SITES[next];
     const distance = Math.hypot(site.x - player.x, site.z - player.z);
@@ -421,6 +390,7 @@ export function renderWorld(o: Options) {
         heading: ((((-player.yaw * 180) / Math.PI) % 360) + 360) % 360,
         moved,
         locked: document.pointerLockElement === canvas,
+        section: deckSection(player.z),
       });
     }
     if (state.playing && now - lastSave > 1500) {
@@ -428,33 +398,7 @@ export function renderWorld(o: Options) {
       save();
     }
   }
-  const skyTask = new Promise<void>((resolve) => {
-    new HDRLoader(manager).load(
-      "/art/coastal-sunset.hdr",
-      (texture) => {
-        if (disposed) {
-          texture.dispose();
-          resolve();
-          return;
-        }
-        sky = texture;
-        texture.mapping = THREE.EquirectangularReflectionMapping;
-        environment = pmrem.fromEquirectangular(texture);
-        scene.environment = environment.texture;
-        scene.environmentIntensity = 0.55;
-        scene.background = texture;
-        scene.backgroundIntensity = 0.28;
-        scene.backgroundBlurriness = 0.035;
-        scene.backgroundRotation.y = 4.1;
-        scene.environmentRotation.y = 4.1;
-        resolve();
-      },
-      undefined,
-      () => resolve(),
-    );
-  });
-  manager.itemEnd("island-setup");
-  void Promise.all([skyTask, texturesReady])
+  void Promise.resolve()
     .then(async () => {
       if (disposed) return;
       await renderer.compileAsync(scene, camera);
@@ -497,11 +441,8 @@ export function renderWorld(o: Options) {
       canvas.removeEventListener("pointercancel", up);
       canvas.removeEventListener("webglcontextlost", lost);
       disposeScene(scene);
-      environment?.dispose();
-      sky?.dispose();
-      normal.dispose();
+      environment.dispose();
       pmrem.dispose();
-      water.material.uniforms.mirrorSampler.value?.dispose();
       composer.dispose();
       bloom.dispose();
       renderer.dispose();

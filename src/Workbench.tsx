@@ -91,7 +91,7 @@ export function Workbench({
   if (reflection)
     instruction =
       id === "workshop"
-        ? "There’s our spark."
+        ? "Auxiliary path confirmed."
         : id === "harbor"
           ? "They shared one path."
           : "The backup held.";
@@ -122,10 +122,19 @@ export function Workbench({
       onClose={onClose}
     >
       <div className="repair-heading">
-        <h1>{SITES[id].name}</h1>
+        <span className="eyebrow">
+          MAINTENANCE INTERFACE / {mission.number}
+        </span>
+        <h1>
+          {SITES[id].name}
+          <span className="station-system">{SITES[id].system}</span>
+        </h1>
       </div>
       <div className="repair-instruction" role="status">
-        <span>{instruction}</span>
+        <span className="eyebrow">
+          {success || done ? "DIAGNOSTIC COMPLETE" : "REPAIR PROTOCOL"}
+        </span>
+        <span key={instruction}>{instruction}</span>
       </div>
       <div className="repair-layout">
         <CircuitBoard
@@ -170,7 +179,7 @@ export function Workbench({
           )}
           {guided && stage < 3 && (
             <div className="repair-step">
-              <span className="crayon-number">{stage === 1 ? "01" : "02"}</span>
+              <span className="step-number">{stage === 1 ? "01" : "02"}</span>
               <span>
                 {stage === 1 ? "Connect the loose ends" : "Find a conductor"}
               </span>
@@ -245,7 +254,7 @@ export function Workbench({
               onClick={onComplete}
             >
               {done
-                ? "Back to the island"
+                ? "Back to the ship"
                 : practice
                   ? "Finish circuit"
                   : mission.restore}

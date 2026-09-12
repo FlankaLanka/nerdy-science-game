@@ -5,15 +5,15 @@ import type { Player } from "../../src/scene/navigation";
 export async function begin(page: Page, nearWorkshop = false) {
   if (nearWorkshop)
     await page.addInitScript(() => {
-      if (!localStorage.getItem("signal.lighthouse.player.v1"))
+      if (!localStorage.getItem("signal.dead-orbit.player.v1"))
         localStorage.setItem(
-          "signal.lighthouse.player.v1",
-          JSON.stringify({ x: -3, z: 5.6, yaw: 0, pitch: 0 }),
+          "signal.dead-orbit.player.v1",
+          JSON.stringify({ x: -4, z: 13.5, yaw: 0, pitch: 0 }),
         );
     });
   await page.goto("/");
   await page
-    .getByRole("button", { name: /^(Enter the island|Continue)$/ })
+    .getByRole("button", { name: /^(Board the Asterion|Continue)$/ })
     .click({ timeout: 60000 });
   await expect(
     page.getByRole("button", { name: "Pause game", exact: true }),
@@ -22,12 +22,12 @@ export async function begin(page: Page, nearWorkshop = false) {
 export async function openWorkshop(page: Page) {
   await begin(page, true);
   await expect(
-    page.getByRole("button", { name: "Repair Keeper’s workshop", exact: true }),
+    page.getByRole("button", { name: "Repair Engineering", exact: true }),
   ).toBeVisible();
   await page.keyboard.press("e");
   await expect(
     page.getByRole("dialog", {
-      name: "Keeper’s workshop circuit",
+      name: "Engineering circuit",
       exact: true,
     }),
   ).toBeVisible();
@@ -48,7 +48,7 @@ export async function position(page: Page): Promise<Player> {
     page.getByRole("dialog", { name: "Paused", exact: true }),
   ).toBeVisible();
   const p = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("signal.lighthouse.player.v1")!),
+    JSON.parse(localStorage.getItem("signal.dead-orbit.player.v1")!),
   );
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   return p;
@@ -101,6 +101,6 @@ export async function workshopRepair(page: Page) {
     })
     .click();
   await page
-    .getByRole("button", { name: "Light the workshop", exact: true })
+    .getByRole("button", { name: "Restore auxiliary power", exact: true })
     .click();
 }

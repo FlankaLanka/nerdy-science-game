@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
-import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
-import { rounded, surface, disposeScene } from "./scene/art";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { rounded, disposeScene } from "./scene/art";
 import { MISSIONS } from "./missions";
 import type { Mission } from "./missions";
 import type { Progress } from "./game";
@@ -83,9 +83,9 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
   manager.itemStart("kit-setup");
   function buildKit(mission: Mission) {
     const scene = new THREE.Scene();
-    scene.environmentIntensity = 0.75;
+    scene.environmentIntensity = 0.42;
     scene.add(new THREE.HemisphereLight("#cce1ec", "#182222", 1.35));
-    const key = new THREE.DirectionalLight("#ffe2b2", 3.0);
+    const key = new THREE.DirectionalLight("#d9f1ff", 3.0);
     key.position.set(-230, 400, -150);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -105,19 +105,17 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
       color: string,
       extra: THREE.MeshStandardMaterialParameters = {},
     ) => new THREE.MeshStandardMaterial({ color, roughness: 0.45, ...extra });
-    const brass = mat("#bb8d43", { metalness: 0.85, roughness: 0.3 });
+    const brass = mat("#7898aa", { metalness: 0.85, roughness: 0.3 });
     const nickel = mat("#aeb9b6", { metalness: 0.88, roughness: 0.3 });
     const dark = mat("#101d20", { metalness: 0.35, roughness: 0.4 });
     const ceramic = new THREE.MeshPhysicalMaterial({
-      color: "#ddd8c4",
+      color: "#bdd7e5",
       roughness: 0.2,
       clearcoat: 0.8,
       clearcoatRoughness: 0.15,
     });
-    const enamel = surface("metal", 1, "#638389", 0.42, manager);
-    enamel.roughness = 0.62;
-    enamel.normalScale.set(0.13, 0.13);
-    const timber = surface("wood", 1, "#c39b63", 0, manager);
+    const enamel = mat("#0d1d2f", { metalness: 0.2, roughness: 0.65 });
+    const polymer = mat("#dadfe6", { metalness: 0, roughness: 0.7 });
     function mesh(
       g: THREE.BufferGeometry,
       m: THREE.Material,
@@ -157,10 +155,19 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
         cyl(6, 2, nickel, x, 4, z);
         box(6, 1, 1, dark, x, 5.1, z, 0.2);
       }
-    // Four rubber feet and a folded leather carrying handle establish the kit as an object.
+    // Recessed fasteners and cyan circuit traces frame the service module.
     for (const x of [96, 624])
       for (const z of [36, 424]) box(27, 2, 9, dark, x, 3, z, 2);
-    box(96, 3, 3, brass, 360, 4, 33, 1);
+    const trace = mat("#64e9df", {
+      emissive: "#64e9df",
+      emissiveIntensity: 1.1,
+      roughness: 0.25,
+    });
+    for (const x of [12, 708]) box(2, 1, 390, trace, x, 3, 230, 0.3);
+    for (const z of [12, 448]) box(670, 1, 2, trace, 360, 3, z, 0.3);
+    for (let i = 0; i < 6; i++) {
+      box(140 + i * 18, 0.4, 0.65, brass, 302 + i * 9, 2.2, 380 + i * 8, 0.2);
+    }
     // Battery: recessed panel, ribbed end caps, retaining straps and binding posts.
     box(96, 13, 145, dark, 130, 10, 235, 10);
     box(80, 42, 118, brass, 130, 34, 235, 13);
@@ -189,9 +196,9 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
     glowCanvas.height = 128;
     const c = glowCanvas.getContext("2d")!;
     const gradient = c.createRadialGradient(64, 64, 0, 64, 64, 64);
-    gradient.addColorStop(0, "rgba(255,216,148,.6)");
-    gradient.addColorStop(0.2, "rgba(255,190,85,.18)");
-    gradient.addColorStop(1, "rgba(255,150,40,0)");
+    gradient.addColorStop(0, "rgba(110,255,226,.6)");
+    gradient.addColorStop(0.2, "rgba(70,238,215,.18)");
+    gradient.addColorStop(1, "rgba(40,210,200,0)");
     c.fillStyle = gradient;
     c.fillRect(0, 0, 128, 128);
     const glowTexture = new THREE.CanvasTexture(glowCanvas);
@@ -313,7 +320,7 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
     });
     if (mission.id === "workshop") {
       box(160, 9, 55, dark, 480, 8, 330, 7);
-      strip = box(117, 9, 29, timber, 480, 19, 330, 2);
+      strip = box(117, 9, 29, polymer, 480, 19, 330, 2);
       for (const x of [418, 542]) {
         box(12, 7, 38, brass, x, 19, 330, 2);
         cyl(4, 2, nickel, x, 24, 330);
@@ -324,19 +331,15 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
       cyl(8, 7, brass, terminal.x, 11, terminal.y);
       cyl(4, 1, dark, terminal.x, 15, terminal.y);
     }
-    return { scene, bulbs, strip, copper, bridgeGlass, timber, glowTexture };
+    return { scene, bulbs, strip, copper, bridgeGlass, polymer, glowTexture };
   }
   const kits = new Map(
     MISSIONS.map((mission) => [mission.id, buildKit(mission)]),
   );
-  new HDRLoader(manager).load("/art/coastal-sunset.hdr", (texture) => {
-    if (!disposed) {
-      environment = pmrem.fromEquirectangular(texture);
-      for (const kit of kits.values())
-        kit.scene.environment = environment.texture;
-    }
-    texture.dispose();
-  });
+  const roomEnvironment = new RoomEnvironment();
+  environment = pmrem.fromScene(roomEnvironment, 0.04);
+  for (const kit of kits.values()) kit.scene.environment = environment.texture;
+  roomEnvironment.dispose();
   manager.itemEnd("kit-setup");
   function resize() {
     if (disposed) return;
@@ -382,7 +385,7 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
       bulb.group.visible = !(p.removed && bulb.id === "a");
       bulb.filament.emissiveIntensity = bulb.level * 12;
       bulb.light.intensity = bulb.level * 22000;
-      bulb.glass.emissive.set("#ffbb55");
+      bulb.glass.emissive.set("#67ffe0");
       bulb.glass.emissiveIntensity = bulb.level * 0.65;
       (bulb.glow.material as THREE.SpriteMaterial).opacity = bulb.level * 0.78;
     }
@@ -392,7 +395,7 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
           ? kit.copper
           : p.progress.material === "glass"
             ? kit.bridgeGlass
-            : kit.timber;
+            : kit.polymer;
     if (signature !== nextSignature || animating) {
       renderer.render(kit.scene, camera);
       signature = nextSignature;
@@ -426,7 +429,7 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
       }
       for (const kit of kits.values()) {
         const variants = kit.strip
-          ? [kit.timber, kit.copper, kit.bridgeGlass]
+          ? [kit.polymer, kit.copper, kit.bridgeGlass]
           : [null];
         for (const material of variants) {
           if (material && kit.strip) kit.strip.material = material;
@@ -446,7 +449,7 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
             ? kit.copper
             : initial.progress.material === "glass"
               ? kit.bridgeGlass
-              : kit.timber;
+              : kit.polymer;
       renderer.render(kit.scene, camera);
       performance.mark("signal-kit-ready");
       state().onReady(true);
@@ -469,7 +472,7 @@ function prepareBench(container: HTMLDivElement, state: () => Props): Runtime {
       renderer.domElement.removeEventListener("webglcontextlost", lost);
       for (const kit of kits.values()) {
         disposeScene(kit.scene);
-        [kit.copper, kit.bridgeGlass, kit.timber].forEach((material) =>
+        [kit.copper, kit.bridgeGlass, kit.polymer].forEach((material) =>
           material.dispose(),
         );
         kit.glowTexture.dispose();

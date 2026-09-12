@@ -1,116 +1,28 @@
 import type { MissionId } from "../missions.ts";
-import { WORKSHOP } from "./workshopLayout.ts";
-import { HARBOR } from "./islandLayout.ts";
+import { insideDeck, SHIP_SITES } from "./shipLayout.ts";
 
 export type Player = { x: number; z: number; yaw: number; pitch: number };
 export type Obstacle =
   | { x: number; z: number; radius: number }
   | { x: number; z: number; width: number; depth: number };
-export const PLAYER_KEY = "signal.lighthouse.player.v1";
-export const SPAWN: Player = { x: -3, z: 15.5, yaw: 0, pitch: 0.015 };
-export const SITES: Record<MissionId, { x: number; z: number; name: string }> =
-  {
-    workshop: {
-      x: -3,
-      z: 3.2,
-      name: "Keeper’s workshop",
-    },
-    harbor: {
-      x: 21,
-      z: 12,
-      name: "Harbor relay",
-    },
-    beacon: {
-      x: 11,
-      z: -16.3,
-      name: "Lighthouse control",
-    },
-  };
-
-function islandHeight(x: number, z: number) {
-  const radius = Math.hypot(x / 34, (z + 2) / 38);
-  const hill = 4.4 * Math.exp(-((x - 11) ** 2 / 190 + (z + 21) ** 2 / 220));
-  const land = 1.15 + hill + Math.sin(x * 0.14) * Math.cos(z * 0.16) * 0.28;
-  const coast = Math.max(0, Math.min(1, (radius - 0.76) / 0.28));
-  return land * (1 - coast * coast) - 2.6 * coast * coast;
-}
-
-export function terrainHeight(x: number, z: number) {
-  let height = islandHeight(x, z);
-  // Grade a full terrain cell beyond the deck so triangles cannot pierce it.
-  const dockDistance = Math.hypot(
-    Math.max(0, HARBOR.approach - x, x - HARBOR.end),
-    Math.max(0, Math.abs(z - HARBOR.z) - HARBOR.width / 2),
-  );
-  if (dockDistance < 1.1) {
-    const t = Math.max(0, (dockDistance - 0.6) / 0.5);
-    const blend = t * t * (3 - 2 * t);
-    const beneathDeck = Math.min(height, harborDeckHeight(x) - 0.16);
-    height = beneathDeck + (height - beneathDeck) * blend;
-  }
-  const { x: cx, z: cz, width, depth, porchDepth } = WORKSHOP;
-  const dx = Math.max(0, Math.abs(x - cx) - width / 2 - 0.45);
-  const dz = Math.max(
-    0,
-    cz - depth / 2 - 0.3 - z,
-    z - cz - depth / 2 - porchDepth,
-  );
-  const distance = Math.hypot(dx, dz);
-  if (distance >= 1.4) return height;
-  // Grade below the entire slab, plus one terrain-grid cell so triangles cannot
-  // cut through its edges. Blend back into the hillside outside the foundation.
-  const t = Math.max(0, (distance - 0.55) / 0.85);
-  const blend = t * t * (3 - 2 * t);
-  const beneathFloor = Math.min(height, workshopFloorHeight() - 0.12);
-  return beneathFloor + (height - beneathFloor) * blend;
-}
-
-export function groundHeight(x: number, z: number) {
-  if (
-    x >= HARBOR.approach &&
-    x <= HARBOR.end &&
-    Math.abs(z - HARBOR.z) <= HARBOR.width / 2
-  )
-    return harborDeckHeight(x);
-  const { x: cx, z: cz, width, depth, porchDepth } = WORKSHOP;
-  const onHouseFloor =
-    Math.abs(x - cx) <= width / 2 + 0.3 && Math.abs(z - cz) <= depth / 2 + 0.3;
-  const onPorch =
-    Math.abs(x - cx) <= width / 2 + 0.45 &&
-    z >= cz + depth / 2 + 0.3 &&
-    z <= cz + depth / 2 + porchDepth;
-  if (onHouseFloor || onPorch) return workshopFloorHeight();
-  return terrainHeight(x, z);
-}
-
-/** The short boarding ramp meets the first plank without a camera-height step. */
-export function harborDeckHeight(x: number) {
-  const firstPlank = HARBOR.start - 0.155;
-  const t = Math.max(
-    0,
-    Math.min(1, (x - HARBOR.approach) / (firstPlank - HARBOR.approach)),
-  );
-  const shore = islandHeight(HARBOR.approach, HARBOR.z) + 0.025;
-  return shore + (HARBOR.floor - shore) * t;
-}
-
-export function workshopFloorHeight() {
-  return islandHeight(WORKSHOP.x, WORKSHOP.z) + WORKSHOP.floorLift;
+export const PLAYER_KEY = "signal.dead-orbit.player.v1";
+export const SPAWN: Player = { x: -4, z: 20, yaw: 0, pitch: 0.015 };
+export const SITES = SHIP_SITES;
+export function groundHeight(_x: number, _z: number) {
+  return 0;
 }
 
 export function canWalk(x: number, z: number, obstacles: Obstacle[]) {
-  const onPier = x >= 22 && x <= 33.5 && z >= 12.85 && z <= 16.15;
-  if (
-    !onPier &&
-    (Math.hypot(x / 34, (z + 2) / 38) > 0.87 || terrainHeight(x, z) < 0.15)
-  )
-    return false;
-  const radius = 0.3;
+  // Keep the entire player capsule inside the connected deck, including room corners.
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4;
+    if (!insideDeck(x + Math.cos(a) * 0.3, z + Math.sin(a) * 0.3)) return false;
+  }
   return !obstacles.some((o) =>
     "radius" in o
-      ? Math.hypot(x - o.x, z - o.z) < radius + o.radius
-      : Math.abs(x - o.x) < o.width / 2 + radius &&
-        Math.abs(z - o.z) < o.depth / 2 + radius,
+      ? Math.hypot(x - o.x, z - o.z) < 0.3 + o.radius
+      : Math.abs(x - o.x) < o.width / 2 + 0.3 &&
+        Math.abs(z - o.z) < o.depth / 2 + 0.3,
   );
 }
 
@@ -192,7 +104,7 @@ export function restorePlayer(
         pitch: Math.max(-1.25, Math.min(1.25, p.pitch)),
       };
   } catch {
-    /* A damaged or unavailable save starts safely on the path. */
+    /* A damaged or unavailable save starts safely on the engineering deck. */
   }
   return { ...SPAWN };
 }

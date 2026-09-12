@@ -15,17 +15,17 @@ const series: Wire[] = [
   ["b2", "n"],
 ];
 
-test("a complete copper path powers the workshop lamp; dry wood and glass do not", () => {
+test("a complete copper path powers the workshop lamp; polymer and glass do not", () => {
   const wires: Wire[] = [["a2", "m1"]];
   const copper = solveCircuit("workshop", wires, "copper");
   assert.equal(copper.lamps.a.power, 3);
   assert.equal(copper.bridgeActive, true);
-  for (const material of ["wood", "glass"] as const)
+  for (const material of ["polymer", "glass"] as const)
     assert.equal(solveCircuit("workshop", wires, material).count, 0);
   assert.equal(solveCircuit("workshop", [], "copper").count, 0);
 });
 test("a valid wire bypass around an insulator remains a real circuit", () => {
-  const result = solveCircuit("workshop", [["a2", "n"]], "wood");
+  const result = solveCircuit("workshop", [["a2", "n"]], "polymer");
   assert.equal(result.count, 1);
   assert.equal(result.bridgeActive, false);
 });

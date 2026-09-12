@@ -1,17 +1,14 @@
 let loading: Promise<void> | undefined;
 
-/** Load paper and menu fonts during arrival, before any menu can be opened. */
+/** Prepare the locally bundled console type before the world paints its signage. */
 export function prepareInterface() {
-  return (loading ??= Promise.allSettled([
-    ...["keepers-paper"].map((name) => {
-      const image = new Image();
-      image.src = `/art/${name}.webp`;
-      return image.decode();
-    }),
-    ...[
-      '400 24px "IM Fell English"',
-      'italic 400 24px "IM Fell English"',
-      '400 24px "Kalam"',
+  return (loading ??= Promise.allSettled(
+    [
+      '400 24px "Space Grotesk"',
+      '500 24px "Space Grotesk"',
+      '600 24px "Space Grotesk"',
+      '700 24px "Space Grotesk"',
+      '400 16px "IBM Plex Mono"',
     ].map((font) => document.fonts.load(font)),
-  ]).then(() => {}));
+  ).then(() => {}));
 }

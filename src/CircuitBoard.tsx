@@ -235,7 +235,7 @@ export function CircuitBoard({
               </text>
               <path d="M258 264q-30 22-75-7m9-4-9 4 8 8" />
               <text x="395" y="75" transform="rotate(-4 395 75)">
-                a little light?
+                AUXILIARY CIRCUIT
               </text>
             </g>
           )}
@@ -243,7 +243,7 @@ export function CircuitBoard({
             <g className="connection-sketch" aria-hidden="true">
               <path d="M552 145 C635 208 505 255 408 330" />
               <text x="545" y="248" transform="rotate(-10 545 248)">
-                join these
+                CONNECT
               </text>
             </g>
           )}
@@ -356,7 +356,7 @@ export function CircuitBoard({
               rx="16"
               fill="url(#batteryCase)"
             />
-            <rect x="92" y="212" width="76" height="64" rx="2" fill="#e4d8af" />
+            <rect x="92" y="212" width="76" height="64" rx="2" fill="#c8d9e3" />
             <path
               d="M130 150v26M130 295v25"
               stroke="#b5ab8a"
@@ -378,7 +378,7 @@ export function CircuitBoard({
               x="152"
               y="198"
               textAnchor="middle"
-              fill="#f4e7bf"
+              fill="#daecf6"
               fontSize="15"
             >
               +
@@ -387,7 +387,7 @@ export function CircuitBoard({
               x="153"
               y="287"
               textAnchor="middle"
-              fill="#f4e7bf"
+              fill="#daecf6"
               fontSize="15"
             >
               −
@@ -464,7 +464,7 @@ export function CircuitBoard({
                 </g>
                 <text y="66" textAnchor="middle" className="component-label">
                   {mission.id === "workshop"
-                    ? "WORKSHOP LAMP"
+                    ? "AUXILIARY LAMP"
                     : `LAMP ${l.id.toUpperCase()}`}
                 </text>
                 <text
@@ -504,18 +504,18 @@ export function CircuitBoard({
                   fill={
                     progress.material === "copper"
                       ? "#c89269"
-                      : progress.material === "wood"
-                        ? "#ad8d5a"
+                      : progress.material === "polymer"
+                        ? "#c6d0d9"
                         : "#a1beb1"
                   }
                   fillOpacity={progress.material === "glass" ? 0.3 : 1}
                 />
-                {progress.material === "wood" &&
+                {progress.material === "polymer" &&
                   [-5, 2, 8].map((y) => (
                     <path
                       key={y}
-                      d={`M-45 ${y}Q-18 ${y - 5} 0 ${y}T45 ${y}`}
-                      stroke="#7d683e"
+                      d={`M-45 ${y}H45`}
+                      stroke="#8298ab"
                       strokeWidth="1.2"
                       fill="none"
                     />
@@ -539,7 +539,7 @@ export function CircuitBoard({
                 <circle cx="62" r="8" fill="#c0af81" />
               </g>
               <text y="56" textAnchor="middle" className="component-label">
-                THE BRIDGE
+                CONDUCTOR INSERT
               </text>
             </g>
           )}

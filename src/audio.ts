@@ -40,12 +40,22 @@ export function useSound(enabled: boolean) {
         noise.buffer = buffer;
         noise.loop = true;
         filter.type = "lowpass";
-        filter.frequency.value = 480;
-        volume.gain.value = 0.095;
+        filter.frequency.value = 240;
+        volume.gain.value = 0.065;
         noise.connect(filter);
         filter.connect(volume);
         volume.connect(master);
         noise.start();
+        for (const frequency of [48, 72]) {
+          const hum = context.createOscillator(),
+            humGain = context.createGain();
+          hum.type = "sine";
+          hum.frequency.value = frequency;
+          humGain.gain.value = 0.045;
+          hum.connect(humGain);
+          humGain.connect(master);
+          hum.start();
+        }
         state.current = { context, master };
       } catch {
         return null;
@@ -97,8 +107,8 @@ export function useSound(enabled: boolean) {
         gain = context.createGain();
       source.buffer = buffer;
       filter.type = "lowpass";
-      filter.frequency.value = 390;
-      gain.gain.value = 0.38;
+      filter.frequency.value = 690;
+      gain.gain.value = 0.2;
       source.connect(filter);
       filter.connect(gain);
       gain.connect(master);
@@ -169,6 +179,10 @@ export function useSound(enabled: boolean) {
       gain.connect(master);
       osc.start(start);
       osc.stop(start + 1.5);
+      osc.onended = () => {
+        osc.disconnect();
+        gain.disconnect();
+      };
     });
   }
   useEffect(() => {

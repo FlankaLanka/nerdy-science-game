@@ -7,7 +7,7 @@ const context = parseCoachContext({
   mission: "workshop",
   phase: "build",
   wires: [],
-  material: "wood",
+  material: "polymer",
   message: "",
   hints: 1,
   attempts: 0,
@@ -79,13 +79,39 @@ test("the live request grounds its response in server-computed circuit facts", a
   assert.match(reply.text, /What do you predict/);
 });
 test("the backup follow-up cannot imply a gap in B's complete path", async () => {
-  const reply = await coachResponse({ ...context, mission: "beacon", phase: "fault-result", wires: [["p","a1"],["a2","n"],["p","b1"],["b2","n"]] }, {
-    key: "test-only-key", fetchImpl: async () => new Response(JSON.stringify({choices:[{message:{content:"B has a complete path that does not pass through A."}}]})),
-  });
-  assert.equal(reply.source,"live");
-  assert.match(reply.text,/B’s complete path while avoiding A’s empty socket/);
+  const reply = await coachResponse(
+    {
+      ...context,
+      mission: "beacon",
+      phase: "fault-result",
+      wires: [
+        ["p", "a1"],
+        ["a2", "n"],
+        ["p", "b1"],
+        ["b2", "n"],
+      ],
+    },
+    {
+      key: "test-only-key",
+      fetchImpl: async () =>
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  content:
+                    "B has a complete path that does not pass through A.",
+                },
+              },
+            ],
+          }),
+        ),
+    },
+  );
+  assert.equal(reply.source, "live");
+  assert.match(reply.text, /B’s complete path while avoiding A’s empty socket/);
 });
-test("coaching distinguishes the workshop bridge from every conducting wire and names the removed lamp", () => {
+test("coaching distinguishes the engineering bridge from every conducting wire and names the removed lamp", () => {
   const facts = coachFacts({
     ...context,
     mission: "harbor",

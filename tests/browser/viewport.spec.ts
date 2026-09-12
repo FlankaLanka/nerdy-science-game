@@ -111,19 +111,15 @@ test("world, menus and repair steps share a 16:9 frame with no scrolling", async
     await checkFrame(page);
   }
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.screenshot({ path: "docs/screenshots/paper-pause.png" });
   for (const name of [
-    /^Island map/,
-    /^Field notes/,
+    /^Deck map/,
+    /^Mission log/,
     /^Settings$/,
     /^Controls$/,
   ]) {
     await page.getByRole("button", { name }).click();
     await checkFrame(page);
-    const menu = await page.getByRole("dialog").getAttribute("aria-label");
-    await page.screenshot({
-      path: `docs/screenshots/paper-${menu!.toLowerCase().replaceAll(" ", "-")}.png`,
-    });
+
     await page.keyboard.press("Escape");
   }
   await page.getByRole("button", { name: "Resume", exact: true }).click();
@@ -132,10 +128,8 @@ test("world, menus and repair steps share a 16:9 frame with no scrolling", async
   await checkFrame(page);
   await connect(page, "Lamp A right", "Bridge left");
   await checkFrame(page);
-  await page.screenshot({ path: "docs/screenshots/paper-conductor.png" });
   await page.getByRole("button", { name: "Copper", exact: true }).click();
   await checkFrame(page);
-  await page.screenshot({ path: "docs/screenshots/paper-predict.png" });
   await page.getByRole("button", { name: "Light up", exact: true }).click();
   await page.getByRole("button", { name: "Test circuit", exact: true }).click();
   await page
@@ -145,7 +139,6 @@ test("world, menus and repair steps share a 16:9 frame with no scrolling", async
     })
     .click();
   await checkFrame(page);
-  await page.screenshot({ path: "docs/screenshots/paper-reflect.png" });
 });
 
 test("fullscreen works from the title, the F key and the pause menu", async ({
@@ -186,7 +179,7 @@ test("fullscreen works from the title, the F key and the pause menu", async ({
   await expect
     .poll(() => page.evaluate(() => !!document.fullscreenElement))
     .toBe(false);
-  await page.getByRole("button", { name: /^Field notes/ }).click();
+  await page.getByRole("button", { name: /^Mission log/ }).click();
   await page.getByRole("textbox", { name: "A note to yourself" }).press("f");
   expect(await page.evaluate(() => !!document.fullscreenElement)).toBe(false);
   await expect(
@@ -194,7 +187,7 @@ test("fullscreen works from the title, the F key and the pause menu", async ({
   ).toHaveValue("f");
 });
 
-test("circuit art is prepared before entry and its renderer survives reopening", async ({
+test("console fonts and circuit shaders are prepared before entry and its renderer survives reopening", async ({
   page,
 }) => {
   let release = () => {};
@@ -205,15 +198,15 @@ test("circuit art is prepared before entry and its renderer survives reopening",
   const arrival = new Promise<void>((resolve) => {
     requested = resolve;
   });
-  await page.route("**/art/wood-color.webp", async (route) => {
+  await page.route("**/*space-grotesk*500*.woff2", async (route) => {
     requested();
     await gate;
     await route.continue();
   });
   await page.addInitScript(() =>
     localStorage.setItem(
-      "signal.lighthouse.player.v1",
-      JSON.stringify({ x: -3, z: 5.6, yaw: 0, pitch: 0 }),
+      "signal.dead-orbit.player.v1",
+      JSON.stringify({ x: -4, z: 13.5, yaw: 0, pitch: 0 }),
     ),
   );
   await page.goto("/");
@@ -221,7 +214,7 @@ test("circuit art is prepared before entry and its renderer survives reopening",
   await expect(page.locator(".title-play")).toBeDisabled();
   release();
   await page
-    .getByRole("button", { name: "Enter the island", exact: true })
+    .getByRole("button", { name: "Board the Asterion", exact: true })
     .click();
   const canvas = await page.locator(".bench-scene canvas").elementHandle();
   expect(canvas).not.toBeNull();
@@ -229,7 +222,7 @@ test("circuit art is prepared before entry and its renderer survives reopening",
     await page.keyboard.press("e");
     await expect(
       page.getByRole("dialog", {
-        name: "Keeper’s workshop circuit",
+        name: "Engineering circuit",
         exact: true,
       }),
     ).toBeVisible();
