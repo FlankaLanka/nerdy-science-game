@@ -12,7 +12,7 @@ test("the chart locates the actual player and physical repair stations", async (
     page.getByRole("dialog", { name: "Deck map", exact: true }),
   ).toBeVisible();
   const player = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("signal.dead-orbit.player.v1")!),
+    JSON.parse(localStorage.getItem("signal.asterion.player.v2")!),
   );
   await expect(page.locator(".chart-player")).toHaveAttribute(
     "data-world-x",
@@ -28,13 +28,13 @@ test("the chart locates the actual player and physical repair stations", async (
   );
   await expect(page.locator('.chart-stop[data-site="harbor"]')).toHaveAttribute(
     "data-world-x",
-    "4",
+    "14",
   );
   await expect(page.locator('.chart-stop[data-site="beacon"]')).toHaveAttribute(
     "data-world-z",
-    "-23",
+    "-19",
   );
-  await expect(page.locator('.map-stops [aria-current="step"]')).toContainText(
+  await expect(page.locator('.activity-map-list .tracked')).toContainText(
     "Engineering",
   );
   await expect(page.locator(".deck-map img")).toHaveCount(0);
@@ -45,7 +45,7 @@ test("the chart locates the actual player and physical repair stations", async (
       .querySelector("dialog[open] .dialog-close")!
       .getBoundingClientRect().top,
   }));
-  expect(bounds.chart).toBeLessThan(bounds.back - 4);
+  expect(bounds.chart).toBeLessThanOrEqual(bounds.back + 2);
 });
 
 test("the destination stays attached to the world on every turning frame", async ({

@@ -1,52 +1,9 @@
-import { ArrowLeft, ArrowRight, Download, Check } from "lucide-react";
-import { MISSIONS } from "./missions";
-import type { GameState } from "./game";
+import { Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog } from "./Dialog";
-
-function Sketch({ page }: { page: number }) {
-  return (
-    <svg
-      className="notebook-sketch"
-      viewBox="0 0 300 180"
-      role="img"
-      aria-label={
-        page === 2
-          ? "Two lamp branches across the battery"
-          : page === 1
-            ? "Two lamps along a single loop"
-            : "A lamp in a complete loop"
-      }
-    >
-      <g
-        stroke="currentColor"
-        fill="none"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M40 72V42H126M40 109v33h86M24 80h32M30 97h20M156 42h91v100H156" />
-        <circle cx="141" cy="42" r="15" />
-        <path d="m132 33 18 18m0-18-18 18" />
-        {page === 1 ? (
-          <>
-            <circle cx="141" cy="142" r="15" />
-            <path d="m132 133 18 18m0-18-18 18" />
-          </>
-        ) : (
-          <path d="M126 142h30" />
-        )}
-        {page === 2 && (
-          <>
-            <path d="M90 42v53h36M156 95h91" />
-            <circle cx="141" cy="95" r="15" />
-            <path d="m132 86 18 18m0-18-18 18" />
-          </>
-        )}
-      </g>
-    </svg>
-  );
-}
-
+import type { LabId } from "./activities";
+import { ACTIVITIES, isLab } from "./activities";
+import type { GameState } from "./campaign";
+import { measure, rcAt } from "./labPhysics";
 export function Notebook({
   state,
   page,
@@ -56,34 +13,23 @@ export function Notebook({
 }: {
   state: GameState;
   page: number;
-  onPage: (page: number) => void;
-  onNote: (text: string) => void;
+  onPage: (p: number) => void;
+  onNote: (s: string) => void;
   onClose: () => void;
 }) {
-  const mission = MISSIONS[page],
-    progress = state.missions[mission.id],
-    done = state.completed.includes(mission.id);
-  const first = progress.experiments[0],
-    fault = progress.experiments.find((e) => e.type === "fault");
+  const index = Math.min(page, ACTIVITIES.length - 1),
+    a = ACTIVITIES[index],
+    done = state.completed.includes(a.id);
   function download() {
-    const blob = new Blob(
+    const file = new Blob(
       [
         JSON.stringify(
           {
-            game: "SIGNAL",
-            exportedAt: new Date().toISOString(),
+            title: "Asterion circuit investigations",
             completed: state.completed,
+            experiments: state.labs,
+            circuits: state.missions,
             note: state.note,
-            experiments: Object.fromEntries(
-              MISSIONS.map((m) => [
-                m.id,
-                {
-                  experiments: state.missions[m.id].experiments,
-                  firstExplanation: state.missions[m.id].firstExplanation,
-                  hints: state.missions[m.id].hints,
-                },
-              ]),
-            ),
           },
           null,
           2,
@@ -91,113 +37,113 @@ export function Notebook({
       ],
       { type: "application/json" },
     );
-    const url = URL.createObjectURL(blob),
-      a = document.createElement("a");
-    a.href = url;
-    a.download = "signal-field-notes.json";
-    a.click();
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "asterion-investigations.json";
+    link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return (
-    <Dialog title="Notebook" onClose={onClose} className="notebook-dialog">
+    <Dialog
+      title="Mission log"
+      className="notebook-dialog science-log"
+      onClose={onClose}
+    >
       <header className="screen-heading">
-        <h2>Mission log</h2>
+        <div>
+          <span className="eyebrow">ASTERION / ENGINEERING RECORD</span>
+          <h2>Field observations</h2>
+        </div>
+        <button className="text-button" onClick={download}>
+          <Download size={16} />
+          Export data
+        </button>
       </header>
-      <nav className="archive-tabs" aria-label="Discoveries">
-        {MISSIONS.map((m, i) => (
-          <button
-            key={m.id}
-            aria-pressed={page === i}
-            onClick={() => onPage(i)}
-          >
-            <span>{m.number}</span>
-            {m.place.replace("The ", "")}
-            {state.completed.includes(m.id) && <Check size={16} />}
-          </button>
-        ))}
-      </nav>
-      <div className="archive-content">
-        <div className={`archive-diagram ${done ? "restored" : ""}`}>
-          <Sketch page={page} />
-          <span className="diagram-label">
-            {["COMPLETE LOOP", "SERIES CIRCUIT", "PARALLEL CIRCUIT"][page]}
+      <div className="science-log-grid">
+        <section>
+          <span className="eyebrow">
+            {a.code} · {done ? "COMMISSIONED" : "INVESTIGATION OPEN"}
           </span>
-        </div>
-        <div className="archive-record">
-          <h3>{done ? mission.discovery : "System awaiting repair."}</h3>
-          <p className="notebook-evidence">
-            {done
-              ? mission.evidence
-              : "Explore the ship and restore this circuit to record your discovery."}
-          </p>
-          <div className="archive-stats">
-            <span>
-              <strong>{progress.experiments.length}</strong> experiments
-            </span>
+          <h3>{a.concept}</h3>
+          <p>{a.purpose}</p>
+          <div className="log-discovery">
+            <span>MODEL TO TAKE WITH YOU</span>
+            <p>{a.discovery}</p>
           </div>
-          {done && (
-            <div className="evidence-log">
-              {first && (
-                <p>
-                  Your first prediction{" "}
-                  {first.matched
-                    ? "matched the result"
-                    : "differed from the result"}
-                  .
-                </p>
-              )}
-              {fault && (
-                <p>
-                  Before disconnecting A, you expected B to{" "}
-                  {fault.prediction === "stays" ? "stay on" : "go out"}. B{" "}
-                  {fault.outcome === "stays" ? "stayed on" : "went out"}.
-                </p>
-              )}
-              {progress.firstExplanation && (
-                <p>
-                  Your first explanation{" "}
-                  {progress.firstExplanation === mission.answer
-                    ? "fit the observation"
-                    : "needed another look at the evidence"}
-                  .
-                </p>
-              )}
-            </div>
+          <span className="eyebrow">RECORDED EVIDENCE</span>
+          {isLab(a.id) ? (
+            <table>
+              <thead>
+                <tr>
+                  <th>Trial</th>
+                  <th>Measurement</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.labs[a.id].samples.slice(-5).map((s, i) => {
+                  const r = measure(a.id as LabId, s.config);
+                  return (
+                    <tr key={i}>
+                      <td>{i + 1}</td>
+                      <td>
+                        {a.id === "timing"
+                          ? `${rcAt(s.config, "discharge", s.start!, s.time!).voltage.toFixed(2)} V after ${s.time} s · ${s.config.capacitance} mF · ${s.config.resistance} Ω`
+                          : a.id === "storage"
+                            ? `${(r.capacitance * 1000).toFixed(1)} mF · ${r.energy.toFixed(2)} J · ${["series", "parallel", "single"][s.config.topology]}`
+                            : `${r.current.toFixed(3)} A · ${r.voltage} V source`}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <p>
+              {state.missions[a.id].experiments.length} circuit tests recorded.{" "}
+              {done
+                ? "A working repair was verified."
+                : "Visit the equipment to investigate."}
+            </p>
           )}
-        </div>
+          <nav className="log-pages">
+            <button
+              aria-label="Previous investigation"
+              disabled={index === 0}
+              onClick={() => onPage(index - 1)}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <span>
+              {index + 1} / {ACTIVITIES.length}
+            </span>
+            <button
+              aria-label="Next investigation"
+              disabled={index === ACTIVITIES.length - 1}
+              onClick={() => onPage(index + 1)}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </nav>
+        </section>
+        <aside>
+          <span className="eyebrow">YOUR NOTES · OPTIONAL</span>
+          <label htmlFor="field-notes">
+            What changed, and what stayed the same?
+          </label>
+          <textarea
+            id="field-notes"
+            value={state.note}
+            onChange={(e) => onNote(e.target.value)}
+            maxLength={3000}
+            placeholder="Record a useful comparison or a question to try next."
+          />
+          <p>
+            Measurements are recorded automatically. Writing here is optional
+            and never blocks a repair.
+          </p>
+        </aside>
       </div>
-      <label className="personal-note" htmlFor="personal-note">
-        A note to yourself
-        <input
-          id="personal-note"
-          value={state.note}
-          maxLength={1500}
-          onChange={(e) => onNote(e.target.value)}
-          placeholder="Record a discovery…"
-        />
-      </label>
-      <div className="notebook-pagination">
-        <button
-          className="icon-button"
-          aria-label="Previous discovery"
-          disabled={page === 0}
-          onClick={() => onPage(page - 1)}
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <span>{page + 1} / 3</span>
-        <button
-          className="icon-button"
-          aria-label="Next discovery"
-          disabled={page === 2}
-          onClick={() => onPage(page + 1)}
-        >
-          <ArrowRight size={18} />
-        </button>
-      </div>
-      <button className="archive-export text-button" onClick={download}>
-        <Download size={16} /> Keep a copy
-      </button>
     </Dialog>
   );
 }

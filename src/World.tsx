@@ -9,7 +9,12 @@ import { renderWorld } from "./scene/renderWorld";
 import type { Telemetry, WorldState } from "./scene/renderWorld";
 import { SITES, SPAWN } from "./scene/navigation";
 import type { Player } from "./scene/navigation";
-import type { MissionId } from "./missions";
+import {
+  ACTIVITY_IDS,
+  nextActivity,
+  available as isAvailable,
+} from "./activities";
+import type { ActivityId as MissionId } from "./activities";
 import { SHIP_SYSTEMS, SYSTEM_ORDER, systemStatus } from "./shipSystems";
 import { Activity, ArrowUpRight, Check, LockKeyhole } from "lucide-react";
 import { DOORWAYS } from "./scene/shipLayout";
@@ -106,10 +111,13 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
   }, []);
   const focus = hud?.focus,
     complete = focus ? props.completed.includes(focus) : false;
-  const next = (["workshop", "harbor", "beacon"] as MissionId[]).find(
-    (id) => !props.completed.includes(id),
-  );
-  const available = focus === next || complete;
+  const next =
+    props.completed.length === ACTIVITY_IDS.length
+      ? undefined
+      : nextActivity(props.completed, props.tracked);
+  const available = focus
+    ? isAvailable(focus, props.completed) || complete
+    : false;
   const current = next ? SHIP_SYSTEMS[next] : null;
   const position = controls.current?.position();
   const lockedDoor = position
@@ -136,7 +144,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
             <strong>{hud.section}</strong>
             <span className="deck-status">
               <i />
-              {props.completed.length === 3
+              {props.completed.length === ACTIVITY_IDS.length
                 ? "PRIMARY SYSTEMS ONLINE"
                 : props.completed.includes("harbor")
                   ? "REACTOR ONLINE / COMMS OFFLINE"
@@ -149,10 +157,10 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
             <span>
               {props.distressSent
                 ? "RESCUE SIGNAL ACKNOWLEDGED"
-                : `${props.completed.length} / 3 SYSTEMS ONLINE`}
+                : `${props.completed.length} / ${ACTIVITY_IDS.length} SYSTEMS ONLINE`}
             </span>
             <div>
-              {["workshop", "harbor", "beacon"].map((id) => (
+              {ACTIVITY_IDS.map((id) => (
                 <i
                   key={id}
                   className={
@@ -168,7 +176,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
           <aside className="objective-card" aria-label="Current objective">
             <span className="eyebrow">
               {props.distressSent ? "MISSION COMPLETE" : "RECOVERY OBJECTIVE"}
-              <span>{next ? SHIP_SYSTEMS[next].code : "COM–03"}</span>
+              <span>{SHIP_SYSTEMS[next ?? "beacon"].code}</span>
             </span>
             <h2>
               {props.distressSent
@@ -182,8 +190,9 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
                 ? "Keep the transmitter online. Explore the restored ship."
                 : props.transmitting
                   ? "Sending vessel identity and position. Awaiting rescue control’s acknowledgement."
-                  : (current?.consequence ??
-                    "Use the forward console to contact rescue control.")}
+                  : current
+                    ? current.consequence.split(". ")[0] + "."
+                    : "Use the forward console to contact rescue control."}
             </p>
             <span className="objective-location">
               <ArrowUpRight size={13} />
@@ -223,7 +232,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
             >
               <span className="eyebrow">POWER NETWORK / LIVE DIAGNOSTICS</span>
               <ol>
-                {SYSTEM_ORDER.map((id, index) => {
+                {ACTIVITY_IDS.map((id, index) => {
                   const status = systemStatus(id, props.completed);
                   return (
                     <li key={id} data-status={status}>
@@ -244,8 +253,8 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
                 })}
               </ol>
               <p className="network-caption">
-                Power flows forward. Restore each upstream feed to reach the
-                next system.
+                Explore either service wing. The map shows which upstream
+                repairs each system needs.
               </p>
             </aside>
           )}
@@ -282,7 +291,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
               onClick={() => controls.current?.interact()}
               aria-label={
                 focus === "beacon" &&
-                props.completed.length === 3 &&
+                props.completed.length === ACTIVITY_IDS.length &&
                 !props.distressSent
                   ? "Use distress transmitter"
                   : `${complete ? "Inspect" : available ? "Repair" : "Inspect locked"} ${SITES[focus].name}`
@@ -291,14 +300,14 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
               <kbd>E</kbd>
               <span>
                 {focus === "beacon" &&
-                props.completed.length === 3 &&
+                props.completed.length === ACTIVITY_IDS.length &&
                 !props.distressSent
                   ? "Use distress transmitter"
                   : complete
                     ? `Inspect ${SITES[focus].name}`
                     : available
                       ? `Repair ${SITES[focus].name}`
-                      : "No incoming power"}
+                      : `Inspect ${SITES[focus].name}`}
               </span>
             </button>
           )}

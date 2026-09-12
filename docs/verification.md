@@ -1,31 +1,51 @@
-# Dead Orbit verification
+# Asterion verification
 
 Verified locally on September 11, 2026, on `codex/spaceship-dead-orbit`.
 
-| Check                                                    | Result                                                                                                                  |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `npm test`                                               | 34 tests passed                                                                                                         |
-| `npm run test:browser`                                   | 24-test full suite passed; the additional transmission regression also passed (25 browser checks total)                 |
-| `npm run build`                                          | TypeScript and production build passed                                                                                  |
-| `SIGNAL_REVIEW_URL=http://127.0.0.1:5176 npm run review` | Ten reviewed scenarios plus panel, map, network and transmission states; 16 current captures; no browser or HTTP errors |
-| `git diff --check`                                       | Passed                                                                                                                  |
+| Check                  | Result                                                            |
+| ---------------------- | ----------------------------------------------------------------- |
+| `npm test`             | 45 unit tests passed                                              |
+| `npm run test:browser` | All 31 browser tests passed in 3.8 minutes                        |
+| `npm run build`        | TypeScript and production build passed                            |
+| `npm run review`       | Current station, map and instrument views; no page or HTTP errors |
+| `git diff --check`     | Passed                                                            |
 
-The browser adventure walks from Engineering through both bulkheads to the Power relay and Command using ordinary player controls. It covers a wrong conductor, incorrect explanation, failed series backup, successful parallel backup, distress transmission, saved evidence, reload, and post-rescue practice.
+## Gameplay and physics
 
-Additional browser coverage includes hull collision and paused input, locked stations, keyboard socket operation, blocked storage, WebGL fallback, denied pointer lock, map/player alignment, a waypoint that follows every turning frame, fullscreen stacking and controls, delayed font readiness, and the persistent circuit renderer. Automated WCAG A/AA checks pass on the repair panel and mission log. Touch movement and the full first repair pass at 390 × 844, 844 × 390, and 320 × 568.
+After the final label and isolated-branch voltage corrections, all 45 unit tests and the production build passed again; the seven instrument, accessibility and RC interruption browser checks also passed again.
 
-Spaceship checks confirm that lighthouse saves remain unchanged, launch effects never intercept pointer input, unrepaired bulkheads stop movement and explain their requirement, commissioning releases access, and a saved position inside an aperture resumes safely. The anti-trapping rule cannot be triggered by approaching a locked door. Q opens and closes the live power network without losing control. Undo restores the previous edit and re-establishes connection guidance. Browser assertions verify zero current through an insulator, 0.50 A through the completed auxiliary load, 3 V / 0.25 A in the series test, and a 0.50 A backup after the main parallel branch is disconnected.
+The complete browser adventure walks both service loops with ordinary movement controls and completes all eight repairs. It chooses the distribution branch first, returns through the transverse service connection, investigates materials and life support, tests RC hold-up, builds the final independent circuits and transmits the distress signal. It does not teleport between activities. It tests equipment without entering a prediction or explanation.
 
-The additional transmission regression starts from physically validated commissioned circuits, sends the packet, closes the console, moves through the ship and observes a single persistent acknowledgement. The HUD reports sending while this runs. The player can explore throughout.
+The adventure observes the virtual fuse with a low-resistance specimen, a 0.50 A reading for the 6 V / 12 Ω sample, a 3 V / 0.25 A series load, branch isolation with 12 V retained on the reserve, 2.88 J stored in a parallel bank, and an initially inadequate RC reserve followed by a successful 40 mF repair. Unit tests separately check material resistivity and conductor geometry in SI units, current and power conservation, source internal resistance, unequal capacitor combinations, charge and discharge signs, time constants, and analytic results independent of update cadence.
 
-The current visual captures are generated in ignored `artifacts/spaceship/`. The review checks the title, engineering deck, observation window, reactor, command deck, circuit console, deck map, Q network view, restored ship, sending state and distress response. Engineering, reactor and the Command observation shield have matching before/after camera views. The service panel was inspected before and after energizing its load, including focus, readings and panel bounds. Rescue captures use a fixture produced through the real reducer's circuit/fault/explanation sequence; the separate browser adventure verifies actual gameplay. No screenshots are runtime assets or committed review output.
+Comparison evidence must use the same specimen or capacitor modules. Changing equipment invalidates the current result. Commissioning requires valid measurements and the incoming systems in the dependency graph. Save validation recomputes physical evidence rather than accepting supplied numbers. Completed equipment can be reopened for practice without replacing its commissioned state.
 
-The build retains Vite's advisory about the approximately 549 kB uncompressed Three.js vendor chunk (approximately 136 kB gzip). It is not a compilation or runtime failure. The complete production output is approximately 1.1 MB after removing the old photographic assets and fonts.
+## Interaction and resilience
 
-A local 120-frame stationary check at 1280 × 720 in headless Chromium with Metal measured a median frame interval of 33.3 ms before shadow caching and 16.7 ms afterward (90th percentile 16.7 ms afterward). This is a local smoke sample, not a hardware-wide performance guarantee. Static geometry is merged by material; only moving bulkheads/shields invalidate the directional shadow map.
+Browser coverage includes early equipment inspection with commissioning blocked by explicit dependencies, selecting either repair wing on the map, keyboard wiring and undo, save migration, corrupted or unavailable storage, reduced motion, hull and door collisions, a saved capsule inside an aperture, pointer-lock denial, WebGL fallback, fullscreen controls, delayed font readiness and reuse of the circuit renderer. The map and waypoint use the same physical locations as the station.
 
-A Web Audio analyser probe confirmed a running audio context and nonzero output for ambience/UI feedback (sample peak 0.051, RMS 0.0126, below clipping), then zero sampled output after muting. This checks signal generation and mute behavior; subjective headphone balance remains a human playtest item.
+RC playback can be paused, stepped and closed. Hidden or closed panels do not advance model time. Reload restores validated recorded evidence without silently running the apparatus. Sending the final packet continues when the console closes, permits walking and produces one acknowledgement.
 
-The original cleaned lighthouse is preserved on `main` at `0f3007f`, after its 44 unit tests and production build passed. Its screenshots, redundant original downloads, and unused decorative images were removed before creating the spaceship branch. The new branch subsequently removed the replaced island geometry, active island textures, and obsolete diagnostic scripts. No remote branches were changed.
+Automated WCAG A/AA checks pass on all five advanced instrument panels, the foundational repair interface and the mission log. The advanced panels also have geometric checks for content and close-button bounds. Touch movement and the introductory repair pass at 390 × 844, 844 × 390 and 320 × 568. These checks do not establish that every small-screen interaction is equally comfortable; the game retains a fixed composition and is best viewed in landscape.
 
-Human playtesting is still needed to assess high-school appeal, learning retention, and comfort across hardware; these automated checks verify the implemented software behavior.
+## Visual review
+
+Fourteen current captures are retained in ignored `artifacts/station/`: title, engineering, hub, materials, life support, reserve, command, the first wiring repair, all five advanced instrument panels, and the station map. They were inspected for compartment continuity, readable equipment identities, panel clipping, chart visibility and schematic correctness. The review caught and corrected ceiling transitions, disconnected pipe runs, a chart/guide overlap and a capacitor-label collision. The final isolated series schematic displays a physically open route.
+
+`npm run review -- storage-instruments wiring-instruments` updates selected views and preserves other review results. Fixtures are produced through the real reducers; the separate full adventure verifies player interaction and travel. No captures are runtime assets. Superseded captures from `artifacts/spaceship/` were removed.
+
+## Performance and assets
+
+At 1280 × 720 in local headless Chromium using Metal, 120-frame samples measured **16.7 ms median and 16.7 ms p90** for both a stationary hub view and a moving sample. This matches the previous local median and p90, with no observed regression in that sample. It is approximately 60 frames per second on this machine, not a minimum-spec or integrated-GPU guarantee. A browser animation-frame sample is not a GPU profiler or a whole-campaign worst-case benchmark.
+
+The renderer retains the existing pixel-ratio caps, ambient occlusion and bloom budget. It uses four nearby point-light slots, one cached directional shadow, material batches split into spatial cells for culling, and no additional fullscreen postprocessing. Static and hidden rendering is suspended when appropriate. Authored geometry and three shared 1K PBR maps supply the new compartment detail.
+
+The three licensed metal maps total **2,237,747 bytes**. Only the runtime color, normal and roughness maps are retained; provenance is in [assets.md](assets.md). The build retains Vite's advisory about the approximately 552 kB uncompressed Three.js vendor chunk (approximately 137 kB gzip). It is an advisory, not a compilation failure. No dependency was added for this rebuild.
+
+## Practical limits
+
+The station is an authored browser game using original modular geometry and licensed surface maps. It does not reach Alien: Isolation's production asset fidelity. The circuits are explicitly idealized test models: real lamps, motors, capacitor leakage, heating and instrument uncertainty require further activities or a physical-lab follow-up.
+
+The research establishes a rationale for scaffolding and comparison, not measured learning gains. High-school appeal, navigation comfort, transfer to unseen circuits, delayed retention and performance on a representative school laptop require observed playtests. See the [research report](research/station-design.md) and [classroom protocol](playtest.md).
+
+The cleaned lighthouse remains on `main` at `0f3007f`; the prior three-room spaceship remains at `0421e7b`. No remote branch was changed and nothing was deployed.

@@ -24,6 +24,7 @@ type Props = {
   practice: boolean;
   lesson: number;
   onLesson: (step: number) => void;
+  blocked?: string;
 };
 
 export function Workbench({
@@ -39,6 +40,7 @@ export function Workbench({
   practice,
   lesson,
   onLesson,
+  blocked,
 }: Props) {
   const mission = missionById(id),
     removed = p.phase === "fault-result";
@@ -80,7 +82,7 @@ export function Workbench({
         ? "Select the two circled sockets to connect a wire."
         : stage === 2
           ? "Replace the broken bridge. Choose a material below."
-          : "What will the lamp do? Predict, then switch on.";
+          : "Switch on and read the instruments. You can change the circuit and test again.";
   if (p.tested && p.phase === "build")
     instruction = result?.short
       ? "Short circuit. Remove the wire bypassing the lamps."
@@ -102,23 +104,6 @@ export function Workbench({
           : "The backup held.";
   if (success || done)
     instruction = "Circuit restored. Ready to bring the power online.";
-  const shortAnswers: Record<string, Record<string, string>> = {
-    workshop: {
-      near: "Voltage, even with an open return",
-      loop: "A complete conducting loop",
-      one: "Only a connection to positive",
-    },
-    harbor: {
-      used: "A consumed B’s share of current",
-      loop: "Their only path was broken",
-      battery: "Removing A reversed the polarity",
-    },
-    beacon: {
-      store: "B runs on stored charge after isolation",
-      bigger: "Removing A increases the source voltage",
-      branch: "B has its own complete path",
-    },
-  };
   return (
     <Dialog
       open={open}
@@ -187,33 +172,13 @@ export function Workbench({
           lesson={stage}
         />
         <section className="repair-actions" aria-label="Circuit controls">
-          {p.phase === "build" && (!guided || stage >= 3) && (
-            <>
-              <fieldset>
-                <legend>
-                  {id === "workshop" ? "The lamp will…" : "Your prediction"}
-                </legend>
-                <div className="choice-row">
-                  {mission.predictions.map((c) => (
-                    <button
-                      key={c.id}
-                      aria-pressed={p.prediction === c.id}
-                      className="choice"
-                      onClick={() => act({ type: "PREDICT", value: c.id })}
-                    >
-                      {c.text}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-              <button
-                className="primary-action"
-                disabled={!p.prediction}
-                onClick={() => act({ type: "TEST" })}
-              >
-                <Play size={16} /> Test circuit
-              </button>
-            </>
+          {p.phase === "build" && (
+            <button
+              className="primary-action"
+              onClick={() => act({ type: "TEST" })}
+            >
+              <Play size={16} /> Test circuit
+            </button>
           )}
           {guided && stage < 3 && (
             <div className="repair-step">
@@ -229,35 +194,18 @@ export function Workbench({
             </div>
           )}
           {p.phase === "fault-ready" && (
-            <>
-              <fieldset>
-                <legend>Disconnect A. What happens to B?</legend>
-                <div className="choice-row">
-                  {[
-                    { id: "stays", text: "B stays on" },
-                    { id: "out", text: "B goes out" },
-                  ].map((c) => (
-                    <button
-                      key={c.id}
-                      className="choice"
-                      aria-pressed={p.faultPrediction === c.id}
-                      onClick={() =>
-                        act({ type: "FAULT_PREDICT", value: c.id })
-                      }
-                    >
-                      {c.text}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
+            <div className="repair-step">
+              <p>
+                Both loads are on. Disconnect A to see whether B has an
+                independent return path.
+              </p>
               <button
                 className="primary-action"
-                disabled={!p.faultPrediction}
                 onClick={() => act({ type: "FAULT_TEST" })}
               >
                 <Lightbulb size={16} /> Disconnect lamp A
               </button>
-            </>
+            </div>
           )}
           {faultFailed && (
             <button
@@ -268,39 +216,30 @@ export function Workbench({
               <ArrowRight size={17} />
             </button>
           )}
-          {reflection && !success && (
-            <fieldset className="reflection">
-              <legend>{mission.question}</legend>
-              <div className="choice-row">
-                {mission.explanations.map((c) => (
-                  <button
-                    key={c.id}
-                    className="choice"
-                    aria-label={c.text}
-                    aria-pressed={p.explanation === c.id}
-                    onClick={() => act({ type: "EXPLAIN", value: c.id })}
-                  >
-                    {shortAnswers[id][c.id]}
-                  </button>
-                ))}
-              </div>
-              {p.explanation && p.explanation !== mission.answer && (
-                <p className="explanation-feedback" role="status">
-                  {mission.misconception[p.explanation]}
-                </p>
-              )}
-            </fieldset>
+          {reflection && (
+            <div className="observation-explainer">
+              <span>WHAT THE METERS SHOW</span>
+              <p>{mission.evidence}</p>
+            </div>
           )}
           {(success || done) && (
             <div className="commission-result">
-              <span>READY FOR SERVICE</span>
+              <span>
+                {blocked
+                  ? "UPSTREAM REPAIR NEEDED"
+                  : done
+                    ? "SYSTEM ONLINE"
+                    : "ON COMMISSION"}
+              </span>
+              {blocked && <p>{blocked}</p>}
               <p>
                 {id === "harbor" ? "Re-seat test module A. " : ""}
-                {SHIP_SYSTEMS[id].consequence}
+                {SHIP_SYSTEMS[id].restored}
               </p>
               <button
                 className="primary-action restore-action"
                 onClick={onComplete}
+                disabled={!!blocked && !done}
               >
                 {done
                   ? "Back to the ship"

@@ -87,6 +87,7 @@ export function shipArt(root: THREE.Group) {
     object.scale.set(w, h, d);
     return object;
   }
+  const bevels = new Map<string, THREE.BufferGeometry>();
   function bevel(
     x: number,
     y: number,
@@ -98,7 +99,13 @@ export function shipArt(root: THREE.Group) {
     radius = 0.05,
     parent: THREE.Object3D = root,
   ) {
-    return mesh(rounded(w, h, d, radius), m, x, y, z, parent);
+    const key = `${w}:${h}:${d}:${radius}`;
+    let geometry = bevels.get(key);
+    if (!geometry) {
+      geometry = rounded(w, h, d, radius);
+      bevels.set(key, geometry);
+    }
+    return mesh(geometry, m, x, y, z, parent);
   }
   function rod(
     a: THREE.Vector3,
@@ -200,7 +207,7 @@ export function shipArt(root: THREE.Group) {
    * carry dynamic flags, so visible animation and physical colliders stay together. */
   function batch() {
     root.updateMatrixWorld(true);
-    const groups = new Map<THREE.Material, THREE.Mesh[]>();
+    const groups = new Map<string, THREE.Mesh[]>();
     root.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh) || Array.isArray(obj.material)) return;
       let current: THREE.Object3D | null = obj;
@@ -209,10 +216,13 @@ export function shipArt(root: THREE.Group) {
         current = current.parent;
       }
       if (obj.material.transparent) return;
-      groups.set(obj.material, [...(groups.get(obj.material) ?? []), obj]);
+      const point = obj.getWorldPosition(new THREE.Vector3());
+      const key = `${obj.material.uuid}:${Math.floor(point.x / 12)}:${Math.floor(point.z / 12)}`;
+      groups.set(key, [...(groups.get(key) ?? []), obj]);
     });
     const removed = new Set<THREE.BufferGeometry>();
-    for (const [material, objects] of groups) {
+    for (const objects of groups.values()) {
+      const material = objects[0].material as THREE.Material;
       if (objects.length < 2) continue;
       const copies = objects.map((obj) => {
         const g = obj.geometry.clone().applyMatrix4(obj.matrixWorld);

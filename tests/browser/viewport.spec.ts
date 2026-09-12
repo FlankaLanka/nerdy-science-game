@@ -130,14 +130,7 @@ test("world, menus and repair steps share a 16:9 frame with no scrolling", async
   await checkFrame(page);
   await page.getByRole("button", { name: "Copper", exact: true }).click();
   await checkFrame(page);
-  await page.getByRole("button", { name: "Light up", exact: true }).click();
   await page.getByRole("button", { name: "Test circuit", exact: true }).click();
-  await page
-    .getByRole("button", {
-      name: "A connection to the positive terminal only",
-      exact: true,
-    })
-    .click();
   await checkFrame(page);
 });
 
@@ -180,10 +173,14 @@ test("fullscreen works from the title, the F key and the pause menu", async ({
     .poll(() => page.evaluate(() => !!document.fullscreenElement))
     .toBe(false);
   await page.getByRole("button", { name: /^Mission log/ }).click();
-  await page.getByRole("textbox", { name: "A note to yourself" }).press("f");
+  await page
+    .getByRole("textbox", { name: "What changed, and what stayed the same?" })
+    .press("f");
   expect(await page.evaluate(() => !!document.fullscreenElement)).toBe(false);
   await expect(
-    page.getByRole("textbox", { name: "A note to yourself" }),
+    page.getByRole("textbox", {
+      name: "What changed, and what stayed the same?",
+    }),
   ).toHaveValue("f");
 });
 
@@ -205,8 +202,8 @@ test("console fonts and circuit shaders are prepared before entry and its render
   });
   await page.addInitScript(() =>
     localStorage.setItem(
-      "signal.dead-orbit.player.v1",
-      JSON.stringify({ x: -4, z: 13.5, yaw: 0, pitch: 0 }),
+      "signal.asterion.player.v2",
+      JSON.stringify({ x: -3, z: 22.5, yaw: 0, pitch: 0 }),
     ),
   );
   await page.goto("/");

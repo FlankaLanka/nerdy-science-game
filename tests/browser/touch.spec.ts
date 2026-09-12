@@ -73,8 +73,8 @@ for (const viewport of [
       await page.getByRole("button", { name: "Pause game", exact: true }).tap();
       await page.getByRole("button", { name: /^Deck map/ }).tap();
       await expect(
-        page.locator('.map-stops [aria-current="step"]'),
-      ).toContainText("Power relay");
+        page.locator('.activity-map-list .tracked'),
+      ).toContainText("Materials workshop");
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,

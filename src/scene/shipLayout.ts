@@ -1,113 +1,218 @@
-import type { MissionId } from "../missions.ts";
-
-/** One deck plan drives the hull, walking boundaries, and navigation display. */
-export const DECK = [
+import { ACTIVITIES } from "../activities.ts";
+import type { ActivityId } from "../activities.ts";
+type Compartment = {
+  id: string;
+  name: string;
+  x: number;
+  z: number;
+  width: number;
+  depth: number;
+  height: number;
+  color: string;
+  system: ActivityId;
+};
+/** Authored footprints shared by architecture, collision, map and routing. Two wing loops reconnect to the hub and cross passage. */
+export const DECK: Compartment[] = [
   {
     id: "engineering",
     name: "Engineering",
     x: 0,
-    z: 15.5,
-    width: 16,
-    depth: 17,
-    height: 5.4,
-    color: "#60eadb",
+    z: 20,
+    width: 12,
+    depth: 12,
+    height: 4.4,
+    color: "#bdab87",
+    system: "workshop",
   },
   {
-    id: "aft-passage",
-    name: "Aft passage",
+    id: "entry",
+    name: "Hub access",
     x: 0,
-    z: 5.5,
-    width: 6,
-    depth: 3,
-    height: 4,
-    color: "#60eadb",
+    z: 13,
+    width: 4,
+    depth: 2,
+    height: 3.2,
+    color: "#a9c7b4",
+    system: "workshop",
   },
   {
-    id: "relay",
-    name: "Power relay",
+    id: "hub",
+    name: "Station hub",
     x: 0,
-    z: -3,
-    width: 16,
+    z: 5,
+    width: 14,
     depth: 14,
-    height: 5.4,
-    color: "#ffb568",
+    height: 5.7,
+    color: "#a9c7b4",
+    system: "junction",
   },
   {
-    id: "forward-passage",
-    name: "Forward passage",
-    x: 0,
-    z: -12,
-    width: 6,
+    id: "west-link",
+    name: "Materials access",
+    x: -8,
+    z: 10,
+    width: 2,
     depth: 4,
-    height: 4,
-    color: "#a9adff",
+    height: 3.2,
+    color: "#ceb084",
+    system: "workshop",
+  },
+  {
+    id: "east-link",
+    name: "Distribution access",
+    x: 8,
+    z: 10,
+    width: 2,
+    depth: 4,
+    height: 3.2,
+    color: "#d6b278",
+    system: "workshop",
+  },
+  {
+    id: "materials",
+    name: "Materials workshop",
+    x: -14,
+    z: 12,
+    width: 10,
+    depth: 10,
+    height: 3.8,
+    color: "#ceb084",
+    system: "ohm",
+  },
+  {
+    id: "distribution",
+    name: "Distribution",
+    x: 14,
+    z: 12,
+    width: 10,
+    depth: 10,
+    height: 4.2,
+    color: "#d6b278",
+    system: "harbor",
+  },
+  {
+    id: "west-gallery",
+    name: "West service gallery",
+    x: -14,
+    z: 4,
+    width: 4,
+    depth: 6,
+    height: 3.2,
+    color: "#b6c596",
+    system: "power",
+  },
+  {
+    id: "east-gallery",
+    name: "East service gallery",
+    x: 14,
+    z: 4,
+    width: 4,
+    depth: 6,
+    height: 3.2,
+    color: "#a2c3d1",
+    system: "storage",
+  },
+  {
+    id: "life-support",
+    name: "Life support",
+    x: -14,
+    z: -5,
+    width: 10,
+    depth: 12,
+    height: 4.4,
+    color: "#b6c596",
+    system: "power",
+  },
+  {
+    id: "reserve",
+    name: "Reserve vault",
+    x: 14,
+    z: -5,
+    width: 10,
+    depth: 12,
+    height: 4.4,
+    color: "#a2c3d1",
+    system: "storage",
+  },
+  {
+    id: "west-cross",
+    name: "West cross passage",
+    x: -5.5,
+    z: -6,
+    width: 7,
+    depth: 3,
+    height: 3.2,
+    color: "#a9c7b4",
+    system: "workshop",
+  },
+  {
+    id: "east-cross",
+    name: "East cross passage",
+    x: 5.5,
+    z: -6,
+    width: 7,
+    depth: 3,
+    height: 3.2,
+    color: "#a9c7b4",
+    system: "workshop",
+  },
+  {
+    id: "spine",
+    name: "Airlock control",
+    x: 0,
+    z: -6.5,
+    width: 4,
+    depth: 9,
+    height: 3.6,
+    color: "#a2c3d1",
+    system: "timing",
   },
   {
     id: "command",
-    name: "Command deck",
+    name: "Command",
     x: 0,
-    z: -21.5,
-    width: 20,
-    depth: 15,
-    height: 6,
-    color: "#a9adff",
+    z: -17,
+    width: 16,
+    depth: 12,
+    height: 5.2,
+    color: "#bbcbd2",
+    system: "beacon",
   },
-] as const;
-
-export const SHIP_SITES: Record<
-  MissionId,
+];
+export const SHIP_SITES = Object.fromEntries(
+  ACTIVITIES.map((a) => [
+    a.id,
+    { x: a.x, z: a.z, name: a.name, color: a.color, system: a.system },
+  ]),
+) as Record<
+  ActivityId,
   { x: number; z: number; name: string; color: string; system: string }
-> = {
-  workshop: {
-    x: -4,
-    z: 11,
-    name: "Engineering",
-    color: "#60eadb",
-    system: "Auxiliary power",
-  },
-  harbor: {
-    x: 4,
-    z: -3,
-    name: "Power relay",
-    color: "#ffb568",
-    system: "Distribution bus",
-  },
-  beacon: {
-    x: 0,
-    z: -23,
-    name: "Command deck",
-    color: "#a9adff",
-    system: "Distress transmitter",
-  },
-};
-
-export const DOORWAYS = [5.5, -12] as const;
+>;
+export const DOORWAYS = [13] as const;
 export const FURNITURE = [
-  { x: 4.6, z: 13, radius: 1.65 },
-  { x: -4.7, z: -3, radius: 1.7 },
-  { x: -6.9, z: 20.5, width: 1.25, depth: 3.4 },
-  { x: -6.9, z: 15.5, width: 1.25, depth: 3.4 },
-  { x: 6.4, z: 21.5, width: 2, depth: 2 },
-  { x: -7, z: -20, width: 2.6, depth: 1.3 },
-  { x: 7, z: -20, width: 2.6, depth: 1.3 },
-  { x: 3.4, z: -8.7, width: 1.62, depth: 0.64 },
-  { x: 5.2, z: -8.7, width: 1.62, depth: 0.64 },
-  { x: 7, z: -8.7, width: 1.62, depth: 0.64 },
+  { x: -17.3, z: 11, width: 1.5, depth: 5 },
+  { x: 18.3, z: 12, width: 1, depth: 5.5 },
+  { x: -3.2, z: 25.4, width: 4, depth: 0.8 },
+  { x: -1.5, z: 4.5, radius: 1.7 },
+  { x: 3.6, z: 21.5, width: 2, depth: 5 },
+  { x: -17.7, z: -5, width: 1, depth: 7 },
+  { x: 17.6, z: -5, width: 1.4, depth: 7 },
+  { x: -5.9, z: -18, width: 1.6, depth: 3 },
+  { x: 5.9, z: -18, width: 1.6, depth: 3 },
 ] as const;
-
 export function insideDeck(x: number, z: number) {
   return DECK.some(
-    (room) =>
-      Math.abs(x - room.x) <= room.width / 2 &&
-      Math.abs(z - room.z) <= room.depth / 2,
+    (r) => Math.abs(x - r.x) <= r.width / 2 && Math.abs(z - r.z) <= r.depth / 2,
   );
 }
-
-export function deckSection(z: number) {
-  return z > 5.5 ? "Engineering" : z > -12 ? "Power relay" : "Command deck";
+export function deckSection(z: number, x = 0) {
+  return (
+    DECK.find(
+      (r) =>
+        Math.abs(x - r.x) <= r.width / 2 && Math.abs(z - r.z) <= r.depth / 2,
+    )?.name ?? "Station access"
+  );
 }
-
-/** Forward points up on the ship's deck display; meters are scaled uniformly. */
 export function deckPoint(x: number, z: number): [number, number] {
-  return [350 + x * 7.2, 36 + (z + 29) * 7.2];
+  return [350 + x * 8, 24 + (z + 23) * 8];
 }

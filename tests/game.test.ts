@@ -10,9 +10,11 @@ import {
 } from "../src/game.ts";
 import type { MissionId, Wire } from "../src/missions.ts";
 
-test("a prediction is required and editing invalidates a stale result and prediction", () => {
+test("testing is immediate without a prediction, and editing invalidates the result", () => {
   let p = initialProgress();
-  assert.equal(updateProgress("workshop", p, { type: "TEST" }), p);
+  const unprompted = updateProgress("workshop", p, { type: "TEST" });
+  assert.equal(unprompted.tested, true);
+  assert.equal(unprompted.experiments[0].prediction, "unprompted");
   p = updateProgress("workshop", p, { type: "PREDICT", value: "off" });
   p = updateProgress("workshop", p, { type: "TEST" });
   assert.equal(p.experiments.length, 1);
@@ -23,7 +25,7 @@ test("a prediction is required and editing invalidates a stale result and predic
   p = updateProgress("workshop", p, { type: "UNDO" });
   assert.deepEqual(p.wires, []);
 });
-test("the complete adventure needs real working circuits, a fault experiment, and supported explanations", () => {
+test("the foundational circuits require physical evidence without a reflection gate", () => {
   let s = reducer(initialState(), { type: "START" });
   assert.equal(reducer(s, { type: "SEND_DISTRESS" }), s);
   assert.equal(reducer(s, { type: "COMPLETE", id: "beacon", now: 1 }), s);
@@ -50,7 +52,7 @@ test("the complete adventure needs real working circuits, a fault experiment, an
       send({ type: "FAULT_PREDICT", value: id === "beacon" ? "stays" : "out" });
       send({ type: "FAULT_TEST" });
     }
-    assert.equal(canFinish(id, s.missions[id]), false);
+    assert.equal(canFinish(id, s.missions[id]), true);
     send({ type: "EXPLAIN", value: id === "beacon" ? "branch" : "loop" });
     s = reducer(s, { type: "COMPLETE", id, now: 1234 });
     assert.ok(s.completed.includes(id));

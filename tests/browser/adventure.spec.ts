@@ -1,358 +1,235 @@
 import { test, expect } from "@playwright/test";
 import {
-  aimAt,
   begin,
-  connect,
-  hold,
   openWorkshop,
-  position,
-  walkTo,
   workshopRepair,
+  connect,
+  walkTo,
+  aimAt,
+  position,
 } from "./helpers";
-
-test("walk the ship, restore all three physical stations, and retain discoveries", async ({
+import { SAVE_KEY } from "../../src/campaign.ts";
+import { PLAYER_KEY } from "../../src/scene/navigation.ts";
+import { campaignFixtures } from "../fixtures.ts";
+import type { Page } from "@playwright/test";
+const button = (p: Page, name: string) =>
+  p.getByRole("button", { name, exact: true });
+const record = async (p: Page) => button(p, "Test & record").click();
+const commission = async (p: Page) => button(p, "Commission system").click();
+async function travel(p: Page, points: number[][]) {
+  for (const [x, z] of points) await walkTo(p, x, z);
+}
+async function use(p: Page, x: number, z: number, title: string) {
+  await aimAt(p, x, z);
+  await p.keyboard.press("e");
+  await expect(
+    p.getByRole("dialog", { name: title, exact: true }),
+  ).toBeVisible();
+}
+test("explore both loops and commission the full eight-repair station through ordinary controls", async ({
   page,
 }) => {
   test.setTimeout(240000);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  await openWorkshop(page);
+  await expect(button(page, "Test circuit")).toBeEnabled();
+  await expect(page.getByText(/Your prediction|The lamp will/)).toHaveCount(0);
+  await button(page, "Test circuit").click();
+  await expect(page.locator(".service-readout")).toContainText("0.00");
+  await workshopRepair(page);
+  // Choose the distribution branch first rather than the default materials objective.
+  await travel(page, [
+    [0, 22.5],
+    [0, 15],
+    [0, 10],
+    [8, 10],
+    [12, 10],
+    [12, 15.3],
+    [14, 15.3],
+  ]);
+  await use(page, 14, 13, "Distribution circuit");
+  await connect(page, "Lamp B right", "Battery negative");
+  await button(page, "Test circuit").click();
+  await expect(page.locator(".service-readout")).toContainText("3.0V/0.25A");
+  await button(page, "Disconnect lamp A").click();
+  await button(page, "Restore distribution").click();
+  await travel(page, [
+    [12, 15],
+    [12, 10],
+    [4, 10],
+    [4, 6.3],
+  ]);
+  await use(page, 4, 4, "Station hub instruments");
+  await button(page, "Parallel").click();
+  await record(page);
+  await expect(page.locator(".instrument-meters")).toContainText("1.50 A");
+  await button(page, "A isolated").click();
+  await record(page);
+  await expect(page.locator(".instrument-meters")).toContainText("12.00 V");
+  await commission(page);
+  await travel(page, [
+    [4, 9],
+    [14, 9],
+    [14, 2],
+    [12, -2],
+    [12, -3.7],
+    [14, -3.7],
+  ]);
+  await use(page, 14, -6, "Reserve vault instruments");
+  await record(page);
+  await button(page, "Parallel").click();
+  await record(page);
+  await expect(page.locator(".instrument-meters")).toContainText("2.88 J");
+  await commission(page);
+  await travel(page, [
+    [12, -3.7],
+    [12, -6],
+    [0, -6],
+    [-12, -6],
+    [-14, -2],
+    [-14, 4],
+    [-13, 10],
+    [-13, 15.3],
+    [-15, 15.3],
+  ]);
+  await use(page, -15, 13, "Materials workshop instruments");
+  await button(page, "Copper").click();
+  await record(page);
+  await expect(page.locator(".lab-narration")).toContainText("virtual fuse");
+  await button(page, "Nichrome").click();
+  await record(page);
+  await button(page, "3 V").click();
+  await record(page);
+  await button(page, "6 V").click();
+  await record(page);
+  await expect(page.locator(".instrument-meters")).toContainText("0.50 A");
+  await commission(page);
+  await travel(page, [
+    [-13, 15.3],
+    [-13, 10],
+    [-14, 4],
+    [-14, -2],
+    [-15, -3.7],
+  ]);
+  await use(page, -15, -6, "Life support instruments");
+  await record(page);
+  await expect(button(page, "Commission system")).toHaveCount(0);
+  await button(page, "5 Ω").click();
+  await record(page);
+  await expect(page.locator(".instrument-meters")).toContainText("6.00 V");
+  await commission(page);
+  await travel(page, [
+    [-13, -3.7],
+    [-12, -6],
+    [-3, -6],
+    [0, -4.7],
+  ]);
+  await use(page, 0, -7, "Airlock control instruments");
+  await button(page, "Advance to 5τ").click();
+  await button(page, "Run 2 s outage test").click();
+  await expect(page.locator(".lab-narration")).toContainText(
+    "lost its voltage reserve",
+    { timeout: 7000 },
+  );
+  await button(page, "40 mF").click();
+  await button(page, "Advance to 5τ").click();
+  await button(page, "Run 2 s outage test").click();
+  await expect(button(page, "Commission system")).toBeVisible({
+    timeout: 7000,
+  });
+  await commission(page);
+  // The airlock console is offset by walking around its right side.
+  await travel(page, [
+    [1.35, -5],
+    [1.35, -9],
+    [0, -12],
+    [0, -16.7],
+  ]);
+  await use(page, 0, -19, "Command circuit");
+  for (const [a, b] of [
+    ["Battery positive", "Lamp A left"],
+    ["Lamp A right", "Battery negative"],
+    ["Battery positive", "Lamp B left"],
+    ["Lamp B right", "Battery negative"],
+  ])
+    await connect(page, a, b);
+  await button(page, "Test circuit").click();
+  await button(page, "Disconnect lamp A").click();
+  await button(page, "Power the transmitter").click();
+  await button(page, "Transmit distress signal").click();
+  await expect(
+    page.getByRole("heading", { name: "Signal received." }),
+  ).toBeVisible();
+  const saved = await page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key)!),
+    SAVE_KEY,
+  );
+  expect(saved.completed).toHaveLength(8);
+  expect(saved.distressSent).toBe(true);
+  expect(saved.missions.beacon.prediction).toBeNull();
+  expect(errors).toEqual([]);
+});
+test("later equipment can be inspected before commissioning dependencies are repaired", async ({
+  page,
+}) => {
+  await page.addInitScript(
+    (key) =>
+      localStorage.setItem(
+        key,
+        JSON.stringify({ x: 14, z: -3.7, yaw: 0, pitch: 0 }),
+      ),
+    PLAYER_KEY,
+  );
   await begin(page);
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.keyboard.down("w");
-  await page
-    .getByRole("button", { name: "Repair Engineering", exact: true })
-    .waitFor();
-  await page.keyboard.up("w");
   await page.keyboard.press("e");
-  await page.getByRole("dialog", { name: "Engineering circuit" }).waitFor();
-  await expect(
-    page.getByRole("button", { name: "Test circuit", exact: true }),
-  ).toHaveCount(0);
-  await connect(page, "Lamp A right", "Bridge left");
-  await page.getByRole("button", { name: "Glass", exact: true }).click();
-  await page.getByRole("button", { name: "Light up", exact: true }).click();
-  await page.getByRole("button", { name: "Test circuit", exact: true }).click();
-  await expect(
-    page.getByText("No current through the bridge.", { exact: false }),
-  ).toBeVisible();
-  await expect(page.locator('[data-load="a"] strong')).toContainText("0.00");
-  await page.getByRole("button", { name: "Copper", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Test circuit", exact: true }),
-  ).toBeDisabled();
-  await page.getByRole("button", { name: "Light up", exact: true }).click();
-  await page.getByRole("button", { name: "Test circuit", exact: true }).click();
-  await expect(page.locator('[data-load="a"] strong')).toContainText("0.50");
+  await record(page);
+  await button(page, "Parallel").click();
+  await record(page);
+  await expect(button(page, "Commission system")).toBeDisabled();
+  await expect(page.locator(".lab-blocked")).toContainText(
+    "Independent supply",
+  );
+});
+test("map tracking chooses either unlocked wing and changes the world objective", async ({
+  page,
+}) => {
+  const state = campaignFixtures().snapshots.workshop!;
+  await page.addInitScript(
+    ({ key, state }) => localStorage.setItem(key, JSON.stringify(state)),
+    { key: SAVE_KEY, state },
+  );
+  await begin(page);
+  await page.keyboard.press("m");
   await page
-    .getByRole("button", {
-      name: "A connection to the positive terminal only",
-      exact: true,
-    })
+    .getByRole("button", { name: /03 Distribution TRACK REPAIR/ })
     .click();
+  await expect(page.getByLabel("Current objective")).toContainText(
+    "shared interlock",
+  );
+});
+test("keyboard wiring, undo, cancellation and reload preserve the editable circuit", async ({
+  page,
+}) => {
+  await openWorkshop(page);
+  await button(page, "Lamp A right").focus();
+  await page.keyboard.press("Enter");
+  await button(page, "Bridge left").focus();
+  await page.keyboard.press("Enter");
   await expect(
-    page.getByText("One connection leaves a gap.", { exact: false }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", {
-      name: "A conducting path through the lamp, joining both battery ends",
-      exact: true,
-    })
-    .click();
-  await page
-    .getByRole("button", { name: "Restore auxiliary power", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", {
-      name: "Inspect Engineering",
-      exact: true,
-    }),
-  ).toBeVisible();
-  await walkTo(page, 0, 14);
-  await walkTo(page, 0, 0);
-  await walkTo(page, 4, -0.5);
-  await aimAt(page, 4, -3);
-  await expect(
-    page.getByRole("button", { name: "Repair Power relay", exact: true }),
-  ).toBeVisible();
-  await page.keyboard.press("e");
-  await connect(page, "Lamp B right", "Battery negative");
-  await page
-    .getByRole("button", { name: "Both lamps light", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Test circuit", exact: true }).click();
-  await page.getByRole("button", { name: "B stays on", exact: true }).click();
-  await expect(page.locator('[data-load="a"] strong')).toContainText("3.0");
-  await expect(page.locator('[data-load="b"] strong')).toContainText("0.25");
-  await page
-    .getByRole("button", { name: "Disconnect lamp A", exact: true })
-    .click();
-  await expect(
-    page.getByText("They shared one path.", { exact: true }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", {
-      name: "Removing A opened their only complete path",
-      exact: true,
-    })
-    .click();
-  await page
-    .getByRole("button", { name: "Restore distribution", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Inspect Power relay", exact: true }),
-  ).toBeVisible();
-  await walkTo(page, 0, 0);
-  await walkTo(page, 0, -20.5);
-  await aimAt(page, 0, -23);
-  await expect(
-    page.getByRole("button", { name: "Repair Command deck", exact: true }),
-  ).toBeVisible();
-  await page.keyboard.press("e");
-  await connect(page, "Battery positive", "Lamp A left");
-  await connect(page, "Lamp A right", "Lamp B left");
-  await connect(page, "Lamp B right", "Battery negative");
-  await page
-    .getByRole("button", { name: "Both lamps light", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Test circuit", exact: true }).click();
-  await page.getByRole("button", { name: "B stays on", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Disconnect lamp A", exact: true })
-    .click();
-  await expect(
-    page.getByText("Both went dark.", { exact: false }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Revise your circuit", exact: true })
-    .click();
-  await connect(page, "Lamp A right", "Lamp B left");
-  await connect(page, "Lamp A right", "Battery negative");
-  await connect(page, "Battery positive", "Lamp B left");
-  await page
-    .getByRole("button", { name: "Both lamps light", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Test circuit", exact: true }).click();
-  await page.getByRole("button", { name: "B stays on", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Disconnect lamp A", exact: true })
-    .click();
-  await expect(
-    page.getByText("The backup held.", { exact: true }),
-  ).toBeVisible();
-  await expect(page.locator('[data-load="a"] strong')).toContainText("0.00");
-  await expect(page.locator('[data-load="b"] strong')).toContainText("0.50");
-  await page
-    .getByRole("button", {
-      name: "B has its own complete path to both battery ends",
-      exact: true,
-    })
-    .click();
-  await page
-    .getByRole("button", { name: "Power the transmitter", exact: true })
-    .click();
-  await expect(
-    page.getByRole("dialog", { name: "Signal restored", exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Transmitter online.", { exact: true }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Transmit distress signal", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Sending coordinates…", exact: true }),
-  ).toBeDisabled();
-  await expect(
-    page.getByText("Signal received.", { exact: true }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Open mission log", exact: true })
-    .click();
-  await page
-    .getByLabel("A note to yourself", { exact: false })
-    .fill("Each lamp can have its own path.");
-  await page
-    .getByRole("button", { name: "Previous discovery", exact: true })
-    .click();
-  await expect(
-    page.getByText(
-      "Before disconnecting A, you expected B to stay on. B went out.",
-      { exact: true },
-    ),
-  ).toBeVisible();
-  await page.reload();
-  await page
-    .getByRole("button", { name: "Continue", exact: true })
-    .click({ timeout: 60000 });
-  await page.keyboard.press("j");
-  await expect(page.locator(".archive-tabs svg")).toHaveCount(3);
-  await expect(
-    page.getByLabel("A note to yourself", { exact: false }),
-  ).toHaveValue("Each lamp can have its own path.");
-  await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
-  await page.keyboard.press("e");
-  await expect(
-    page.getByRole("dialog", {
-      name: "Command deck circuit",
-      exact: true,
-    }),
-  ).toBeVisible();
+    page.getByRole("button", { name: /^Remove wire from/ }),
+  ).toHaveCount(1);
+  await button(page, "Undo").click();
   await expect(
     page.getByRole("button", { name: /^Remove wire from/ }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Test circuit", exact: true }),
-  ).toBeDisabled();
-  expect(errors).toEqual([]);
-});
-
-test("pause, mouse release, wall collision, map, and safe restart preserve progress", async ({
-  page,
-}) => {
-  await begin(page);
-  const start = await position(page);
-  await hold(page, "w", 1300);
-  const after = await position(page);
-  expect(after.z).toBeLessThan(start.z - 2);
-  await hold(page, "w", 3500);
-  const wall = await position(page);
-  expect(wall.z).toBeGreaterThanOrEqual(11.65);
-  await page.keyboard.press("m");
-  await expect(
-    page.getByRole("dialog", { name: "Deck map", exact: true }),
-  ).toBeVisible();
-  const stopped = await page.evaluate(() =>
-    localStorage.getItem("signal.dead-orbit.player.v1"),
-  );
-  await hold(page, "w", 300);
-  expect(
-    await page.evaluate(() =>
-      localStorage.getItem("signal.dead-orbit.player.v1"),
-    ),
-  ).toBe(stopped);
-  await expect(
-    page.getByRole("button", { name: /follow path|explore/ }),
-  ).toHaveCount(0);
-  await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Settings", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Start a new adventure", exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "Keep exploring", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
-  const kept = await position(page);
-  expect(kept.z).toBeCloseTo(wall.z, 1);
-});
-
-test("keyboard socket selection, reset, closing a panel and reloading retain the circuit", async ({
-  page,
-}) => {
-  await openWorkshop(page);
-  await page.getByRole("button", { name: "Lamp A right", exact: true }).focus();
-  await page.keyboard.press("Enter");
-  await page.getByRole("button", { name: "Bridge left", exact: true }).focus();
-  await page.keyboard.press("Enter");
-  await page.getByRole("button", { name: "Reset", exact: true }).click();
-  await expect(
-    page.getByRole("button", {
-      name: "Remove wire from Lamp A right to Bridge left",
-      exact: true,
-    }),
-  ).toHaveCount(0);
-  await page.getByRole("button", { name: "Lamp A right", exact: true }).focus();
-  await page.keyboard.press("Enter");
-  await page.keyboard.press("Escape");
-  await expect(
-    page.getByRole("dialog", {
-      name: "Engineering circuit",
-      exact: true,
-    }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Lamp A right", exact: true }),
-  ).toHaveAttribute("aria-pressed", "false");
   await connect(page, "Lamp A right", "Bridge left");
-  await page.getByRole("button", { name: "Copper", exact: true }).click();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await position(page);
   await page.reload();
-  await page
-    .getByRole("button", { name: "Continue", exact: true })
-    .click({ timeout: 60000 });
+  await button(page, "Continue").click();
   await page.keyboard.press("e");
   await expect(
-    page.getByRole("button", { name: "Copper", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    page.getByRole("button", {
-      name: "Remove wire from Lamp A right to Bridge left",
-      exact: true,
-    }),
-  ).toBeAttached();
-});
-
-test("locked stations cannot be repaired before they have incoming power", async ({
-  page,
-}) => {
-  await page.addInitScript(() =>
-    localStorage.setItem(
-      "signal.dead-orbit.player.v1",
-      JSON.stringify({ x: 4, z: -0.5, yaw: 0, pitch: 0 }),
-    ),
-  );
-  await begin(page);
-  await page
-    .getByRole("button", { name: "Inspect locked Power relay", exact: true })
-    .waitFor();
-  await page.keyboard.press("e");
-  await expect(
-    page.getByText("No incoming power.", { exact: false }),
-  ).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-});
-
-test("coaching API validates requests and labels authored answers", async ({
-  request,
-}) => {
-  expect((await request.get("/api/status")).status()).toBe(200);
-  expect((await request.post("/api/coach", { data: {} })).status()).toBe(400);
-  expect(
-    (
-      await request.post("/api/coach", {
-        headers: { Origin: "https://unrelated.example" },
-        data: {},
-      })
-    ).status(),
-  ).toBe(403);
-  const answer = await request.post("/api/coach", {
-    data: {
-      mission: "workshop",
-      phase: "build",
-      wires: [["a2", "m1"]],
-      material: "copper",
-      message: "What changed?",
-      hints: 1,
-      attempts: 1,
-    },
-  });
-  expect(answer.status()).toBe(200);
-  expect((await answer.json()).source).toBe("field-guide");
-});
-
-test("first repair restores the environment and marks the Power relay on the map", async ({
-  page,
-}) => {
-  await openWorkshop(page);
-  await workshopRepair(page);
-  await page.keyboard.press("m");
-  await expect(page.locator('.map-stops [aria-current="step"]')).toContainText(
-    "Power relay",
-  );
-  const completed = await page.evaluate(
-    () => JSON.parse(localStorage.getItem("signal.dead-orbit.v1")!).completed,
-  );
-  expect(completed).toEqual(["workshop"]);
+    page.getByRole("button", { name: /^Remove wire from/ }),
+  ).toHaveCount(1);
 });

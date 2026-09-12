@@ -7,9 +7,13 @@ import {
   restoreState,
   SAVE_KEY,
   updateProgress,
-} from "./game";
-import type { Progress } from "./game";
-import type { MissionId } from "./missions";
+} from "./campaign";
+import type { Progress } from "./campaign";
+import { ACTIVITY_IDS, activity, isLab, available } from "./activities";
+import type { ActivityId as MissionId } from "./activities";
+import { LabWorkbench } from "./LabWorkbench";
+import { updateLab } from "./labPhysics";
+import type { LabProgress } from "./labPhysics";
 import type { WorldHandle } from "./World";
 import { SITES } from "./scene/navigation";
 import { Workbench } from "./Workbench";
@@ -36,7 +40,10 @@ type Menu =
 export default function App() {
   const [state, dispatch] = useReducer(reducer, null, () => {
     try {
-      return restoreState(localStorage.getItem(SAVE_KEY));
+      return restoreState(
+        localStorage.getItem(SAVE_KEY) ??
+          localStorage.getItem("signal.dead-orbit.v1"),
+      );
     } catch {
       return restoreState(null);
     }
@@ -58,6 +65,7 @@ export default function App() {
   const [entered, setEntered] = useState(false),
     [menu, setMenu] = useState<Menu>(null),
     [active, setActive] = useState<MissionId | null>(null);
+  const [labPractice, setLabPractice] = useState<LabProgress | null>(null);
   const [practice, setPractice] = useState<Progress | null>(null),
     [saved, setSaved] = useState(true),
     [page, setPage] = useState(0);
@@ -106,8 +114,13 @@ export default function App() {
   const world = useRef<WorldHandle>(null),
     sound = useSound(state.sound);
   const next = currentMission(state),
-    allDone = state.completed.length === 3;
+    allDone = state.completed.length === ACTIVITY_IDS.length;
   const panelId = active ?? next;
+  const basicPanel = isLab(panelId) ? "workshop" : panelId;
+  const blocked = activity(panelId)
+    .prerequisites.filter((id) => !state.completed.includes(id))
+    .map((id) => activity(id).system)
+    .join(" + ");
   const arrived = ready && kitReady && interfaceReady;
   const reducedMotion = state.reducedMotion || systemMotion;
   const playing = running && !menu && !active && !failed;
@@ -166,7 +179,7 @@ export default function App() {
       dispatch({ type: "START" });
       dispatch({ type: "INTRO", step: 3 });
       setSubtitle(
-        "Flight recorder: a surge took out the primary bus. Start at the marked auxiliary console. Get the lights on, then find a way to call for rescue.",
+        "Maintenance recorder: the station lost its primary feed. Get the emergency lights on at the console ahead. Then explore the two service wings and bring our systems back online.",
       );
     }
     resume();
@@ -174,14 +187,12 @@ export default function App() {
   function closePanel() {
     setActive(null);
     setPractice(null);
+    setLabPractice(null);
     sound.play("soft");
     if (!failed) resume();
   }
   function visit(id: MissionId) {
-    if (!state.completed.includes(id) && id !== next) {
-      setSubtitle(`No incoming power. Repair ${SITES[next].name} first.`);
-      return;
-    }
+    dispatch({ type: "VISIT", id });
     world.current?.release();
     setRunning(false);
     if (id === "beacon" && allDone && !state.distressSent) {
@@ -189,8 +200,15 @@ export default function App() {
       return;
     }
     setActive(id);
+    if (isLab(id) && state.completed.includes(id))
+      setLabPractice(structuredClone(state.labs[id]));
     setSubtitle("");
-    if (id === "beacon" && allDone) setPractice(initialProgress());
+    if (!isLab(id) && state.completed.includes(id))
+      setPractice({
+        ...initialProgress(),
+        wires: structuredClone(state.missions[id].wires),
+        material: state.missions[id].material,
+      });
     if (id === "workshop" && state.lesson === 0)
       dispatch({
         type: "LESSON",
@@ -202,9 +220,11 @@ export default function App() {
     if (!active) return;
     const id = active;
     const newlyRestored = !practice && !state.completed.includes(id);
+    if (newlyRestored && !available(id, state.completed)) return;
     if (newlyRestored) dispatch({ type: "COMPLETE", id, now: Date.now() });
     setActive(null);
     setPractice(null);
+    setLabPractice(null);
     sound.play(newlyRestored || practice ? "success" : "soft");
     if (newlyRestored)
       setEffect({ id: Date.now(), kind: "restore", mission: id });
@@ -214,12 +234,8 @@ export default function App() {
     } else {
       setSubtitle(
         practice
-          ? "Another working route. Nicely done."
-          : id === "workshop"
-            ? "Auxiliary power restored. The relay bulkhead is released. Follow the illuminated power trunk forward."
-            : id === "harbor"
-              ? "Reactor synchronized. Command access is released. Build a transmitter that can survive another failure."
-              : "All systems holding. The ship is yours to explore.",
+          ? "Experiment recorded. The commissioned station remains online."
+          : activity(id).restored,
       );
       if (!failed) resume();
     }
@@ -272,6 +288,7 @@ export default function App() {
               completed={state.completed}
               reducedMotion={reducedMotion}
               sensitivity={sensitivity}
+              tracked={state.tracked}
               onVisit={visit}
               onPause={() => openMenu("pause")}
               onReady={() => setReady(true)}
@@ -377,29 +394,27 @@ export default function App() {
                   d="M8 28h224M8 103h224M8 3v105M232 3v105"
                 />
               </svg>
-              <small>A circuit adventure in deep space</small>
+              <small>Eight connected systems. Choose your route.</small>
             </div>
             <div
               className="title-systems"
-              aria-label={`${state.completed.length} of 3 systems restored`}
+              aria-label={`${state.completed.length} of 8 systems restored`}
             >
-              {(["workshop", "harbor", "beacon"] as MissionId[]).map(
-                (id, index) => (
-                  <div
-                    key={id}
-                    className={state.completed.includes(id) ? "online" : ""}
-                  >
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <i />
-                    <p>
-                      {SITES[id].name}
-                      <small>
-                        {state.completed.includes(id) ? "ONLINE" : "OFFLINE"}
-                      </small>
-                    </p>
-                  </div>
-                ),
-              )}
+              {(["workshop", "power", "beacon"] as MissionId[]).map((id) => (
+                <div
+                  key={id}
+                  className={state.completed.includes(id) ? "online" : ""}
+                >
+                  <span>{activity(id).code}</span>
+                  <i />
+                  <p>
+                    {SITES[id].name}
+                    <small>
+                      {state.completed.includes(id) ? "ONLINE" : "OFFLINE"}
+                    </small>
+                  </p>
+                </div>
+              ))}
             </div>
             <span className="title-footer-code">
               VESSEL ID / AST–07 <b>•</b> MANUAL RECOVERY PROTOCOL
@@ -444,23 +459,43 @@ export default function App() {
           </>
         )}
         <Workbench
-          open={!!active}
+          open={!!active && !isLab(active)}
           onReady={() => setKitReady(true)}
-          id={panelId}
-          progress={practice ?? state.missions[panelId]}
+          id={basicPanel}
+          progress={practice ?? state.missions[basicPanel]}
+          blocked={blocked}
           practice={!!practice}
           saved={saved}
           lesson={state.lesson}
           onLesson={(step) => dispatch({ type: "LESSON", step })}
           onAction={(action) =>
             practice
-              ? setPractice((p) => (p ? updateProgress(panelId, p, action) : p))
-              : dispatch({ type: "MISSION", id: panelId, action })
+              ? setPractice((p) =>
+                  p ? updateProgress(basicPanel, p, action) : p,
+                )
+              : dispatch({ type: "MISSION", id: basicPanel, action })
           }
           onClose={closePanel}
           onComplete={complete}
           play={sound.play}
         />
+        {active && isLab(active) && (
+          <LabWorkbench
+            key={active}
+            id={active}
+            p={labPractice ?? state.labs[active]}
+            onAction={(action) =>
+              labPractice
+                ? setLabPractice((p) => (p ? updateLab(active, p, action) : p))
+                : dispatch({ type: "LAB", id: active, action })
+            }
+            onComplete={complete}
+            onClose={closePanel}
+            completed={state.completed.includes(active)}
+            blocked={blocked}
+            play={sound.play}
+          />
+        )}
         {menu === "pause" && (
           <Dialog title="Paused" className="pause-dialog" onClose={resume}>
             <h2>Paused</h2>
@@ -499,6 +534,10 @@ export default function App() {
             state={state}
             player={failed ? null : mapPlayer}
             onClose={back}
+            onTrack={(id) => {
+              dispatch({ type: "TRACK", id });
+              resume();
+            }}
           />
         )}
         {menu === "journal" && (
@@ -699,7 +738,7 @@ export default function App() {
                 ? "“Asterion, this is Rescue Control. Your coordinates are locked. Hold position. We’re coming to get you.”"
                 : transmitting
                   ? "Carrier acquired. Sending vessel identity and position through the independent backup channel."
-                  : "Three systems restored. One way home. Your distress transmitter is ready to reach beyond this orbit."}
+                  : "Eight systems restored. One way home. Your distress transmitter is ready to reach beyond this orbit."}
             </p>
             <div
               className={`transmission-strip ${transmitting ? "sending" : state.distressSent ? "acknowledged" : ""}`}
@@ -709,8 +748,8 @@ export default function App() {
                 {state.distressSent
                   ? "RESCUE CONTROL / ACKNOWLEDGED"
                   : transmitting
-                    ? "COM–03 / TRANSMITTING COORDINATES"
-                    : "COM–03 / BACKUP CHANNEL VERIFIED"}
+                    ? "COM–08 / TRANSMITTING COORDINATES"
+                    : "COM–08 / BACKUP CHANNEL VERIFIED"}
               </span>
               <div>
                 <i />
@@ -739,7 +778,7 @@ export default function App() {
             <button
               className="text-button"
               onClick={() => {
-                setPage(2);
+                setPage(7);
                 setMenu("journal");
               }}
             >

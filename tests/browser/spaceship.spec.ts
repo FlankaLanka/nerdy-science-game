@@ -1,124 +1,84 @@
 import { test, expect } from "@playwright/test";
 import {
+  aimAt,
   begin,
   hold,
   position,
   walkTo,
-  aimAt,
   workshopRepair,
 } from "./helpers";
-
-test("ship saves are isolated from the preserved lighthouse adventure", async ({
+import { SAVE_KEY } from "../../src/campaign.ts";
+import { PLAYER_KEY } from "../../src/scene/navigation.ts";
+test("station saves remain isolated from the lighthouse and prior three-room edition", async ({
   page,
 }) => {
-  const previous = {
-    progress: '{"started":true,"completed":["workshop"]}',
-    player: '{"x":21,"z":14,"yaw":0,"pitch":0}',
-  };
-  await page.addInitScript((previous) => {
-    localStorage.setItem("signal.lighthouse.v1", previous.progress);
-    localStorage.setItem("signal.lighthouse.player.v1", previous.player);
-  }, previous);
+  await page.addInitScript(() => {
+    localStorage.setItem("signal.v1", "preserved lighthouse");
+    localStorage.setItem("signal.dead-orbit.v1", "preserved earlier spaceship");
+  });
   await begin(page);
-  await hold(page, "w", 250);
-  await page.keyboard.press("Tab");
-  const saves = await page.evaluate(() => ({
-    lighthouse: localStorage.getItem("signal.lighthouse.v1"),
-    lighthousePlayer: localStorage.getItem("signal.lighthouse.player.v1"),
-    ship: JSON.parse(localStorage.getItem("signal.dead-orbit.v1")!),
-    shipPlayer: JSON.parse(
-      localStorage.getItem("signal.dead-orbit.player.v1")!,
-    ),
-  }));
-  expect(saves.lighthouse).toBe(previous.progress);
-  expect(saves.lighthousePlayer).toBe(previous.player);
-  expect(saves.ship.completed).toEqual([]);
-  expect(saves.shipPlayer.x).toBe(-4);
-  expect(saves.shipPlayer.z).toBeLessThan(20);
+  const keys = await page.evaluate(
+    (key) => ({
+      old: localStorage.getItem("signal.v1"),
+      ship: localStorage.getItem("signal.dead-orbit.v1"),
+      current: JSON.parse(localStorage.getItem(key)!),
+    }),
+    SAVE_KEY,
+  );
+  expect(keys.old).toBe("preserved lighthouse");
+  expect(keys.ship).toBe("preserved earlier spaceship");
+  expect(keys.current.version).toBe(2);
 });
-
-test.describe("animated ship", () => {
-  test.use({ reducedMotion: "no-preference" });
-  test("bulkheads telegraph their repair requirement, release after commissioning, and remain usable with reduced motion", async ({
+for (const motion of ["reduce", "no-preference"] as const)
+  test(`first bulkhead requires a repair and opens physically (${motion})`, async ({
     page,
   }) => {
-    test.setTimeout(90000);
+    await page.emulateMedia({ reducedMotion: motion });
     await begin(page);
-    const overlay = page.locator(".world-transition");
-    await expect(overlay).toHaveCSS("pointer-events", "none");
-    await expect(overlay).toHaveCount(0, { timeout: 4000 });
-    await walkTo(page, 0, 16);
-    await walkTo(page, 0, 7.5);
-    await hold(page, "w", 1500);
-    expect((await position(page)).z).toBeGreaterThan(5.8);
+    await walkTo(page, 0, 21);
+    await aimAt(page, 0, 13);
+    await hold(page, "w", 3000);
+    const locked = await position(page);
+    expect(locked.z).toBeGreaterThan(13.4);
     await expect(page.locator(".bulkhead-notice")).toContainText(
-      "Restore auxiliary power",
+      "auxiliary power",
     );
-    await walkTo(page, 0, 14);
-    await walkTo(page, -4, 13.5);
-    await aimAt(page, -4, 11);
+    await walkTo(page, 0, 22.4);
+    await walkTo(page, -3, 22.4);
+    await aimAt(page, -3, 20);
     await page.keyboard.press("e");
     await workshopRepair(page);
-    await expect(page.locator(".objective-card")).toContainText(
-      "Commission the distribution bus",
-    );
-    await walkTo(page, 0, 14);
-    await walkTo(page, 0, 0);
-    const p = await position(page);
-    expect(p.z).toBeLessThan(1);
-    await expect(page.locator(".deck-readout strong")).toHaveText(
-      "Power relay",
-    );
-    await page.keyboard.press("Tab");
-    await page.getByRole("button", { name: "Settings", exact: true }).click();
-    await page
-      .getByRole("checkbox", { name: "Reduce motion", exact: true })
-      .check();
-    await expect(page.locator("html")).toHaveAttribute("data-motion", "reduce");
-    await expect(page.locator(".dialog[open] .screen-content")).toHaveCSS(
-      "animation-name",
-      "none",
-    );
-    await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
-    await hold(page, "w", 250);
-    expect((await position(page)).z).toBeLessThan(p.z);
+    await walkTo(page, 0, 20);
+    await walkTo(page, 0, 10);
+    expect((await position(page)).z).toBeLessThan(12);
   });
-});
-
-test("systems view explains the active fault and can be closed without losing movement", async ({
+test("systems overlay shows eight equipment states without capturing movement", async ({
   page,
 }) => {
   await begin(page);
-  await expect(page.getByLabel("Current objective")).toContainText(
-    "release the relay bulkhead",
-  );
   await page.keyboard.press("q");
-  await expect(
-    page.getByRole("complementary", { name: "Ship systems" }),
-  ).toContainText("conductor insert");
-  await expect(
-    page.locator('#ship-systems [data-status="NO FEED"]'),
-  ).toHaveCount(2);
+  await expect(page.locator("#ship-systems")).toContainText("Sensor feed");
+  await expect(page.locator("#ship-systems")).toContainText("Capacitor bank");
+  const start = await position(page);
+  await hold(page, "s", 200);
+  expect((await position(page)).z).toBeGreaterThan(start.z);
   await page.keyboard.press("q");
-  await expect(page.locator("#ship-systems")).toHaveCount(0);
-  await hold(page, "w", 400);
-  expect((await position(page)).z).toBeLessThan(19);
+  await expect(page.locator("#ship-systems")).toBeVisible();
+  await page.keyboard.press("q");
+  await expect(page.locator("#ship-systems")).not.toBeVisible();
 });
-
-test("a saved doorway position resumes inside the open bulkhead", async ({
+test("a saved capsule in a doorway is not trapped by a closed leaf", async ({
   page,
 }) => {
-  await page.addInitScript(() =>
-    localStorage.setItem(
-      "signal.dead-orbit.player.v1",
-      JSON.stringify({ x: 0, z: 5.5, yaw: 0, pitch: 0 }),
-    ),
+  await page.addInitScript(
+    (key) =>
+      localStorage.setItem(
+        key,
+        JSON.stringify({ x: 0, z: 13, yaw: 0, pitch: 0 }),
+      ),
+    PLAYER_KEY,
   );
   await begin(page);
-  const resumed = await position(page);
-  expect(resumed.x).toBe(0);
-  expect(resumed.z).toBe(5.5);
-  await hold(page, "w", 450);
-  expect((await position(page)).z).toBeLessThan(4.5);
+  await hold(page, "s", 500);
+  expect((await position(page)).z).toBeGreaterThan(14);
 });

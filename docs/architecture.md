@@ -1,33 +1,38 @@
-# Implementation boundaries
+# Architecture
 
-## Deck and navigation
+React owns campaign state and the instrument UI. Three.js owns the first-person environment and its transient presentation. The reducers are authoritative for repair completion; renderer state cannot commission equipment.
 
-`shipLayout.ts` defines the five connected floor rectangles, named compartments, console positions, furniture footprints, door coordinates, and map projection. `spaceship.ts` builds the matching floor tiles, hull, observation windows, bulkheads, equipment, labels, and external ship spars. The projection in `ShipMap.tsx` preserves scale and maps forward to the top of the display.
+## Campaign and simulation
 
-`navigation.ts` validates the entire 0.3 m player footprint against the union of floor rectangles, then tests furniture and wall obstacles. Axis-separated substeps support wall sliding without tunnelling. Door meshes and colliders share the same animated positions. Console interaction checks proximity, facing, vertical look, and a sampled unobstructed approach; only the target console's own collider is excluded.
+`activities.ts` defines eight fixed equipment locations, their prerequisites, concept summaries and guidance. `campaign.ts` stores completion, visits, a tracked objective, foundational circuit progress, five quantitative lab records and optional notes. Inspection and experimentation are permitted before prerequisites; commissioning requires both upstream repairs and physically valid evidence.
 
-`renderWorld.ts` owns input, pointer lock, frame scheduling, rendering, the camera, and saves. Movement stops on pause, hidden tabs, blur, or overlays. Drag and keyboard alternatives work without pointer lock. The title uses a cinematic camera without changing the saved player pose. A camera-projected waypoint updates its DOM transform after every rendered frame; React receives semantic telemetry at 10 Hz.
+`game.ts` retains the foundational wire-editing reducer and legacy save sanitizer. `circuit.ts` uses conducting-node unions and nodal analysis for the 6 V resistive wiring rigs. Shorts open a virtual fuse. Neither predictions nor selected explanations are required. Old prediction data can still be read without blocking new tests.
 
-## Rendering and effects
+`labPhysics.ts` evaluates the specimen from resistivity and SI geometry, the pump from series resistance including source losses, and the junction network from its series/parallel arrangement. Capacitor bank values use equivalent capacitance, Q = CV, and E = ½CV². RC voltage is evaluated analytically from the starting voltage, R, C, mode and elapsed simulation time. The graph uses the same evaluator as the success predicate. No frame-integrated approximation determines the result.
 
-The ship uses shared box geometry, metal materials, emissive light strips, point lights, and procedural signage. A deterministic starfield, shader planet, atmospheric shell, and geometry rings provide space outside the hull. Both graphics contexts use Three.js RoomEnvironment for procedural reflections, with no HDR or material image downloads. `shipArt.ts` builds deterministic surface grain, bevels and signs, then merges static geometry by material. `space.ts` owns the exterior. The main renderer adds contact occlusion, restrained bloom and output color conversion. Shadow maps update when doors or the viewing shield move rather than on every camera frame; contact occlusion is omitted on coarse-pointer devices. Each renderer and generated resource is disposed on teardown.
+Editing a setting invalidates the current measurement. Historical samples remain available for comparison, bounded to 48 per equipment panel. The specimen comparison only qualifies readings of the same material and geometry. RC tests record starting voltage and time; restored voltage is recomputed instead of trusting saved readings. Active playback stops advancing when the panel closes or document is hidden. It resumes explicitly in the open panel; reload restores completed observations with playback paused.
 
-Decorative environment time freezes under reduced motion. Doors, the observation shield and system lights become instantaneous in that mode. Ship progression, objective copy, bulkhead authorization and tuning values share `shipSystems.ts`. The Q overlay and map show the same persistent network state. Hidden pages stop drawing; paused scenes retain their frame unless display, progress, or motion settings change. The title can animate its camera and instruments while visible.
+Completed systems are immutable in the campaign reducer. Reopening them creates local practice state. The notebook and JSON export retain original commissioning measurements.
 
-`BenchScene.tsx` keeps one renderer and three precompiled kits across every console opening. A prepared kit changes materials and service-lamp output only when the simulation result changes. `ServiceReadout.tsx` derives load current from measured voltage / resistance and displays source voltage and power without invented telemetry. A disabled WebGL context exposes the existing SVG components and native socket buttons. Source materials and sign fonts are bundled or procedural, avoiding a mid-repair texture swap.
+## World
 
-`game.css` owns the fixed frame, responsive scale, instrument panels, startup/repair effects, touch layout, and reduced-motion overrides. `Dialog.tsx` uses native modal dialogs and restores focus on close. Dialogs occupy the same scaled 16:9 frame and reopen above the browser's fullscreen top layer when necessary.
+`shipLayout.ts` is the common coordinate source for hull boundaries, navigation and map. The deck is the union of authored compartment footprints, with two wing loops, a transverse connection and a forward command deck. Ceiling-height transitions are closed with lintels. `navigation.ts` enforces a capsule footprint with substepped movement and occluded, facing-based interaction. Doors have colliders synchronized to visible leaves and an aperture-resume guard.
 
-## Simulation and evidence
+`spaceship.ts` builds modular pressure-wall panels, physical service cabinets, the central heat exchanger, ventilation, reserve racks and observation aperture. Static geometry is merged by material and 12 m spatial cell. Rounded geometry is cached by dimensions. Dynamic machinery and signage remain outside immutable batches. Four local point-light slots select nearby fixtures; there is one cached directional shadow map. Surface textures are local and shared.
 
-`solveCircuit` merges ideal wire connections, rejects a source short, and solves Kirchhoff current equations for reachable resistive nodes. Floating networks have no source of energy. Only valid source-to-source routes through powered loads receive active cable styling. Crossings join only at sockets.
+`renderWorld.ts` retains the existing pixel-ratio caps, 12-sample SSAO, restrained bloom and tone mapping. It avoids drawing hidden tabs and steady paused views. Shadow maps update when doors or texture readiness require it, not on every frame. Waypoints follow the current camera every rendered frame; React telemetry is throttled independently. All scene resources are disposed when the renderer unmounts.
 
-The reducer records predictions before testing, requires valid physical results before progress, preserves original explanations after corrections, and sanitizes saved socket IDs, wires, materials, choices, and experiments. Mission IDs remain `workshop`, `harbor`, and `beacon` as stable internal identifiers for the existing simulation; their visible locations are Engineering, Power relay, and Command deck. The UI makes no coaching requests; the optional server API remains separately validated.
+## Interface and fallback
 
-The final transmission is an authored, cancellable-in-view sending state: its timer survives closing the console, while reset or teardown cancels an unfinished packet. Only the acknowledgement is persisted. No external communications are sent.
+The viewport preserves a 1280×720 authored composition. Native dialogs remain above fullscreen via top-layer reordering and restore focus. The advanced instrument panels use accessible HTML controls and SVG schematics/graphs, so their measurements do not depend on WebGL. Wiring panels retain a persistent precompiled 3D bench with an SVG fallback. A graphics failure exposes the next repair in circuit mode.
 
-The ship uses `signal.dead-orbit.v1` for evidence/progress and `signal.dead-orbit.player.v1` for position. It never reads or mutates the lighthouse save keys. Invalid positions return to Engineering. Unavailable storage leaves a playable tab and a visible save notice.
+Sound uses local Web Audio synthesis. Read-aloud is optional and available only when the browser exposes a local English speech voice. The maintenance guidance is always available as text. The UI makes no requests to the optional coaching API.
 
-## Generated output
+## Save keys
 
-`artifacts/`, `test-results/`, `playwright-report/`, and `dist/` are ignored. `scripts/review-spaceship.mjs` is the only maintained visual capture entry point. Source contains no screenshot dependencies or external runtime art requests. The cleaned lighthouse is preserved on `main` at `0f3007f`; obsolete geometry tests were replaced with deck and navigation checks on the spaceship branch.
+- Current campaign: `signal.asterion.circuits.v2`.
+- Current camera: `signal.asterion.player.v2`.
+- Migration source only: `signal.dead-orbit.v1`.
+- Older spaceship camera and lighthouse keys are preserved.
+
+A v1 campaign is sanitized through the existing foundational model. Previous working loops remain; the new advanced prerequisites are required before finishing the expanded campaign. Invalid or unavailable storage falls back to safe session state.

@@ -45,10 +45,10 @@ test("walls block walking and sprinting, allow sliding, and cannot be tunnelled 
 
 test("the entire player remains inside the hull while passage connections stay walkable", () => {
   assert.equal(canWalk(45, 0, []), false);
-  assert.equal(canWalk(0, 25, []), false);
+  assert.equal(canWalk(0, 26, []), false);
   assert.equal(canWalk(8, 14, []), false);
-  assert.equal(canWalk(3, 5.5, []), false);
-  for (let z = -28; z < 23; z += 0.1) assert.equal(canWalk(0, z, []), true);
+  assert.equal(canWalk(3, 13, []), false);
+  for (let z = -22; z < 25; z += 0.1) assert.equal(canWalk(0, z, []), true);
   for (const site of Object.values(SITES)) {
     assert.equal(canWalk(site.x, site.z + 2, []), true);
     assert.equal(groundHeight(site.x, site.z), 0);
@@ -56,19 +56,19 @@ test("the entire player remains inside the hull while passage connections stay w
 });
 
 test("a repair requires proximity, looking at the cabinet, and an unobstructed approach", () => {
-  const p = { x: -4, z: 13.5, yaw: 0, pitch: 0 };
+  const p = { x: -3, z: 22.5, yaw: 0, pitch: 0 };
   assert.equal(focusedSite(SPAWN, []), null);
   assert.equal(focusedSite(p, []), "workshop");
   assert.equal(focusedSite({ ...p, yaw: Math.PI }, []), null);
   assert.equal(focusedSite({ ...p, pitch: 1 }, []), null);
   assert.equal(
-    focusedSite(p, [{ x: -4, z: 12.2, width: 4, depth: 0.3 }]),
+    focusedSite(p, [{ x: -3, z: 21.2, width: 4, depth: 0.3 }]),
     null,
   );
   assert.equal(
-    focusedSite({ ...p, z: 9.8, yaw: Math.PI }, [
-      { x: -4, z: 10.2, width: 3, depth: 0.3 },
-      { x: -4, z: 11, width: 1.05, depth: 0.6 },
+    focusedSite({ ...p, z: 18.8, yaw: Math.PI }, [
+      { x: -3, z: 19.2, width: 3, depth: 0.3 },
+      { x: -3, z: 20, width: 1.05, depth: 0.6 },
     ]),
     null,
   );

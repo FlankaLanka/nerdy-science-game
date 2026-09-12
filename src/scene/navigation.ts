@@ -1,12 +1,12 @@
-import type { MissionId } from "../missions.ts";
+import type { ActivityId as MissionId } from "../activities.ts";
 import { insideDeck, SHIP_SITES } from "./shipLayout.ts";
 
 export type Player = { x: number; z: number; yaw: number; pitch: number };
 export type Obstacle =
   | { x: number; z: number; radius: number }
   | { x: number; z: number; width: number; depth: number };
-export const PLAYER_KEY = "signal.dead-orbit.player.v1";
-export const SPAWN: Player = { x: -4, z: 20, yaw: 0, pitch: 0.015 };
+export const PLAYER_KEY = "signal.asterion.player.v2";
+export const SPAWN: Player = { x: -3, z: 24, yaw: 0, pitch: 0.015 };
 export const SITES = SHIP_SITES;
 export function groundHeight(_x: number, _z: number) {
   return 0;

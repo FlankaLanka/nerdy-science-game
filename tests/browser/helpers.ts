@@ -5,10 +5,10 @@ import type { Player } from "../../src/scene/navigation";
 export async function begin(page: Page, nearWorkshop = false) {
   if (nearWorkshop)
     await page.addInitScript(() => {
-      if (!localStorage.getItem("signal.dead-orbit.player.v1"))
+      if (!localStorage.getItem("signal.asterion.player.v2"))
         localStorage.setItem(
-          "signal.dead-orbit.player.v1",
-          JSON.stringify({ x: -4, z: 13.5, yaw: 0, pitch: 0 }),
+          "signal.asterion.player.v2",
+          JSON.stringify({ x: -3, z: 22.5, yaw: 0, pitch: 0 }),
         );
     });
   await page.goto("/");
@@ -48,7 +48,7 @@ export async function position(page: Page): Promise<Player> {
     page.getByRole("dialog", { name: "Paused", exact: true }),
   ).toBeVisible();
   const p = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("signal.dead-orbit.player.v1")!),
+    JSON.parse(localStorage.getItem("signal.asterion.player.v2")!),
   );
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   return p;
@@ -92,14 +92,7 @@ export async function aimAt(page: Page, x: number, z: number) {
 export async function workshopRepair(page: Page) {
   await connect(page, "Lamp A right", "Bridge left");
   await page.getByRole("button", { name: "Copper", exact: true }).click();
-  await page.getByRole("button", { name: "Light up", exact: true }).click();
   await page.getByRole("button", { name: "Test circuit", exact: true }).click();
-  await page
-    .getByRole("button", {
-      name: "A conducting path through the lamp, joining both battery ends",
-      exact: true,
-    })
-    .click();
   await page
     .getByRole("button", { name: "Restore auxiliary power", exact: true })
     .click();

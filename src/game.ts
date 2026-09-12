@@ -108,12 +108,11 @@ export function unlocked(state: GameState, id: MissionId): boolean {
   );
 }
 export function canFinish(id: MissionId, p: Progress): boolean {
-  if (p.explanation !== missionById(id).answer) return false;
   if (id === "workshop")
     return (
       p.phase === "reflect" && solveCircuit(id, p.wires, p.material).count === 1
     );
-  if (p.phase !== "fault-result" || !p.faultPrediction) return false;
+  if (p.phase !== "fault-result") return false;
   const base = solveCircuit(id, p.wires, p.material),
     fault = solveCircuit(id, p.wires, p.material, "a");
   return (
@@ -177,14 +176,14 @@ export function updateProgress(
         ? { ...p, prediction: action.value }
         : p;
     case "TEST": {
-      if (p.phase !== "build" || !p.prediction) return p;
+      if (p.phase !== "build") return p;
       const result = solveCircuit(id, p.wires, p.material);
       const outcome = outcomeId(id, result);
       const experiment: Experiment = {
         type: "circuit",
         wires: p.wires,
         material: p.material,
-        prediction: p.prediction,
+        prediction: p.prediction ?? "unprompted",
         outcome,
         matched: outcome === p.prediction,
         hints: p.hints,
@@ -213,7 +212,7 @@ export function updateProgress(
         ? { ...p, faultPrediction: action.value }
         : p;
     case "FAULT_TEST": {
-      if (p.phase !== "fault-ready" || !p.faultPrediction) return p;
+      if (p.phase !== "fault-ready") return p;
       const result = solveCircuit(id, p.wires, p.material, "a");
       const outcome = result.lamps.b?.on ? "stays" : "out";
       return {
@@ -225,7 +224,7 @@ export function updateProgress(
             type: "fault" as const,
             wires: p.wires,
             material: p.material,
-            prediction: p.faultPrediction,
+            prediction: p.faultPrediction ?? "unprompted",
             outcome,
             matched: outcome === p.faultPrediction,
             hints: p.hints,
@@ -403,6 +402,7 @@ export function restoreState(raw: string | null): GameState {
               return [];
             const type = e.type as "circuit" | "fault";
             if (
+              e.prediction !== "unprompted" &&
               !(type === "circuit"
                 ? mission.predictions.some((c) => c.id === e.prediction)
                 : ["stays", "out"].includes(e.prediction))
@@ -452,13 +452,11 @@ export function restoreState(raw: string | null): GameState {
       ) {
         if (mission.id === "workshop") p.phase = "reflect";
         else
-          p.phase =
-            p.faultPrediction &&
-            ["fault-result", "complete"].includes(saved.phase)
-              ? "fault-result"
-              : "fault-ready";
+          p.phase = ["fault-result", "complete"].includes(saved.phase)
+            ? "fault-result"
+            : "fault-ready";
       }
-      p.tested = saved.tested === true && !!p.prediction;
+      p.tested = saved.tested === true;
       state.missions[mission.id] = p;
       const orderOkay =
         mission.id === "workshop" ||

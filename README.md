@@ -1,8 +1,8 @@
-# SIGNAL — Dead Orbit
+# SIGNAL — Asterion
 
-A first-person circuit-repair adventure aboard **Asterion**, a stranded research ship. Restore three electrical systems, bring the deck back online, and send a distress signal home.
+An exploratory circuits lesson aboard a stranded space station. Restore eight connected systems, investigate their behavior with working instruments, and bring the distress transmitter online.
 
-## Play
+## Run
 
 Requires Node.js 24 or newer.
 
@@ -11,69 +11,74 @@ npm install
 npm run dev
 ```
 
-Open **http://127.0.0.1:5174**. Set `PORT` to use another port. The complete game works without an account or AI key. Fonts, geometry, effects, and audio run locally; the world uses no external images or sky downloads.
+The default address is **http://127.0.0.1:5174**. Set `PORT` to change it. No account or AI key is needed. Fonts, PBR textures, geometry and synthesized equipment audio are served locally. Optional read-aloud uses an available local English browser voice; the same guidance is always visible as text.
 
-| Action                            | Control                                          |
-| --------------------------------- | ------------------------------------------------ |
-| Move / run                        | W A S D or ↑ ↓ / Shift                           |
-| Look                              | Mouse, ← →, Page Up / Page Down                  |
-| Use a nearby console              | E                                                |
-| Pause / release mouse             | Esc or Tab                                       |
-| Deck map / mission log            | M / J                                            |
-| Fullscreen                        | F                                                |
-| Connect a wire                    | Select two sockets, or drag between them         |
-| Remove a wire                     | Select its cable, or connect the same pair again |
-| Cancel connection / close console | Esc / Esc again                                  |
+| Action                           | Control                                               |
+| -------------------------------- | ----------------------------------------------------- |
+| Move / run                       | WASD or ↑ ↓ / Shift                                   |
+| Look                             | Mouse, ← →, Page Up / Page Down                       |
+| Use nearby equipment             | E                                                     |
+| Pause / release mouse            | Esc or Tab                                            |
+| Station map / field observations | M / J                                                 |
+| System diagnostics               | Q                                                     |
+| Fullscreen                       | F                                                     |
+| Wire a circuit                   | Select two sockets, or drag between them              |
+| Remove a wire / undo             | Select the cable / Undo                               |
+| Test                             | Test circuit or Test & record; no prediction required |
 
-Touch controls provide a left thumbstick, drag-to-look, and a contextual interaction button. Landscape is recommended on phones. If pointer lock is denied, drag-to-look and keyboard turning still work. Settings includes sound, reduced motion, sensitivity, fullscreen, and a safe return to Engineering.
+The station has two service loops around a central hub. After emergency lighting, either wing can be explored first. The map shows commissioning dependencies and lets the player track an available repair. Later equipment can be inspected and tested early. Working systems remain available for practice without overwriting their recorded commissioning evidence.
 
-## The ship
+## Learning progression
 
-| Compartment  | Repair                                                         | Result                                                    |
-| ------------ | -------------------------------------------------------------- | --------------------------------------------------------- |
-| Engineering  | Complete a conducting loop; compare copper, polymer, and glass | Auxiliary deck lighting comes online                      |
-| Power relay  | Repair a series circuit and disconnect one lamp                | Restore distribution and observe a shared failure         |
-| Command deck | Build independent branches; prove B survives A's removal       | Power the distress transmitter and contact Rescue Control |
+| Equipment          | Investigation                                                |
+| ------------------ | ------------------------------------------------------------ |
+| Engineering        | Conductors, open and closed loops, current                   |
+| Materials workshop | I–V comparisons; resistance, resistivity, length and area    |
+| Distribution       | Series paths, voltage division, shared faults                |
+| Life support       | Power, Kirchhoff's loop rule, internal source resistance     |
+| Station hub        | Parallel and compound circuits, junction conservation        |
+| Reserve vault      | Series/parallel capacitor banks, plate charge, stored energy |
+| Airlock control    | RC charging and discharging, time constants, power hold-up   |
+| Command            | Independent circuit construction and fault tolerance         |
 
-The connected deck includes observation windows, a ringed planet, a holographic orbital display, a reactor, cryogenic equipment, and proximity-operated bulkheads. The deck map shares the real hull and station coordinates. Repairs visibly change the lighting and station indicators.
+This covers playable investigations across AP Physics 2 Unit 11, with a bridge to capacitor concepts from Unit 10.6. It is not a complete AP course or a validated substitute for laboratory work. The [research and design report](docs/research/station-design.md) contains the curriculum graph, source references, scaffolding rationale, misconceptions, state transitions, tuning assumptions and student playtest protocol.
 
-The UI preserves the previous fixed **16:9**, 1280 × 720 composition: first-person exploration, a physical circuit module on the left, instructions and controls on the right, pause menus, a full-width map, and a mission log. Dark instrument panels, local Space Grotesk / IBM Plex Mono fonts, cyan highlights, restrained bloom, console reveals, a launch iris, connection pulses, and signal rings establish the new theme. Reduced motion disables decorative animation and camera bob.
+The circuit model uses ideal wires and resistive test loads. The specimen rig opens a resettable virtual fuse above its 2 A rating. The pump model includes source resistance and accounts for power losses. Capacitor responses are calculated analytically, so display frame rate cannot change their electrical behavior. RC exponentials are used internally; the player reads graphs and measurements without entering calculus or an exponential formula.
 
-The model retains ideal conducting wires, a 6 V source, and equal resistive lamps. A direct short trips a resettable virtual fuse. The insulating polymer replaces the old wooden test strip. Every repair requires a valid circuit; the final backup must pass its actual fault test. First predictions and explanations remain in the mission log.
+## Saves and compatibility
 
-Progress and position save separately in `signal.dead-orbit.v1` and `signal.dead-orbit.player.v1`. Lighthouse saves are untouched. Closing and reopening a console resumes its experiment. After the rescue signal, Command offers a fresh practice circuit without changing the recorded discoveries. When storage or WebGL is unavailable, the app reports it and keeps the accessible circuit activities playable.
+Campaign state uses `signal.asterion.circuits.v2`; position uses `signal.asterion.player.v2`. Earlier spaceship progress is read as a migration source if no new save exists. Its conducting-loop and series work is preserved; new prerequisites must still be completed. Earlier spaceship and lighthouse save keys are left untouched. Active RC playback pauses when the equipment closes or the tab is hidden. Reload restores validated recorded tests, not an unattended running simulation.
 
-## Development and verification
+When storage is unavailable, progress remains in the open tab. If WebGL is unavailable, the circuit activities remain accessible through the fallback interface. Keyboard, drag-look, touch controls, fullscreen and reduced motion are supported. The interface retains the fixed 1280×720 composition; phone users benefit from landscape orientation.
+
+## Development
 
 ```sh
 npm test
 npm run test:browser
 npm run build
-npm start
 ```
 
-Browser tests use port 5175 and require Playwright Chromium (`npx playwright install chromium`). They cover the full walk and rescue, incorrect circuits, save restoration, hull collision, keyboard/touch input, map alignment, fullscreen, accessibility, startup readiness, and renderer reuse.
-
-Run a development server, then generate the current visual review:
+Playwright browser tests use port 5175 and Chromium. Install it with `npx playwright install chromium` if needed. With a development server running, produce the current visual review:
 
 ```sh
-SIGNAL_REVIEW_URL=http://127.0.0.1:5174 npm run review
+REVIEW_URL=http://127.0.0.1:5174 npm run review
 ```
 
-The review script writes a small set of current captures to `artifacts/spaceship/`. Generated captures and reports are ignored by Git. Tests only retain screenshots on failures.
+Review captures go to ignored `artifacts/station/`. Only current, useful views are retained. No source screenshot or unused texture library is shipped.
 
-## Repository organization
+## Organization
 
-- `main` preserves the cleaned lighthouse baseline at `0f3007f`.
-- `codex/spaceship-dead-orbit` contains the spaceship version.
-- `src/scene/shipLayout.ts` owns the connected deck, furniture, stations, and map projection.
-- `src/scene/spaceship.ts` builds the ship and procedural space, animates the doors and instruments, and updates restored systems.
-- `src/scene/navigation.ts` owns movement, collision, interaction, and player saves.
-- `src/scene/renderWorld.ts` owns rendering, input, telemetry, and camera-following waypoints.
-- `src/App.tsx`, `src/game.css`, and `src/Dialog.tsx` own the interface and transitions.
-- `src/ShipMap.tsx` and `src/Notebook.tsx` display navigation and learning evidence.
-- `src/Workbench.tsx`, `src/CircuitBoard.tsx`, and `src/BenchScene.tsx` implement the persistent accessible circuit console.
-- `src/circuit.ts`, `src/missions.ts`, and `src/game.ts` implement the simulation and progression.
-- `server/` retains the optional coaching API; circuit activities make no coaching requests.
+- `src/activities.ts`: curriculum graph, equipment goals and fixed locations.
+- `src/campaign.ts`: eight-repair progression, commissioning and save migration.
+- `src/labPhysics.ts`: quantitative DC and capacitor experiments.
+- `src/LabWorkbench.tsx`: instruments, graphs, measurement records and guidance.
+- `src/circuit.ts`, `game.ts`, `CircuitBoard.tsx`, `BenchScene.tsx`: the three wiring investigations and their validated legacy data.
+- `src/scene/shipLayout.ts`: shared hull, collision, furniture and map coordinates.
+- `src/scene/spaceship.ts`: authored pressure-wall kit, machinery, four local lights and powered fixtures.
+- `src/scene/renderWorld.ts`: rendering, controls, cached shadows and telemetry.
+- `src/ShipMap.tsx`, `Notebook.tsx`: navigation and learning evidence.
+- `public/materials/`: three licensed 1K runtime PBR maps; see [asset provenance](docs/assets.md).
+- `server/`: optional foundational-circuit coaching API. The game does not call it.
 
-The cleanup removed obsolete screenshots, review reports, original image duplicates, unused portraits/maps, and then the superseded island geometry, textures, fonts, and review scripts. Earlier assets and implementation are recoverable from Git history. See [design](docs/design.md), [architecture](docs/architecture.md), and [verification](docs/verification.md).
+`main` preserves the cleaned lighthouse baseline at `0f3007f`. The spaceship work is on `codex/spaceship-dead-orbit`. The prior three-room spaceship is preserved at `0421e7b`. Nothing has been pushed or deployed.

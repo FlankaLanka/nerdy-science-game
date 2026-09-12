@@ -17,7 +17,8 @@ import {
   SITES,
   SPAWN,
 } from "./navigation";
-import type { MissionId } from "../missions";
+import { nextActivity } from "../activities";
+import type { ActivityId as MissionId } from "../activities";
 import { gamePixelRatio } from "../viewport";
 import { projectWaypoint } from "./waypoint";
 import type { Waypoint } from "./waypoint";
@@ -38,6 +39,7 @@ export type WorldState = {
   distressSent: boolean;
   transmitting: boolean;
   preview: boolean;
+  tracked?: MissionId | null;
 };
 type Options = {
   container: HTMLDivElement;
@@ -88,8 +90,8 @@ export function renderWorld(o: Options) {
   canvas.tabIndex = -1;
   o.container.prepend(canvas);
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#020711");
-  scene.add(new THREE.HemisphereLight("#abc4ce", "#151a24", 0.48));
+  scene.background = new THREE.Color("#020605");
+  scene.add(new THREE.HemisphereLight("#bac8b8", "#161915", 0.27));
   const sun = new THREE.DirectionalLight("#a7ccdc", 0.75);
   sun.position.set(30, 18, -30);
   sun.castShadow = true;
@@ -112,7 +114,7 @@ export function renderWorld(o: Options) {
   const environment = pmrem.fromScene(roomEnvironment, 0.04);
   roomEnvironment.dispose();
   scene.environment = environment.texture;
-  scene.environmentIntensity = 0.25;
+  scene.environmentIntensity = 0.2;
   const model = buildSpaceship(scene);
   let player = { ...SPAWN };
   try {
@@ -299,7 +301,7 @@ export function renderWorld(o: Options) {
   window.addEventListener("resize", resize);
   resize();
   const targetPoint = new THREE.Vector3();
-  const ids: MissionId[] = ["workshop", "harbor", "beacon"];
+
   function animate(now: number) {
     if (disposed) return;
     frame = requestAnimationFrame(animate);
@@ -309,7 +311,7 @@ export function renderWorld(o: Options) {
     if (document.hidden) return;
     if (wasPlaying && !state.playing) release();
     wasPlaying = state.playing;
-    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.completed.join()}:${state.reducedMotion}:${state.distressSent}`;
+    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.completed.join()}:${state.reducedMotion}:${state.distressSent}:${model.root.userData.textureRevision}`;
     if (
       !state.playing &&
       (!state.preview || state.reducedMotion) &&
@@ -367,7 +369,7 @@ export function renderWorld(o: Options) {
       player.z,
     );
     if (state.preview) {
-      camera.position.set(-1, 2.15, 21);
+      camera.position.set(-2, 1.9, 23);
       camera.rotation.set(
         -0.025,
         -0.2 + (state.reducedMotion ? 0 : Math.sin(time * 0.12) * 0.015),
@@ -386,7 +388,7 @@ export function renderWorld(o: Options) {
     ))
       o.environment(event);
     renderer.shadowMap.needsUpdate = !!model.root.userData.shadowsDirty;
-    const next = ids.find((id) => !state.completed.includes(id)) ?? "beacon";
+    const next = nextActivity(state.completed, state.tracked);
     composer.render();
     const site = SITES[next];
     const distance = Math.hypot(site.x - player.x, site.z - player.z);
@@ -413,7 +415,7 @@ export function renderWorld(o: Options) {
         heading: ((((-player.yaw * 180) / Math.PI) % 360) + 360) % 360,
         moved,
         locked: document.pointerLockElement === canvas,
-        section: deckSection(player.z),
+        section: deckSection(player.z, player.x),
       });
     }
     if (state.playing && now - lastSave > 1500) {

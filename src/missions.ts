@@ -103,8 +103,8 @@ export const MISSIONS: Mission[] = [
   },
   {
     id: "harbor",
-    number: "02",
-    place: "Power relay",
+    number: "03",
+    place: "Distribution",
     title: "Shared power.",
     task: "Reconnect both relay indicators. Then isolate a failed module.",
     intro:
@@ -142,8 +142,8 @@ export const MISSIONS: Mission[] = [
   },
   {
     id: "beacon",
-    number: "03",
-    place: "Command deck",
+    number: "08",
+    place: "Command",
     title: "A signal that survives.",
     task: "Light both lamps. Keep B shining if A is disconnected.",
     intro:
