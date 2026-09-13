@@ -64,7 +64,13 @@ try {
     await page.waitForTimeout(900);
     await page.getByRole("button", { name: "Parts", exact: true }).click();
     await page.waitForTimeout(700);
-    await page.keyboard.press("Escape");
+    await page
+      .getByRole("button", { name: "Power off notebook", exact: true })
+      .hover();
+    await page.waitForTimeout(450);
+    await page
+      .getByRole("button", { name: "Power off notebook", exact: true })
+      .click();
     await page.waitForTimeout(800);
     await page.keyboard.press("n");
     await page.waitForTimeout(900);

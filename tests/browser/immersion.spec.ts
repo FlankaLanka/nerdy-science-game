@@ -19,7 +19,9 @@ test("the tablet can be put away during its opening animation and reopened witho
   await expect(
     page.getByRole("img", { name: /Space station map/ }),
   ).toBeVisible();
-  await page.keyboard.press("n");
+  await page
+    .getByRole("button", { name: "Power off notebook", exact: true })
+    .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(
@@ -52,7 +54,9 @@ test("the tablet respects live motion preferences, retains focus, and stays read
       .violations,
   ).toEqual([]);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.getByRole("button", { name: "Return", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Power off notebook", exact: true })
+    .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(open).toBeFocused();
   await page.keyboard.press("n");

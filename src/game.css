@@ -1070,21 +1070,89 @@ kbd {
   );
   border-radius: 3px;
 }
-.tablet-power-key,
+/* Starting size: 24 px hardware face with a 44 px touch target. */
+.tablet-power-button {
+  position: absolute;
+  z-index: 2;
+  right: 24px;
+  bottom: -7px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #bcecd8;
+  touch-action: manipulation;
+}
+.tablet-power-button::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px solid #7f9e9c;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #344a50, #0a171e 70%);
+  box-shadow:
+    0 0 0 2px #071216,
+    0 0 0 3px #76908d44,
+    0 2px 2px #000a,
+    inset 0 1px #cce5dc30;
+  transition:
+    border-color 0.12s,
+    box-shadow 0.12s,
+    transform 0.12s;
+}
+.tablet-power-button svg {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  filter: drop-shadow(0 0 4px #a5efd5a0);
+  transition:
+    color 0.12s,
+    filter 0.12s,
+    transform 0.12s;
+}
+.tablet-power-button:hover::before {
+  border-color: #c4f6e0;
+  box-shadow:
+    0 0 0 2px #071216,
+    0 0 0 3px #9fcfbd77,
+    0 0 12px #b5eedc2b,
+    inset 0 1px #e2ffef4a;
+}
+.tablet-power-button:focus-visible {
+  outline: none;
+}
+.tablet-power-button:focus-visible::before {
+  outline: 2px solid #e6f6d9;
+  outline-offset: 4px;
+}
+.tablet-power-button:active::before {
+  transform: translateY(1px);
+  box-shadow:
+    0 0 0 2px #071216,
+    inset 0 2px 4px #000c;
+}
+.tablet-power-button:active svg {
+  transform: translateY(1px);
+}
+.notebook[data-phase="closing"] .tablet-power-button svg {
+  color: #58716e;
+  filter: none;
+}
+.notebook[data-phase="closing"] .tablet-indicator i:first-child {
+  background: #3b5354;
+  box-shadow: none;
+}
 .tablet-volume-key {
   position: absolute;
   right: -5px;
-  top: 80px;
-  height: 34px;
+  top: 134px;
+  height: 58px;
   width: 4px;
   border: 1px solid #80939465;
   border-radius: 0 3px 3px 0;
   background: #273a3f;
   box-shadow: 2px 3px 2px #0006;
-}
-.tablet-volume-key {
-  top: 134px;
-  height: 58px;
 }
 .tablet-fastener {
   position: absolute;
@@ -1349,41 +1417,6 @@ kbd {
   text-align: center;
   color: #9eb8ba;
   font-size: 12px;
-}
-.notebook-back {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 24px;
-  min-height: 45px;
-  border-top: 1px solid #a2e0d616;
-  font: 10px var(--mono);
-  color: #a7c2c1;
-  flex-shrink: 0;
-  background: #0512175c;
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-.notebook-back:hover {
-  background: #a7ded70b;
-}
-.notebook-back svg {
-  width: 15px;
-  height: 15px;
-}
-.notebook .dialog-close {
-  top: auto;
-  right: 26px;
-  bottom: 0;
-  height: 29px;
-  width: 48px;
-}
-.notebook .dialog-close kbd {
-  border: 0;
-  color: #a9b9b8;
-  font-size: 8px;
-  letter-spacing: 0.1em;
 }
 .station-map {
   height: 100%;
@@ -1883,6 +1916,10 @@ kbd {
     inset: 21px 9px 25px;
     border-radius: 7px;
   }
+  .tablet-power-button {
+    right: 13px;
+    bottom: -9px;
+  }
   .tablet-brand {
     left: 24px;
     bottom: 8px;
@@ -1943,15 +1980,6 @@ kbd {
   }
   .equation {
     font-size: 22px;
-  }
-  .notebook-back {
-    padding: 0 16px;
-    min-height: 44px;
-  }
-  .notebook .dialog-close {
-    bottom: 0;
-    right: 18px;
-    height: 25px;
   }
   .station-map {
     padding: 12px;

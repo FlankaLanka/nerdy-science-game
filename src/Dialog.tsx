@@ -12,6 +12,7 @@ export function Dialog({
   exitMs = 0,
   onDismiss,
   dismissKeys = [],
+  closeControl,
 }: {
   title: string;
   children: ReactNode | ((close: () => void) => ReactNode);
@@ -22,6 +23,7 @@ export function Dialog({
   exitMs?: number;
   onDismiss?: () => void;
   dismissKeys?: readonly string[];
+  closeControl?: (close: () => void) => ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [closing, setClosing] = useState(false);
@@ -150,14 +152,18 @@ export function Dialog({
       <div className="screen-content">
         {typeof children === "function" ? children(requestClose) : children}
       </div>
-      <button
-        className="dialog-close"
-        aria-label={`Close ${title.toLowerCase()}`}
-        onClick={requestClose}
-      >
-        <kbd>ESC</kbd>
-        <span>BACK</span>
-      </button>
+      {closeControl ? (
+        closeControl(requestClose)
+      ) : (
+        <button
+          className="dialog-close"
+          aria-label={`Close ${title.toLowerCase()}`}
+          onClick={requestClose}
+        >
+          <kbd>ESC</kbd>
+          <span>BACK</span>
+        </button>
+      )}
     </dialog>,
     document.body,
   );
