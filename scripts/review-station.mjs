@@ -133,7 +133,7 @@ try {
       await page.locator(".kit-board canvas").waitFor();
     }
     if (shot.book) {
-      await page.getByRole("button", { name: "Open notebook" }).click();
+      await page.keyboard.press("n");
       await page.getByRole("button", { name: shot.book, exact: true }).click();
     }
     await page.waitForTimeout(1000);

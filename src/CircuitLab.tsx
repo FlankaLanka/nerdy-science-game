@@ -16,7 +16,6 @@ import {
   Trash2,
   Undo2,
   Zap,
-  BookOpen,
 } from "lucide-react";
 import {
   cablePath,
@@ -40,7 +39,6 @@ type Props = {
   onUndo: () => void;
   onReset: () => void;
   onBack: () => void;
-  onNotebook: () => void;
 };
 type Point = { x: number; y: number };
 const position = (p: Point): CSSProperties => ({
@@ -306,14 +304,6 @@ export default function CircuitLab(props: Props) {
             <span className="status-dot" />
           )}
         </div>
-        <button
-          className="icon-button"
-          onClick={props.onNotebook}
-          aria-label="Open notebook"
-          title="Notebook · N"
-        >
-          <BookOpen />
-        </button>
       </header>
       <div className="bench-shell">
         <div

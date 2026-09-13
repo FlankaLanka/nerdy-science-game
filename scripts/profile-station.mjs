@@ -84,8 +84,7 @@ try {
       await page.keyboard.press("e");
       await page.locator(".kit-board canvas").waitFor();
     }
-    if (scene.book)
-      await page.getByRole("button", { name: "Open notebook" }).click();
+    if (scene.book) await page.keyboard.press("n");
     await page.waitForTimeout(1500);
     const stationary = await sample(page);
     let moving;

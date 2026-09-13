@@ -27,7 +27,7 @@ export async function begin(page: Page, index = 0, player?: Player) {
   );
   await page.goto("/");
   await page.getByRole("button", { name: /^(Begin|Continue)$/ }).click();
-  await expect(page.getByRole("button", { name: "Pause game" })).toBeVisible();
+  await expect(page.locator(".room-marker")).toBeVisible();
 }
 export async function bench(page: Page, index = 0) {
   await expect(

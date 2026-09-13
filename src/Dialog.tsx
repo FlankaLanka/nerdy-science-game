@@ -101,9 +101,10 @@ export function Dialog({
       if (opener?.isConnected && opener !== document.body)
         opener.focus({ preventScroll: true });
       else
-        document
-          .querySelector<HTMLButtonElement>('[aria-label="Pause game"]')
-          ?.focus({ preventScroll: true });
+        (
+          document.querySelector<HTMLElement>(".circuit-lab button") ??
+          document.querySelector<HTMLElement>(".world canvas")
+        )?.focus({ preventScroll: true });
     };
   }, [open]);
   return createPortal(

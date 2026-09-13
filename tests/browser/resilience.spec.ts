@@ -3,7 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { begin, bench, connect, restored, saved } from "./helpers";
 import { SAVE_KEY } from "../../src/chamberCampaign.ts";
 
-test("a phone can close the first circuit and open every notebook tab without overflow", async ({
+test("touch circuit controls and keyboard-opened notebook tabs fit a phone viewport", async ({
   browser,
 }) => {
   const context = await browser.newContext({
@@ -25,7 +25,7 @@ test("a phone can close the first circuit and open every notebook tab without ov
     .tap();
   await page.getByRole("button", { name: "Bulb contact B", exact: true }).tap();
   await restored(page, 0);
-  await page.getByRole("button", { name: "Open notebook" }).tap();
+  await page.keyboard.press("n");
   for (const name of ["Parts", "Formulas", "Map"]) {
     await page.getByRole("button", { name, exact: true }).tap();
     expect(

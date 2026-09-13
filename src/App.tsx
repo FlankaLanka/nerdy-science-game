@@ -8,10 +8,8 @@ import {
   useState,
 } from "react";
 import {
-  Tablet,
   Check,
   ChevronRight,
-  Pause,
   Play,
   RotateCcw,
   Volume2,
@@ -134,16 +132,6 @@ export default function App() {
     world.current?.release();
     setMenu("pause");
   }, []);
-  function book(next: NotebookTab = tab) {
-    if (transition.current) {
-      clearTimeout(transition.current);
-      transition.current = null;
-    }
-    world.current?.release();
-    setTab(next);
-    if (current.current.menu !== "notebook") sound.play("tablet-open");
-    setMenu("notebook");
-  }
   function resume() {
     setMenu(null);
     setConfirmReset(false);
@@ -281,7 +269,6 @@ export default function App() {
         <TitleScreen
           ready={ready}
           returning={state.visited.length > 0}
-          powered={completed.length}
           sound={state.sound}
           onSound={() => dispatch({ type: "SOUND" })}
           onBegin={begin}
@@ -293,24 +280,6 @@ export default function App() {
             {CHAMBERS[room]?.number ?? "01"}
             <i className={state.proofs[room] ? "powered" : ""} />
           </span>
-          <div>
-            <button
-              className="icon-button"
-              onClick={() => book()}
-              aria-label="Open notebook"
-              title="Notebook · N"
-            >
-              <Tablet />
-            </button>
-            <button
-              className="icon-button"
-              onClick={pause}
-              aria-label="Pause game"
-              title="Pause · Esc"
-            >
-              <Pause />
-            </button>
-          </div>
         </header>
       )}
       {started && active !== null && (
@@ -330,7 +299,6 @@ export default function App() {
             onUndo={() => dispatch({ type: "UNDO", room: active })}
             onReset={() => dispatch({ type: "RESET_CIRCUIT", room: active })}
             onBack={leaveBench}
-            onNotebook={() => book()}
           />
         </Suspense>
       )}
@@ -402,13 +370,6 @@ export default function App() {
               motion
             </button>
           </div>
-          <p className="pause-controls">
-            WASD · move
-            <br />
-            Mouse / arrows · look
-            <br />E · use bench
-            <br />N · notebook &nbsp; M · map
-          </p>
           {confirmReset ? (
             <div className="reset-confirm">
               <p>Start a new run?</p>

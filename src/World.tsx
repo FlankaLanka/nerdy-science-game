@@ -84,7 +84,11 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
   }, [props.playing]);
   return (
     <>
-      <div className="world" ref={host} aria-hidden={props.preview || undefined} />
+      <div
+        className="world"
+        ref={host}
+        aria-hidden={props.preview || undefined}
+      />
       {props.playing && hud && (
         <div className="world-hud">
           <span
@@ -99,12 +103,6 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
             >
               <kbd>E</kbd>
             </button>
-          )}
-          {!hud.moved && !hud.focus && (
-            <div className="first-controls">
-              <span className="desktop-controls">WASD · Mouse</span>
-              <span className="touch-controls">Move · Drag to look</span>
-            </div>
           )}
           <div
             className="touch-stick"

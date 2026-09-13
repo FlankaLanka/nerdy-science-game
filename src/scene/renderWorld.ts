@@ -24,8 +24,6 @@ import { buildTitleSatellite } from "./titleSatellite";
 export type Telemetry = {
   focus: MissionId | null;
   room: number;
-  moved: boolean;
-  locked: boolean;
   section: string;
 };
 export type WorldState = {
@@ -121,7 +119,7 @@ export function renderWorld(o: Options) {
   const camera = new THREE.PerspectiveCamera(68, 1, 0.08, 650);
   camera.rotation.order = "YXZ";
   scene.add(camera);
-  const titleSatellite = buildTitleSatellite(camera);
+  const titleSatellite = buildTitleSatellite(scene);
   const previewAim = new THREE.Vector2(),
     previewTarget = new THREE.Vector2();
   const previewPointer = (e: PointerEvent) => {
@@ -161,7 +159,6 @@ export function renderWorld(o: Options) {
     lastStep = 0;
   let stillFrame = "";
   let ready = false,
-    moved = false,
     wasPlaying = false,
     ignoreUnlock = false;
   const keys = new Set<string>();
@@ -371,7 +368,6 @@ export function renderWorld(o: Options) {
       );
       walking =
         Math.hypot(player.x - previous.x, player.z - previous.z) > 0.002;
-      if (walking) moved = true;
       if (
         walking &&
         now - lastStep >
@@ -457,8 +453,6 @@ export function renderWorld(o: Options) {
       o.telemetry({
         focus: state.playing ? focusedSite(player, model.obstacles) : null,
         room: roomAt(player.x, player.z),
-        moved,
-        locked: document.pointerLockElement === canvas,
         section: deckSection(player.z, player.x),
       });
     }
@@ -488,7 +482,6 @@ export function renderWorld(o: Options) {
     reset() {
       clear();
       player = { ...SPAWN };
-      moved = false;
       save();
     },
     dispose() {

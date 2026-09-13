@@ -122,7 +122,7 @@ test("notebook keeps discovered parts, formulas, and a non-teleporting station m
   page,
 }) => {
   await begin(page);
-  await page.getByRole("button", { name: "Open notebook" }).click();
+  await page.keyboard.press("n");
   await expect(
     page.getByRole("heading", { name: "Battery", exact: true }),
   ).toBeVisible();
@@ -182,7 +182,7 @@ test("keyboard-only circuit construction and editing works", async ({
 test("a closed door physically blocks progression", async ({ page }) => {
   await begin(page, 0, { x: -10, z: 15, yaw: 0, pitch: 0 });
   await hold(page, "w", 1000);
-  await page.getByRole("button", { name: "Open notebook" }).click();
+  await page.keyboard.press("n");
   expect((await position(page)).z).toBeGreaterThanOrEqual(13.44);
   await page.keyboard.press("Escape");
   await expect(page.locator(".room-marker")).toContainText("01");
@@ -248,7 +248,7 @@ test("notebook returns discovered equations in the later chambers", async ({
   page,
 }) => {
   await begin(page, 5);
-  await page.getByRole("button", { name: "Open notebook" }).click();
+  await page.keyboard.press("n");
   await page.getByRole("button", { name: "Formulas", exact: true }).click();
   for (const name of ["Ohm's law", "Series", "Parallel"])
     await expect(

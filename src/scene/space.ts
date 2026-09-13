@@ -1,5 +1,7 @@
 import * as THREE from "three";
 
+export const EARTH = { x: -170, y: 22, z: 60, radius: 48 } as const;
+
 /** One continuous exterior. Planet positions are art-directed, not an orbital-scale model. */
 export function buildSpace(scene: THREE.Scene, loaded: () => void) {
   const root = new THREE.Group();
@@ -45,11 +47,12 @@ export function buildSpace(scene: THREE.Scene, loaded: () => void) {
         cloudMap: { value: clouds },
         sunlight: { value: sun },
         earth: { value: earth ? 1 : 0 },
+        cloudOffset: { value: 0 },
       },
       vertexShader,
       fragmentShader: `
       uniform sampler2D dayMap, nightMap, cloudMap;
-      uniform vec3 sunlight; uniform float earth;
+      uniform vec3 sunlight; uniform float earth, cloudOffset;
       varying vec2 vUv; varying vec3 vNormal; varying vec3 vWorld;
       void main() {
         vec3 n=normalize(vNormal);
@@ -57,7 +60,7 @@ export function buildSpace(scene: THREE.Scene, loaded: () => void) {
         float day=smoothstep(-.12,.25,ndl);
         vec3 albedo=texture2D(dayMap,vUv).rgb;
         if(earth>.5) {
-          float cloud=smoothstep(.08,.85,texture2D(cloudMap,vUv).r);
+          float cloud=smoothstep(.08,.85,texture2D(cloudMap,vUv+vec2(cloudOffset,0.)).r);
           albedo=mix(albedo,vec3(.91,.96,1.),cloud*.92);
         }
         vec3 color=albedo*(.015+max(ndl,0.)*.98);
@@ -92,10 +95,19 @@ export function buildSpace(scene: THREE.Scene, loaded: () => void) {
     g.add(sphere);
     return g;
   }
-  const earth = body("Earth", -170, 22, 60, 48, surface(earthDay, true), 72);
+  const earthMaterial = surface(earthDay, true);
+  const earth = body(
+    "Earth",
+    EARTH.x,
+    EARTH.y,
+    EARTH.z,
+    EARTH.radius,
+    earthMaterial,
+    72,
+  );
   earth.rotation.set(0.12, 0.65, -0.16);
   const atmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(48.65, 64, 40),
+    new THREE.SphereGeometry(EARTH.radius + 0.65, 64, 40),
     new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
@@ -213,9 +225,13 @@ export function buildSpace(scene: THREE.Scene, loaded: () => void) {
   let previousTime = 0;
   return {
     update(time: number, reduced: boolean, preview = false) {
-      if (!reduced)
-        earth.rotation.y +=
-          Math.max(0, time - previousTime) * (preview ? 0.006 : 0.00035);
+      if (!reduced) {
+        const elapsed = Math.max(0, time - previousTime);
+        // Starting title speeds: a visible continental turn with slower cloud shear.
+        earth.rotation.y += elapsed * (preview ? 0.028 : 0.00035);
+        earthMaterial.uniforms.cloudOffset.value +=
+          elapsed * (preview ? 0.0008 : 0.000025);
+      }
       previousTime = time;
     },
   };

@@ -1,12 +1,26 @@
 import * as THREE from "three";
+import { EARTH } from "./space";
 
-/** An authored maintenance relay in the title's foreground. No lights or shadows. */
-export function buildTitleSatellite(camera: THREE.Camera) {
+/** A real orbit around Earth: the planet occludes the relay on the far side. */
+export function buildTitleSatellite(scene: THREE.Scene) {
   const rig = new THREE.Group();
   rig.name = "Title / maintenance relay";
-  camera.add(rig);
+  scene.add(rig);
+  const center = new THREE.Vector3(EARTH.x, EARTH.y, EARTH.z);
+  const towardCamera = new THREE.Vector3(133, -10, 22).normalize();
+  const across = new THREE.Vector3()
+    .crossVectors(new THREE.Vector3(0, 1, 0), towardCamera)
+    .normalize();
+  const north = new THREE.Vector3()
+    .crossVectors(towardCamera, across)
+    .normalize();
+  const depth = towardCamera
+    .clone()
+    .multiplyScalar(Math.cos(0.21))
+    .addScaledVector(north, -Math.sin(0.21));
   const body = new THREE.Group();
-  body.scale.setScalar(0.58);
+  body.scale.setScalar(1.4);
+  body.rotation.set(0.12, -0.12, -0.2);
   rig.add(body);
   const alloy = new THREE.MeshStandardMaterial({
     color: "#becac4",
@@ -103,16 +117,15 @@ export function buildTitleSatellite(camera: THREE.Camera) {
     update(time: number, visible: boolean) {
       rig.visible = visible;
       if (!visible) return;
-      rig.position.set(
-        -3.8 + Math.sin(time * 0.09) * 0.8,
-        -3 + Math.sin(time * 0.13) * 0.25,
-        -21,
-      );
-      body.rotation.set(
-        0.26 + Math.sin(time * 0.12) * 0.15,
-        -0.5 + time * 0.035,
-        -0.3 + Math.sin(time * 0.1) * 0.1,
-      );
+      // Starting orbit: 57 seconds, just above the limb, inclined toward the viewer.
+      const phase = 1.88 + time * 0.11,
+        radius = EARTH.radius + 8;
+      rig.position
+        .copy(center)
+        .addScaledVector(across, Math.cos(phase) * radius)
+        .addScaledVector(depth, Math.sin(phase) * radius);
+      rig.lookAt(center);
+      rig.rotateY(Math.PI);
     },
   };
 }

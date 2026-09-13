@@ -1,18 +1,15 @@
 import type { CSSProperties } from "react";
 import { ChevronRight, Power, Volume2, VolumeX } from "lucide-react";
-import { CHAMBERS } from "./chambers";
 
 export default function TitleScreen({
   ready,
   returning,
-  powered,
   sound,
   onSound,
   onBegin,
 }: {
   ready: boolean;
   returning: boolean;
-  powered: number;
   sound: boolean;
   onSound: () => void;
   onBegin: () => void;
@@ -112,14 +109,6 @@ export default function TitleScreen({
         </button>
       </div>
       <footer className="title-footer">
-        <span className="title-power">
-          <span className="power-cells" aria-hidden="true">
-            {CHAMBERS.map((c, i) => (
-              <i key={c.id} className={i < powered ? "powered" : ""} />
-            ))}
-          </span>
-          {powered === CHAMBERS.length ? "Power restored" : "Reserve power"}
-        </span>
         <button
           className="title-sound icon-button"
           aria-label={sound ? "Mute sound" : "Enable sound"}

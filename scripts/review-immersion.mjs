@@ -6,6 +6,8 @@ import { PLAYER_KEY } from "../src/scene/navigation.ts";
 import { chamberFixture } from "../tests/chamber-fixtures.ts";
 
 const output = "artifacts/station";
+const orbitOnly = process.argv.includes("--orbit");
+const recording = orbitOnly ? "title-orbit" : "immersion";
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch({
   args: process.platform === "darwin" ? ["--use-angle=metal"] : [],
@@ -39,35 +41,42 @@ try {
   await page.goto(process.env.REVIEW_URL ?? "http://localhost:5176");
   const start = page.getByRole("button", { name: /^(Begin|Continue)$/ });
   await start.waitFor();
-  await page.mouse.move(1100, 280, { steps: 28 });
-  await page.waitForTimeout(1500);
-  await page.mouse.move(370, 540, { steps: 35 });
-  await start.hover();
-  await page.waitForTimeout(800);
-  await start.click();
-  await page.waitForTimeout(1100);
-  await page.keyboard.press("n");
-  await page.waitForTimeout(100);
-  await page.screenshot({ path: `${output}/tablet-raising.png` });
-  await page.waitForTimeout(700);
-  await page.getByRole("button", { name: "Map", exact: true }).click();
-  await page.waitForTimeout(1100);
-  await page.getByRole("button", { name: "Formulas", exact: true }).click();
-  await page.waitForTimeout(900);
-  await page.getByRole("button", { name: "Parts", exact: true }).click();
-  await page.waitForTimeout(700);
-  await page.keyboard.press("Escape");
-  await page.waitForTimeout(800);
-  await page.keyboard.press("n");
-  await page.waitForTimeout(900);
-  await page.keyboard.press("n");
-  await page.waitForTimeout(800);
+  if (orbitOnly) {
+    await page.mouse.move(720, 450);
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: `${output}/title.png` });
+    await page.waitForTimeout(58000);
+  } else {
+    await page.mouse.move(1100, 280, { steps: 28 });
+    await page.waitForTimeout(1500);
+    await page.mouse.move(370, 540, { steps: 35 });
+    await start.hover();
+    await page.waitForTimeout(800);
+    await start.click();
+    await page.waitForTimeout(1100);
+    await page.keyboard.press("n");
+    await page.waitForTimeout(100);
+    await page.screenshot({ path: `${output}/tablet-raising.png` });
+    await page.waitForTimeout(700);
+    await page.getByRole("button", { name: "Map", exact: true }).click();
+    await page.waitForTimeout(1100);
+    await page.getByRole("button", { name: "Formulas", exact: true }).click();
+    await page.waitForTimeout(900);
+    await page.getByRole("button", { name: "Parts", exact: true }).click();
+    await page.waitForTimeout(700);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(800);
+    await page.keyboard.press("n");
+    await page.waitForTimeout(900);
+    await page.keyboard.press("n");
+    await page.waitForTimeout(800);
+  }
   if (errors.length) throw new Error(errors.join("\n"));
 } finally {
   await context.close();
-  await fs.rename(await video.path(), `${output}/immersion.webm`);
+  await fs.rename(await video.path(), `${output}/${recording}.webm`);
   await browser.close();
 }
 process.stdout.write(
-  `Motion review: ${output}/immersion.webm; ${errors.length} errors\n`,
+  `Motion review: ${output}/${recording}.webm; ${errors.length} errors\n`,
 );

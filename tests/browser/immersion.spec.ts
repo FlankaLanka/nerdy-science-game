@@ -13,6 +13,7 @@ test("the tablet can be put away during its opening animation and reopened witho
   await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(".world canvas")).toBeFocused();
   await page.keyboard.press("n");
   await page.getByRole("button", { name: "Map", exact: true }).click();
   await expect(
@@ -20,6 +21,11 @@ test("the tablet can be put away during its opening animation and reopened witho
   ).toBeVisible();
   await page.keyboard.press("n");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("dialog", { name: "Pause", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
   await bench(page);
   await expect(
     page.getByRole("button", { name: "Battery negative", exact: true }),
@@ -30,8 +36,13 @@ test("the tablet respects live motion preferences, retains focus, and stays read
   page,
 }) => {
   await begin(page, 5);
-  const open = page.getByRole("button", { name: "Open notebook" });
-  await open.click();
+  await bench(page, 5);
+  const open = page.getByRole("button", {
+    name: "Battery positive",
+    exact: true,
+  });
+  await open.focus();
+  await page.keyboard.press("n");
   await page.getByRole("button", { name: "Formulas", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Ohm's law", exact: true }),
@@ -44,7 +55,7 @@ test("the tablet respects live motion preferences, retains focus, and stays read
   await page.getByRole("button", { name: "Return", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(open).toBeFocused();
-  await page.keyboard.press("Enter");
+  await page.keyboard.press("n");
   await expect(page.getByRole("dialog", { name: "Notebook" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
