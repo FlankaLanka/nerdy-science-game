@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import {
-  BookOpen,
+  Tablet,
   Check,
   ChevronRight,
   Pause,
@@ -35,7 +35,9 @@ import { PLAYER_KEY, SPAWN } from "./scene/navigation";
 import { useSound } from "./audio";
 import { Dialog } from "./Dialog";
 import Notebook from "./Notebook";
+import TitleScreen from "./TitleScreen";
 import type { NotebookTab } from "./Notebook";
+import { useReducedMotion } from "./useReducedMotion";
 import "./game.css";
 const World = lazy(() => import("./World"));
 const CircuitLab = lazy(() => import("./CircuitLab"));
@@ -69,9 +71,7 @@ export default function App() {
     transition = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completed = completedIds(state),
     playing = started && active === null && menu === null;
-  const reduced =
-    state.reducedMotion ||
-    matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced = useReducedMotion(state.reducedMotion);
   useEffect(() => {
     try {
       localStorage.setItem(SAVE_KEY, serializeCampaign(state));
@@ -141,6 +141,7 @@ export default function App() {
     }
     world.current?.release();
     setTab(next);
+    if (current.current.menu !== "notebook") sound.play("tablet-open");
     setMenu("notebook");
   }
   function resume() {
@@ -178,6 +179,7 @@ export default function App() {
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (
+        e.defaultPrevented ||
         !current.current.started ||
         e.ctrlKey ||
         e.metaKey ||
@@ -192,6 +194,7 @@ export default function App() {
         e.preventDefault();
         world.current?.release();
         setTab(e.code === "KeyM" ? "map" : "parts");
+        current.current.sound.play("tablet-open");
         setMenu("notebook");
       }
       if (e.key === "Escape") {
@@ -275,59 +278,14 @@ export default function App() {
         />
       </Suspense>
       {!started && (
-        <section className="title-screen" aria-labelledby="game-title">
-          <header className="title-identity">
-            <svg
-              className="station-insignia"
-              viewBox="0 0 40 40"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path d="M10 29 20 7l10 22M14 22h12" />
-              <path d="M5 18a16 16 0 0 0 26 14M35 22A16 16 0 0 0 9 8" />
-              <circle cx="34" cy="12" r="2" />
-            </svg>
-            <span>Deep space research station</span>
-          </header>
-          <div className="title-content">
-            <h1 id="game-title">ASTERION</h1>
-            <p className="title-tagline">Restore the light.</p>
-            <button className="begin-button" disabled={!ready} onClick={begin}>
-              <span>
-                {!ready ? "Loading…" : state.visited.length ? "Continue" : "Begin"}
-              </span>
-              <ChevronRight aria-hidden="true" />
-            </button>
-          </div>
-          <footer className="title-footer">
-            <span className="title-power">
-              <span className="power-cells" aria-hidden="true">
-                {CHAMBERS.map((c) => (
-                  <i
-                    key={c.id}
-                    className={completed.includes(c.id) ? "powered" : ""}
-                  />
-                ))}
-              </span>
-              {completed.length === CHAMBERS.length
-                ? "Power restored"
-                : "Reserve power"}
-            </span>
-            <button
-              className="title-sound icon-button"
-              aria-label={state.sound ? "Mute sound" : "Enable sound"}
-              aria-pressed={!state.sound}
-              title={state.sound ? "Mute sound" : "Enable sound"}
-              onClick={() => dispatch({ type: "SOUND" })}
-            >
-              {state.sound ? (
-                <Volume2 aria-hidden="true" />
-              ) : (
-                <VolumeX aria-hidden="true" />
-              )}
-            </button>
-          </footer>
-        </section>
+        <TitleScreen
+          ready={ready}
+          returning={state.visited.length > 0}
+          powered={completed.length}
+          sound={state.sound}
+          onSound={() => dispatch({ type: "SOUND" })}
+          onBegin={begin}
+        />
       )}
       {started && active === null && (
         <header className="game-chrome">
@@ -342,7 +300,7 @@ export default function App() {
               aria-label="Open notebook"
               title="Notebook · N"
             >
-              <BookOpen />
+              <Tablet />
             </button>
             <button
               className="icon-button"
@@ -413,10 +371,17 @@ export default function App() {
           onClose={resume}
           current={room}
           player={world.current?.position() ?? SPAWN}
+          reducedMotion={reduced}
+          onSound={sound.play}
         />
       )}
       {menu === "pause" && (
-        <Dialog title="Pause" onClose={resume} className="pause-dialog">
+        <Dialog
+          title="Pause"
+          onClose={resume}
+          className="pause-dialog"
+          reducedMotion={reduced}
+        >
           <h1>Paused</h1>
           <button className="pause-resume" onClick={resume}>
             <Play />

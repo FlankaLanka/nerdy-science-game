@@ -40,6 +40,27 @@ const shots = [
   { name: "resistance", index: 3, kit: true, example: true },
   { name: "independent-branches", index: 5, completed: 6, kit: true },
   { name: "parts", index: 3, book: "Parts" },
+  {
+    name: "parts-phone",
+    index: 3,
+    book: "Parts",
+    viewport: { width: 390, height: 844 },
+    touch: true,
+  },
+  {
+    name: "map-compact",
+    index: 3,
+    book: "Map",
+    viewport: { width: 320, height: 568 },
+    touch: true,
+  },
+  {
+    name: "parts-landscape",
+    index: 3,
+    book: "Parts",
+    viewport: { width: 844, height: 390 },
+    touch: true,
+  },
   { name: "formulas", index: 5, book: "Formulas" },
   { name: "map", index: 3, book: "Map" },
   {

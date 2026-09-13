@@ -210,9 +210,13 @@ export function buildSpace(scene: THREE.Scene, loaded: () => void) {
       }
   }
   root.add(panels);
+  let previousTime = 0;
   return {
-    update(time: number, reduced: boolean) {
-      if (!reduced) earth.rotation.y = 0.65 + time * 0.00035;
+    update(time: number, reduced: boolean, preview = false) {
+      if (!reduced)
+        earth.rotation.y +=
+          Math.max(0, time - previousTime) * (preview ? 0.006 : 0.00035);
+      previousTime = time;
     },
   };
 }

@@ -201,7 +201,7 @@ export function buildSpaceship(scene: THREE.Scene) {
     h: number,
     color: string,
   ) {
-    for (let t = 0; t < length;) {
+    for (let t = 0; t < length; ) {
       const width = Math.min(2, length - t),
         samples = Array.from({ length: width }, (_, i) => t + i + 0.5);
       const heights = samples.map((v) => {
@@ -480,6 +480,7 @@ export function buildSpaceship(scene: THREE.Scene) {
       reduced: boolean,
       playing: boolean,
       circuits?: Circuit[],
+      preview = false,
     ) {
       const events: ("door" | "power")[] = [];
       root.userData.shadowsDirty = !initialized;
@@ -545,7 +546,7 @@ export function buildSpaceship(scene: THREE.Scene) {
         pools[i].color.set(online.has(f.system) ? "#e4e6d6" : "#d39b5e");
         pools[i].intensity = online.has(f.system) ? 32 : 7;
       });
-      space.update(time, reduced);
+      space.update(time, reduced, preview);
       if (root.userData.textureRevision !== textureRevision) {
         textureRevision = root.userData.textureRevision;
         root.userData.shadowsDirty = true;

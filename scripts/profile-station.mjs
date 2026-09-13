@@ -52,6 +52,12 @@ try {
       count: 6,
       kit: true,
     },
+    {
+      name: "tablet",
+      pose: { x: 10, z: 21.5, yaw: 0, pitch: 0 },
+      count: 6,
+      book: true,
+    },
   ]) {
     const page = await browser.newPage({
       viewport: { width: 1280, height: 720 },
@@ -78,13 +84,27 @@ try {
       await page.keyboard.press("e");
       await page.locator(".kit-board canvas").waitFor();
     }
+    if (scene.book)
+      await page.getByRole("button", { name: "Open notebook" }).click();
     await page.waitForTimeout(1500);
     const stationary = await sample(page);
     let moving;
-    if (!scene.kit && !scene.title) {
+    if (!scene.kit && !scene.title && !scene.book) {
       await page.keyboard.down("ArrowRight");
       moving = await sample(page);
       await page.keyboard.up("ArrowRight");
+    }
+    let transitions;
+    if (scene.book) {
+      const sampling = sample(page);
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(280);
+      await page.keyboard.press("n");
+      await page.waitForTimeout(560);
+      await page.getByRole("button", { name: "Map", exact: true }).click();
+      await page.waitForTimeout(300);
+      await page.keyboard.press("Escape");
+      transitions = await sampling;
     }
     let dragging;
     if (scene.kit) {
@@ -115,6 +135,7 @@ try {
       stationary,
       ...(moving ? { moving } : {}),
       ...(dragging ? { dragging } : {}),
+      ...(transitions ? { transitions } : {}),
     });
     process.stdout.write(JSON.stringify(results.at(-1)) + "\n");
     await page.close();

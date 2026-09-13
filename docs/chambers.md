@@ -43,6 +43,8 @@ The map uses the same room and doorway coordinates as rendering and collision. I
 
 ## Start screen
 
+The current motion, physical tablet, sound and input behavior are specified in [Interface motion and material](immersion.md).
+
 An orbital view gives the title its own composition. The existing Earth, atmosphere and star textures supply the image; no second renderer, video, downloaded artwork or extra post-processing is introduced. Contact occlusion and fixture bloom warm once before Begin is enabled, then are disabled for the orbital camera and restored for walking. The preview never changes the player's position, discovered rooms or save data.
 
 Response: Begin / Continue accepts keyboard, pointer and touch input as soon as the renderer is ready. Clarity: one primary action and a brief tagline. Satisfaction: an existing soft sound and a short reveal into the station. Fit: restrained lettering, an original orbital insignia and the same exterior seen through the windows. Motivation: a small reserve-power indicator reflects restored chambers.
@@ -51,7 +53,7 @@ Loading → ready enables the primary button. Activating it immediately enters w
 
 | Starting values | Microtest / pass condition | Adjustment if it fails |
 | --- | --- | --- |
-| 1.1 s title entrance, 14 px travel; 0.65 s station reveal; 0.18 s button feedback | Start repeatedly with keyboard, click and touch; no delayed input or covered controls after the reveal. Reduced motion must show the final state immediately. | Shorten the visual duration or remove travel; never add an input lock. |
+| 0.85 s title entrance, 45 ms glyph stagger; 0.7 s station reveal; 0.18 s button feedback | Start repeatedly with keyboard, click and touch; no delayed input or covered controls after the reveal. Reduced motion must show the final state immediately. | Shorten the visual duration or remove travel; never add an input lock. |
 | 54° landscape lens; minimum 82° portrait lens; portrait breakpoint 0.85 aspect | Inspect desktop, ultrawide, portrait phone, small phone, tablet and landscape phone. Title, action and station label must remain legible and inside the viewport. | Reframe the planet and reduce its projected size before reducing text or hit areas. |
 | CSS spacing / type scale; 248 × 62 px primary action, 220 × 58 px in portrait; 44 px sound control | Tab to both controls, activate with Enter, tap on phone, and run the title contrast/name checks. | Increase clearance or contrast; retain the primary action's visual priority. |
 | Retained DPR caps and assets; title omits SSAO and bloom | Profile the animated title and the first room after entering. Compare local frame intervals with the existing renderer samples. | Reduce rendering work; do not add decorative passes or larger textures. |

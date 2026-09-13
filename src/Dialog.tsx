@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 export function Dialog({
@@ -8,17 +8,78 @@ export function Dialog({
   onClose,
   open = true,
   className = "",
+  reducedMotion = false,
+  exitMs = 0,
+  onDismiss,
+  dismissKeys = [],
 }: {
   title: string;
-  children: ReactNode;
+  children: ReactNode | ((close: () => void) => ReactNode);
   onClose: () => void;
   open?: boolean;
   className?: string;
+  reducedMotion?: boolean;
+  exitMs?: number;
+  onDismiss?: () => void;
+  dismissKeys?: readonly string[];
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const [closing, setClosing] = useState(false);
+  const closePending = useRef(false),
+    finished = useRef(false),
+    closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null),
+    latestClose = useRef(onClose);
+  latestClose.current = onClose;
+  function finishClose() {
+    if (finished.current) return;
+    finished.current = true;
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    latestClose.current();
+  }
+  function requestClose() {
+    if (closePending.current) return;
+    closePending.current = true;
+    onDismiss?.();
+    if (reducedMotion || !exitMs) {
+      finishClose();
+      return;
+    }
+    // Reverse from the currently displayed pose if dismissal interrupts entry.
+    const dialog = ref.current!;
+    const pose = getComputedStyle(dialog);
+    dialog.style.setProperty("--close-transform", pose.transform);
+    dialog.style.setProperty("--close-opacity", pose.opacity);
+    dialog.style.setProperty(
+      "--backdrop-close-opacity",
+      getComputedStyle(dialog, "::backdrop").opacity,
+    );
+    const surface = dialog.querySelector<HTMLElement>("[data-dialog-surface]");
+    if (surface) {
+      const display = getComputedStyle(surface);
+      dialog.style.setProperty("--surface-close-opacity", display.opacity);
+      dialog.style.setProperty("--surface-close-clip", display.clipPath);
+    }
+    setClosing(true);
+    closeTimer.current = setTimeout(finishClose, exitMs);
+  }
+  useEffect(() => {
+    if (closing && reducedMotion) {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      finishClose();
+    }
+  }, [closing, reducedMotion]);
+  useEffect(
+    () => () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    },
+    [],
+  );
   useEffect(() => {
     const dialog = ref.current!;
     if (!open) return;
+    closePending.current = false;
+    finished.current = false;
+    setClosing(false);
     const opener =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -49,10 +110,28 @@ export function Dialog({
     <dialog
       ref={ref}
       aria-label={title}
-      className={`dialog ${className}`}
+      className={`dialog ${className} ${reducedMotion ? "reduced-motion" : ""}`}
+      data-phase={closing ? "closing" : "open"}
+      style={{ "--dialog-exit-ms": `${exitMs}ms` } as CSSProperties}
       onCancel={(e) => {
         e.preventDefault();
-        onClose();
+        requestClose();
+      }}
+      onKeyDown={(e) => {
+        if (
+          !e.metaKey &&
+          !e.ctrlKey &&
+          !e.altKey &&
+          (e.key === "Escape" || dismissKeys.includes(e.code))
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!e.repeat) requestClose();
+        }
+      }}
+      onClose={(e) => {
+        // Native close requests can bypass a cancelable event. Keep React in sync.
+        if (!e.currentTarget.open) finishClose();
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -63,15 +142,17 @@ export function Dialog({
             e.clientY < r.top ||
             e.clientY > r.bottom
           )
-            onClose();
+            requestClose();
         }
       }}
     >
-      <div className="screen-content">{children}</div>
+      <div className="screen-content">
+        {typeof children === "function" ? children(requestClose) : children}
+      </div>
       <button
         className="dialog-close"
         aria-label={`Close ${title.toLowerCase()}`}
-        onClick={onClose}
+        onClick={requestClose}
       >
         <kbd>ESC</kbd>
         <span>BACK</span>

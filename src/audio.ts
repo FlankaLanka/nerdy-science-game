@@ -9,6 +9,9 @@ export type Sound =
   | "step"
   | "door"
   | "power"
+  | "tablet-open"
+  | "tablet-close"
+  | "tab"
   | "signal";
 // Starting gains and envelopes; micro tests and tuning direction are in docs/design.md.
 export function useSound(enabled: boolean) {
@@ -70,6 +73,41 @@ export function useSound(enabled: boolean) {
     const audio = unlock();
     if (!audio) return;
     const { context, master } = audio;
+    if (kind === "tablet-open" || kind === "tablet-close" || kind === "tab") {
+      // Starting envelopes: a quiet relay click, then the display's rising/falling tone.
+      const opening = kind === "tablet-open",
+        changing = kind === "tab";
+      const start = context.currentTime;
+      const duration = changing ? 0.075 : 0.22;
+      for (const [offset, frequency, gain] of [
+        [0, 145, 0.12],
+        [changing ? 0.015 : 0.05, opening ? 520 : changing ? 760 : 430, 0.07],
+      ]) {
+        const voice = context.createOscillator(),
+          envelope = context.createGain();
+        voice.type = "sine";
+        voice.frequency.setValueAtTime(frequency, start + offset);
+        voice.frequency.exponentialRampToValueAtTime(
+          frequency * (opening ? 1.5 : changing ? 1.1 : 0.6),
+          start + offset + duration,
+        );
+        envelope.gain.setValueAtTime(0, start + offset);
+        envelope.gain.linearRampToValueAtTime(gain, start + offset + 0.006);
+        envelope.gain.exponentialRampToValueAtTime(
+          0.001,
+          start + offset + duration,
+        );
+        voice.connect(envelope);
+        envelope.connect(master);
+        voice.start(start + offset);
+        voice.stop(start + offset + duration + 0.01);
+        voice.onended = () => {
+          voice.disconnect();
+          envelope.disconnect();
+        };
+      }
+      return;
+    }
     if (kind === "door" || kind === "power") {
       // Starting envelopes: a servo hiss and low motor spin-up, never a startle cue.
       const duration = kind === "door" ? 0.6 : 1.2;

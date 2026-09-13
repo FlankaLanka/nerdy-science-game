@@ -19,6 +19,7 @@ import {
 import type { ChamberId as MissionId } from "../chambers";
 import type { Circuit } from "../circuitKit";
 import { gamePixelRatio } from "../viewport";
+import { buildTitleSatellite } from "./titleSatellite";
 
 export type Telemetry = {
   focus: MissionId | null;
@@ -119,6 +120,27 @@ export function renderWorld(o: Options) {
   }
   const camera = new THREE.PerspectiveCamera(68, 1, 0.08, 650);
   camera.rotation.order = "YXZ";
+  scene.add(camera);
+  const titleSatellite = buildTitleSatellite(camera);
+  const previewAim = new THREE.Vector2(),
+    previewTarget = new THREE.Vector2();
+  const previewPointer = (e: PointerEvent) => {
+    if (
+      !o.state().preview ||
+      o.state().reducedMotion ||
+      e.pointerType !== "mouse"
+    )
+      return;
+    previewTarget.set(
+      (e.clientX / innerWidth) * 2 - 1,
+      (e.clientY / innerHeight) * 2 - 1,
+    );
+  };
+  const previewLeave = (e: PointerEvent) => {
+    if (!e.relatedTarget) previewTarget.set(0, 0);
+  };
+  window.addEventListener("pointermove", previewPointer, { passive: true });
+  window.addEventListener("pointerout", previewLeave, { passive: true });
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const occlusion = new SSAOPass(scene, camera, 1, 1, 12);
@@ -372,22 +394,33 @@ export function renderWorld(o: Options) {
       // A separate orbital composition, using the existing exterior and textures.
       // Its pose never enters player navigation, progression, or the save file.
       const portrait = camera.aspect <= 0.85;
+      previewAim.x = THREE.MathUtils.damp(previewAim.x, previewTarget.x, 4, dt);
+      previewAim.y = THREE.MathUtils.damp(previewAim.y, previewTarget.y, 4, dt);
+      const aimX = state.reducedMotion ? 0 : previewAim.x,
+        aimY = state.reducedMotion ? 0 : previewAim.y;
       camera.fov = portrait
         ? Math.max(
             82,
             THREE.MathUtils.radToDeg(
-              2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(21)) / camera.aspect),
+              2 *
+                Math.atan(
+                  Math.tan(THREE.MathUtils.degToRad(21)) / camera.aspect,
+                ),
             ),
           )
-        : 54;
-      camera.position.set(-37, 12, 82);
+        : 54 + (state.reducedMotion ? 0 : Math.exp(-time * 1.8) * 5);
+      camera.position.set(
+        -37 + aimX * 0.6,
+        12 + Math.sin(time * 0.14) * 0.24 + aimY * 0.25,
+        82,
+      );
       camera.lookAt(-170, 22, 60);
       camera.rotation.z = -0.12;
       camera.setViewOffset(
         width,
         height,
-        -width * (portrait ? 0.2 : 0.25),
-        height * (portrait ? 0.16 : 0.02),
+        -width * ((portrait ? 0.2 : 0.25) + aimX * 0.008),
+        height * ((portrait ? 0.16 : 0.02) + aimY * 0.006),
         width,
         height,
       );
@@ -399,6 +432,7 @@ export function renderWorld(o: Options) {
     // Warm the station passes before enabling Begin, then omit them in space.
     occlusion.enabled = !coarse && (!state.preview || !ready);
     bloom.enabled = !state.preview || !ready;
+    titleSatellite.update(time, state.preview);
     camera.updateMatrixWorld();
     for (const event of model.update(
       dt,
@@ -408,6 +442,7 @@ export function renderWorld(o: Options) {
       state.reducedMotion,
       state.playing,
       state.circuits,
+      state.preview,
     ))
       o.environment(event);
     renderer.shadowMap.needsUpdate = !!model.root.userData.shadowsDirty;
@@ -469,6 +504,8 @@ export function renderWorld(o: Options) {
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("blur", blur);
       window.removeEventListener("pagehide", save);
+      window.removeEventListener("pointermove", previewPointer);
+      window.removeEventListener("pointerout", previewLeave);
       canvas.removeEventListener("pointerdown", down);
       canvas.removeEventListener("pointermove", move);
       canvas.removeEventListener("pointerup", up);
