@@ -1104,10 +1104,6 @@ kbd {
   transform: translateY(1px);
   background: #bce1d520;
 }
-.notebook[data-phase="closing"] .tablet-indicator i:first-child {
-  background: #3b5354;
-  box-shadow: none;
-}
 .tablet-volume-key {
   position: absolute;
   right: -5px;
@@ -1151,31 +1147,6 @@ kbd {
 .tablet-fastener.br {
   bottom: 14px;
   right: 14px;
-}
-.tablet-brand {
-  position: absolute;
-  bottom: 10px;
-  left: 35px;
-  font: 8px var(--mono);
-  letter-spacing: 0.25em;
-  color: #849a9b;
-  text-shadow: 0 1px #000;
-}
-.tablet-indicator {
-  position: absolute;
-  bottom: 11px;
-  left: calc(50% - 16px);
-  display: flex;
-  gap: 6px;
-}
-.tablet-indicator i {
-  width: 6px;
-  height: 2px;
-  background: #4b6266;
-}
-.tablet-indicator i:first-child {
-  background: #abd9cc;
-  box-shadow: 0 0 8px #a6e5d29c;
 }
 .tablet-display {
   position: relative;
@@ -1230,12 +1201,6 @@ kbd {
   gap: 11px;
   border-bottom: 1px solid #a2e0d616;
   flex-shrink: 0;
-}
-.notebook-header > svg {
-  width: 21px;
-  height: 21px;
-  color: #afdace;
-  stroke-width: 1.5;
 }
 .notebook-header h1 {
   font-size: 18px;
@@ -1870,11 +1835,6 @@ kbd {
     top: 29px;
     right: 15px;
   }
-  .tablet-brand {
-    left: 24px;
-    bottom: 8px;
-    font-size: 7px;
-  }
   .tablet-camera,
   .tablet-speaker {
     top: 8px;
@@ -1887,19 +1847,12 @@ kbd {
   .tablet-fastener.br {
     bottom: 10px;
   }
-  .tablet-indicator {
-    bottom: 10px;
-  }
   .notebook-header {
     padding: 15px 64px 15px 16px;
     gap: 8px;
   }
   .notebook-header h1 {
     font-size: 16px;
-  }
-  .notebook-header > svg {
-    width: 18px;
-    height: 18px;
   }
   .notebook-tabs {
     margin: 0 12px;

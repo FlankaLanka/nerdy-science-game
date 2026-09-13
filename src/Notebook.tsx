@@ -1,4 +1,4 @@
-import { BookOpen, Map, Shapes, Sigma, X } from "lucide-react";
+import { Map, Shapes, Sigma, X } from "lucide-react";
 import type { CSSProperties } from "react";
 import { Dialog } from "./Dialog";
 import { CHAMBERS, FORMULAS } from "./chambers";
@@ -79,16 +79,9 @@ export default function Notebook({
         <i className="tablet-fastener tr" />
         <i className="tablet-fastener bl" />
         <i className="tablet-fastener br" />
-        <span className="tablet-brand">ASTERION</span>
-        <span className="tablet-indicator">
-          <i />
-          <i />
-          <i />
-        </span>
       </div>
       <div className="tablet-display" data-dialog-surface>
         <header className="notebook-header">
-          <BookOpen />
           <h1>Notebook</h1>
         </header>
         <nav
