@@ -1,4 +1,4 @@
-import { BookOpen, Map, Power, Shapes, Sigma } from "lucide-react";
+import { BookOpen, Map, Shapes, Sigma, X } from "lucide-react";
 import type { CSSProperties } from "react";
 import { Dialog } from "./Dialog";
 import { CHAMBERS, FORMULAS } from "./chambers";
@@ -62,12 +62,12 @@ export default function Notebook({
       onDismiss={() => onSound("tablet-close")}
       closeControl={(close) => (
         <button
-          className="tablet-power-button"
-          aria-label="Power off notebook"
-          title="Power off notebook · N / Esc"
+          className="notebook-close-button"
+          aria-label="Close notebook"
+          title="Close notebook · N / Esc"
           onClick={close}
         >
-          <Power aria-hidden="true" />
+          <X aria-hidden="true" />
         </button>
       )}
     >
@@ -90,10 +90,6 @@ export default function Notebook({
         <header className="notebook-header">
           <BookOpen />
           <h1>Notebook</h1>
-          <span>
-            <i />
-            {CHAMBERS[current]?.number ?? "01"}
-          </span>
         </header>
         <nav
           className="notebook-tabs"

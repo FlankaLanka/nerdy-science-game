@@ -65,11 +65,11 @@ try {
     await page.getByRole("button", { name: "Parts", exact: true }).click();
     await page.waitForTimeout(700);
     await page
-      .getByRole("button", { name: "Power off notebook", exact: true })
+      .getByRole("button", { name: "Close notebook", exact: true })
       .hover();
     await page.waitForTimeout(450);
     await page
-      .getByRole("button", { name: "Power off notebook", exact: true })
+      .getByRole("button", { name: "Close notebook", exact: true })
       .click();
     await page.waitForTimeout(800);
     await page.keyboard.press("n");

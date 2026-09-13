@@ -1070,74 +1070,39 @@ kbd {
   );
   border-radius: 3px;
 }
-/* Starting size: 24 px hardware face with a 44 px touch target. */
-.tablet-power-button {
+/* Starting close target: 44 px, aligned with the notebook header. */
+.notebook-close-button {
   position: absolute;
   z-index: 2;
-  right: 24px;
-  bottom: -7px;
+  top: 38px;
+  right: 38px;
   width: 44px;
   height: 44px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  color: #bcecd8;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #a9c5c3;
   touch-action: manipulation;
-}
-.tablet-power-button::before {
-  content: "";
-  position: absolute;
-  inset: 10px;
-  border: 1px solid #7f9e9c;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #344a50, #0a171e 70%);
-  box-shadow:
-    0 0 0 2px #071216,
-    0 0 0 3px #76908d44,
-    0 2px 2px #000a,
-    inset 0 1px #cce5dc30;
-  transition:
-    border-color 0.12s,
-    box-shadow 0.12s,
-    transform 0.12s;
-}
-.tablet-power-button svg {
-  position: relative;
-  width: 12px;
-  height: 12px;
-  filter: drop-shadow(0 0 4px #a5efd5a0);
   transition:
     color 0.12s,
-    filter 0.12s,
+    background 0.12s,
+    border-color 0.12s,
     transform 0.12s;
 }
-.tablet-power-button:hover::before {
-  border-color: #c4f6e0;
-  box-shadow:
-    0 0 0 2px #071216,
-    0 0 0 3px #9fcfbd77,
-    0 0 12px #b5eedc2b,
-    inset 0 1px #e2ffef4a;
+.notebook-close-button svg {
+  width: 18px;
+  height: 18px;
 }
-.tablet-power-button:focus-visible {
-  outline: none;
+.notebook-close-button:hover,
+.notebook-close-button:focus-visible {
+  color: #e3f3eb;
+  background: #bce1d511;
+  border-color: #bce1d536;
 }
-.tablet-power-button:focus-visible::before {
-  outline: 2px solid #e6f6d9;
-  outline-offset: 4px;
-}
-.tablet-power-button:active::before {
+.notebook-close-button:active {
   transform: translateY(1px);
-  box-shadow:
-    0 0 0 2px #071216,
-    inset 0 2px 4px #000c;
-}
-.tablet-power-button:active svg {
-  transform: translateY(1px);
-}
-.notebook[data-phase="closing"] .tablet-power-button svg {
-  color: #58716e;
-  filter: none;
+  background: #bce1d520;
 }
 .notebook[data-phase="closing"] .tablet-indicator i:first-child {
   background: #3b5354;
@@ -1259,7 +1224,7 @@ kbd {
   animation: tablet-wake-sweep 0.65s 0.12s ease-out both;
 }
 .notebook-header {
-  padding: 19px 24px 16px;
+  padding: 19px 72px 16px 24px;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -1276,21 +1241,6 @@ kbd {
   font-size: 18px;
   font-weight: 500;
   letter-spacing: 0.02em;
-}
-.notebook-header > span {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font: 10px var(--mono);
-  color: #9cb9bc;
-}
-.notebook-header > span i {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #abd9cc;
-  box-shadow: 0 0 8px #acd7bf70;
 }
 .notebook-tabs {
   position: relative;
@@ -1916,9 +1866,9 @@ kbd {
     inset: 21px 9px 25px;
     border-radius: 7px;
   }
-  .tablet-power-button {
-    right: 13px;
-    bottom: -9px;
+  .notebook-close-button {
+    top: 29px;
+    right: 15px;
   }
   .tablet-brand {
     left: 24px;
@@ -1941,7 +1891,7 @@ kbd {
     bottom: 10px;
   }
   .notebook-header {
-    padding: 15px 16px;
+    padding: 15px 64px 15px 16px;
     gap: 8px;
   }
   .notebook-header h1 {
