@@ -20,6 +20,14 @@ import type { ChamberId as MissionId } from "../chambers";
 import type { Circuit } from "../circuitKit";
 import { gamePixelRatio } from "../viewport";
 import { buildTitleSatellite } from "./titleSatellite";
+import { CHAMBERS } from "../chambers";
+import {
+  BENCH_HEIGHT,
+  KIT_SCALE,
+  benchFraming,
+  benchWorldPoint,
+} from "./benchView";
+import type { BenchInteraction, BenchPoint, BenchView } from "./benchView";
 
 export type Telemetry = {
   focus: MissionId | null;
@@ -33,6 +41,7 @@ export type WorldState = {
   sensitivity: number;
   circuits: Circuit[];
   preview: boolean;
+  activeBench: number | null;
 };
 type Options = {
   container: HTMLDivElement;
@@ -44,6 +53,7 @@ type Options = {
   pause: () => void;
   step: () => void;
   environment: (sound: "door" | "power") => void;
+  benchView: (view: BenchView | null) => void;
 };
 const empty = {
   capture() {},
@@ -52,6 +62,16 @@ const empty = {
   position: () => ({ ...SPAWN }),
   interact() {},
   stick(_x: number, _y: number) {},
+  setBenchInteraction(_interaction: BenchInteraction | null) {},
+  benchPoint(_x: number, _y: number): BenchPoint | null {
+    return null;
+  },
+  projectBench(_point: BenchPoint, _elevation = 0): BenchPoint | null {
+    return null;
+  },
+  pickBench(_x: number, _y: number): string | null {
+    return null;
+  },
   dispose() {},
 };
 
@@ -83,8 +103,9 @@ export function renderWorld(o: Options) {
   o.container.prepend(canvas);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("#020605");
-  scene.add(new THREE.HemisphereLight("#bac8b8", "#161915", 0.27));
-  const sun = new THREE.DirectionalLight("#a7ccdc", 0.75);
+  // Cool standby light reveals the room; its circuit supplies the overhead lights.
+  scene.add(new THREE.HemisphereLight("#cfdeed", "#435869", 0.32));
+  const sun = new THREE.DirectionalLight("#e2ecf3", 0.45);
   sun.position.set(30, 18, -30);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -98,7 +119,7 @@ export function renderWorld(o: Options) {
   sun.shadow.normalBias = 0.035;
   sun.shadow.bias = -0.0002;
   scene.add(sun);
-  const fill = new THREE.DirectionalLight("#b1c4c9", 0.18);
+  const fill = new THREE.DirectionalLight("#b7d3e7", 0.14);
   fill.position.set(-10, 12, 20);
   scene.add(fill);
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -119,6 +140,47 @@ export function renderWorld(o: Options) {
   const camera = new THREE.PerspectiveCamera(68, 1, 0.08, 650);
   camera.rotation.order = "YXZ";
   scene.add(camera);
+  // A work light travels with the close-up; the room and its original kit stay mounted.
+  const workLight = new THREE.PointLight("#e5efdd", 0, 5, 2);
+  scene.add(workLight);
+  let activeBench: number | null = null;
+  let interaction: BenchInteraction | null = null;
+  let interactionRevision = 0;
+  let cameraTravel: {
+    position: THREE.Vector3;
+    rotation: THREE.Quaternion;
+    fov: number;
+    offsetX: number;
+    offsetY: number;
+    elapsed: number;
+  } | null = null;
+  let publishedView = "";
+  const raycaster = new THREE.Raycaster();
+  const boardPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -BENCH_HEIGHT);
+  const rayPoint = new THREE.Vector3();
+  function benchRay(x: number, y: number) {
+    if (
+      activeBench === null ||
+      cameraTravel ||
+      o.state().activeBench !== activeBench
+    )
+      return false;
+    const r = canvas.getBoundingClientRect();
+    raycaster.setFromCamera(
+      new THREE.Vector2(
+        ((x - r.left) / r.width) * 2 - 1,
+        1 - ((y - r.top) / r.height) * 2,
+      ),
+      camera,
+    );
+    return true;
+  }
+  function publishBenchView(view: BenchView | null) {
+    const key = JSON.stringify(view);
+    if (key === publishedView) return;
+    publishedView = key;
+    o.benchView(view);
+  }
   const titleSatellite = buildTitleSatellite(scene);
   const previewAim = new THREE.Vector2(),
     previewTarget = new THREE.Vector2();
@@ -142,9 +204,9 @@ export function renderWorld(o: Options) {
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const occlusion = new SSAOPass(scene, camera, 1, 1, 12);
-  occlusion.kernelRadius = 0.45;
+  occlusion.kernelRadius = 0.25;
   occlusion.minDistance = 0.0002;
-  occlusion.maxDistance = 0.018;
+  occlusion.maxDistance = 0.009;
   occlusion.enabled = !coarse;
   composer.addPass(occlusion);
   const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.16, 0.32, 2.1);
@@ -186,7 +248,7 @@ export function renderWorld(o: Options) {
     save();
   }
   function capture() {
-    if (disposed) return;
+    if (disposed || o.state().activeBench !== null || cameraTravel) return;
     canvas.focus({ preventScroll: true });
     if (!coarse && document.pointerLockElement !== canvas) {
       try {
@@ -324,15 +386,38 @@ export function renderWorld(o: Options) {
     last = now;
     const state = o.state();
     if (document.hidden) return;
+    if (state.activeBench !== activeBench) {
+      activeBench = state.activeBench;
+      cameraTravel = {
+        position: camera.position.clone(),
+        rotation: camera.quaternion.clone(),
+        fov: camera.fov,
+        offsetX: camera.view?.enabled ? camera.view.offsetX : 0,
+        offsetY: camera.view?.enabled ? camera.view.offsetY : 0,
+        elapsed: 0,
+      };
+      clear();
+      if (activeBench === null) interaction = null;
+      publishBenchView({
+        index: activeBench,
+        ready: false,
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0,
+      });
+    }
     if (wasPlaying && !state.playing) release();
     wasPlaying = state.playing;
     if (circuits !== state.circuits) {
       circuits = state.circuits;
       revision++;
     }
-    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.preview}:${state.completed.join()}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}`;
+    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.preview}:${state.completed.join()}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}:${activeBench}:${interactionRevision}`;
     if (
       !state.playing &&
+      !cameraTravel &&
+      (activeBench === null || state.reducedMotion) &&
       (!state.preview || state.reducedMotion) &&
       ready &&
       stillFrame === frameKey
@@ -340,7 +425,7 @@ export function renderWorld(o: Options) {
       return;
     stillFrame = state.playing ? "" : frameKey;
     let walking = false;
-    if (state.playing) {
+    if (state.playing && !cameraTravel && activeBench === null) {
       player.yaw +=
         ((keys.has("ArrowLeft") ? 1 : 0) - (keys.has("ArrowRight") ? 1 : 0)) *
         dt *
@@ -424,7 +509,79 @@ export function renderWorld(o: Options) {
       camera.fov = 68;
       camera.clearViewOffset();
       camera.rotation.set(player.pitch, player.yaw, 0, "YXZ");
+      const framing = benchFraming(width, height);
+      let offsetX = 0,
+        offsetY = 0;
+      if (activeBench !== null) {
+        const bench = CHAMBERS[activeBench].bench;
+        camera.position.set(bench.x, BENCH_HEIGHT + framing.distance, bench.z);
+        camera.rotation.set(-Math.PI / 2, 0, 0, "YXZ");
+        camera.fov = framing.fov;
+        offsetX = framing.offsetX;
+        offsetY = framing.offsetY;
+        workLight.position.set(
+          bench.x - 0.65,
+          BENCH_HEIGHT + 1.25,
+          bench.z - 0.35,
+        );
+      }
+      if (cameraTravel) {
+        cameraTravel.elapsed += dt;
+        const progress = state.reducedMotion
+          ? 1
+          : Math.min(1, cameraTravel.elapsed / 0.8);
+        const eased = progress * progress * (3 - 2 * progress);
+        camera.position.lerpVectors(
+          cameraTravel.position,
+          camera.position,
+          eased,
+        );
+        // slerpQuaternions copies its start into `this`; preserve the destination.
+        camera.quaternion.slerpQuaternions(
+          cameraTravel.rotation,
+          camera.quaternion.clone(),
+          eased,
+        );
+        camera.fov = THREE.MathUtils.lerp(cameraTravel.fov, camera.fov, eased);
+        offsetX = THREE.MathUtils.lerp(cameraTravel.offsetX, offsetX, eased);
+        offsetY = THREE.MathUtils.lerp(cameraTravel.offsetY, offsetY, eased);
+        if (progress === 1) cameraTravel = null;
+      }
+      camera.setViewOffset(width, height, offsetX, offsetY, width, height);
+      workLight.intensity = state.reducedMotion
+        ? activeBench === null
+          ? 0
+          : 8
+        : THREE.MathUtils.damp(
+            workLight.intensity,
+            activeBench === null ? 0 : 8,
+            6,
+            dt,
+          );
+      camera.updateMatrixWorld();
+      if (!cameraTravel) {
+        publishBenchView(
+          activeBench === null
+            ? null
+            : {
+                index: activeBench,
+                ready: true,
+                left: framing.left,
+                top: framing.top,
+                width: framing.width,
+                height: framing.height,
+              },
+        );
+      }
     }
+    camera.updateProjectionMatrix();
+    canvas.dataset.cameraMode = state.preview
+      ? "preview"
+      : cameraTravel
+        ? "transition"
+        : activeBench !== null
+          ? "bench"
+          : "walk";
     // Warm the station passes before enabling Begin, then omit them in space.
     occlusion.enabled = !coarse && (!state.preview || !ready);
     bloom.enabled = !state.preview || !ready;
@@ -439,6 +596,8 @@ export function renderWorld(o: Options) {
       state.playing,
       state.circuits,
       state.preview,
+      activeBench,
+      interaction,
     ))
       o.environment(event);
     renderer.shadowMap.needsUpdate = !!model.root.userData.shadowsDirty;
@@ -475,6 +634,39 @@ export function renderWorld(o: Options) {
     capture,
     release,
     interact,
+    setBenchInteraction(value: BenchInteraction | null) {
+      interaction = value;
+      interactionRevision++;
+    },
+    benchPoint(x: number, y: number): BenchPoint | null {
+      if (
+        !benchRay(x, y) ||
+        !raycaster.ray.intersectPlane(boardPlane, rayPoint)
+      )
+        return null;
+      const bench = CHAMBERS[activeBench!].bench;
+      return {
+        x: (rayPoint.x - bench.x) / KIT_SCALE + 450,
+        y: (rayPoint.z - bench.z) / KIT_SCALE + 250,
+      };
+    },
+    projectBench(point: BenchPoint, elevation = 0): BenchPoint | null {
+      if (activeBench === null || cameraTravel) return null;
+      const p = benchWorldPoint(
+        CHAMBERS[activeBench].bench,
+        point,
+        elevation,
+      ).project(camera);
+      const r = canvas.getBoundingClientRect();
+      return {
+        x: r.left + ((p.x + 1) * r.width) / 2,
+        y: r.top + ((1 - p.y) * r.height) / 2,
+      };
+    },
+    pickBench(x: number, y: number): string | null {
+      if (!benchRay(x, y)) return null;
+      return model.pickBench(activeBench!, raycaster);
+    },
     stick(x: number, y: number) {
       stickX = x;
       stickY = y;

@@ -45,18 +45,19 @@ export function useSound(enabled: boolean) {
         noise.buffer = buffer;
         noise.loop = true;
         filter.type = "lowpass";
-        filter.frequency.value = 240;
-        volume.gain.value = 0.065;
+        filter.frequency.value = 650;
+        volume.gain.value = 0.025;
         noise.connect(filter);
         filter.connect(volume);
         volume.connect(master);
         noise.start();
-        for (const frequency of [48, 72]) {
+        // A faint, consonant ventilation tone instead of a sub-bass rumble.
+        for (const frequency of [196, 294]) {
           const hum = context.createOscillator(),
             humGain = context.createGain();
           hum.type = "sine";
           hum.frequency.value = frequency;
-          humGain.gain.value = 0.045;
+          humGain.gain.value = 0.008;
           hum.connect(humGain);
           humGain.connect(master);
           hum.start();
@@ -109,7 +110,7 @@ export function useSound(enabled: boolean) {
       return;
     }
     if (kind === "door" || kind === "power") {
-      // Starting envelopes: a servo hiss and low motor spin-up, never a startle cue.
+      // Light pneumatic doors and a gentle equipment startup.
       const duration = kind === "door" ? 0.6 : 1.2;
       const buffer = context.createBuffer(
         1,
@@ -133,7 +134,7 @@ export function useSound(enabled: boolean) {
         kind === "door" ? 240 : 1100,
         context.currentTime + duration,
       );
-      gain.gain.value = kind === "door" ? 0.12 : 0.14;
+      gain.gain.value = kind === "door" ? 0.07 : 0.06;
       source.connect(filter);
       filter.connect(gain);
       gain.connect(master);
@@ -147,15 +148,15 @@ export function useSound(enabled: boolean) {
         motorGain = context.createGain();
       motor.type = "sine";
       motor.frequency.setValueAtTime(
-        kind === "door" ? 100 : 42,
+        kind === "door" ? 180 : 196,
         context.currentTime,
       );
       motor.frequency.exponentialRampToValueAtTime(
-        kind === "door" ? 65 : 120,
+        kind === "door" ? 120 : 392,
         context.currentTime + duration,
       );
       motorGain.gain.setValueAtTime(0, context.currentTime);
-      motorGain.gain.linearRampToValueAtTime(0.13, context.currentTime + 0.08);
+      motorGain.gain.linearRampToValueAtTime(0.06, context.currentTime + 0.08);
       motorGain.gain.linearRampToValueAtTime(0, context.currentTime + duration);
       motor.connect(motorGain);
       motorGain.connect(master);
@@ -207,7 +208,7 @@ export function useSound(enabled: boolean) {
       source.buffer = buffer;
       filter.type = "lowpass";
       filter.frequency.value = 690;
-      gain.gain.value = 0.2;
+      gain.gain.value = 0.12;
       source.connect(filter);
       filter.connect(gain);
       gain.connect(master);

@@ -24,8 +24,9 @@ test("first chamber is one connection, automatic restoration, and a quiet HUD", 
   await connect(page, "Battery negative", "Bulb contact B");
   await restored(page, 0);
   await expect(page.locator(".room-marker")).toContainText("01");
-  const hud = await page.locator(".game-chrome").innerText();
-  expect(hud.trim()).toBe("01");
+  await expect(page.locator(".room-marker")).toContainText("Wake");
+  await expect(page.getByRole("button", { name: "Open notebook", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Pause game", exact: true })).toHaveCount(0);
   await bench(page);
   await page.getByRole("button", { name: "Reset circuit" }).click();
   await expect(page.getByText("Power restored", { exact: true })).toBeVisible();

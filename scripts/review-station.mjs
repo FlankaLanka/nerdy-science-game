@@ -40,6 +40,11 @@ const shots = [
   { name: "resistance", index: 3, kit: true, example: true },
   { name: "independent-branches", index: 5, completed: 6, kit: true },
   { name: "parts", index: 3, book: "Parts" },
+  { name: "pause", index: 3, pause: true },
+  { name: "pause-options", index: 3, pause: "Options" },
+  { name: "pause-restart", index: 3, pause: "New run" },
+  { name: "pause-phone", index: 3, pause: true, viewport: { width: 320, height: 568 }, touch: true },
+  { name: "pause-landscape", index: 3, pause: true, viewport: { width: 844, height: 390 }, touch: true },
   {
     name: "parts-phone",
     index: 3,
@@ -102,6 +107,7 @@ try {
         reducedMotion: "reduce",
       }),
       errors = [];
+    page.setDefaultTimeout(90000);
     page.on("pageerror", (e) => errors.push(e.message));
     page.on("response", (r) => {
       if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`);
@@ -130,11 +136,16 @@ try {
     if (shot.kit) {
       await page.getByRole("button", { name: "Use circuit bench" }).waitFor();
       await page.keyboard.press("e");
-      await page.locator(".kit-board canvas").waitFor();
+      await page.locator('.kit-board[data-ready="true"]').waitFor();
     }
     if (shot.book) {
       await page.keyboard.press("n");
       await page.getByRole("button", { name: shot.book, exact: true }).click();
+    }
+    if (shot.pause) {
+      await page.keyboard.press("Escape");
+      if (typeof shot.pause === "string")
+        await page.getByRole("button", { name: shot.pause, exact: true }).click();
     }
     await page.waitForTimeout(1000);
     await page.screenshot({ path: `${output}/${shot.name}.png` });

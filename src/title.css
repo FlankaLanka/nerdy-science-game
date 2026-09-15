@@ -1,0 +1,105 @@
+.title-screen {
+  --mint: #23738d;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: max(32px, env(safe-area-inset-top))
+    max(24px, 6.4vw, env(safe-area-inset-right))
+    max(32px, env(safe-area-inset-bottom))
+    max(24px, 6.4vw, env(safe-area-inset-left));
+  background: linear-gradient(
+    90deg,
+    #f5f3ec 0%,
+    #f0f3eef0 28%,
+    #e4eef09e 48%,
+    #dceef21a 70%,
+    transparent 85%
+  );
+}
+
+.title-screen h1 {
+  color: #244b63;
+  font-size: clamp(36px, 6.4vw, 112px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: .085em;
+  margin-left: -.055em;
+}
+
+.begin-button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  margin: 32px 0 0 -32px;
+  padding: 0 14px 0 0;
+  border: 0;
+  border-radius: 0;
+  color: #315d73;
+  background: transparent;
+  font-size: clamp(20px, 1.7vw, 26px);
+  text-align: left;
+  transition: color .16s;
+}
+
+.begin-button svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #9b582b;
+  transition: transform .16s;
+}
+
+.begin-button:hover:not(:disabled),
+.begin-button:focus-visible {
+  color: #173e54;
+}
+
+.begin-button:hover:not(:disabled) svg,
+.begin-button:focus-visible svg {
+  transform: translateX(4px);
+}
+
+.begin-button:disabled {
+  opacity: .65;
+}
+
+@media (max-aspect-ratio: 17 / 20) {
+  .title-screen {
+    align-items: flex-end;
+    padding-bottom: max(15vh, env(safe-area-inset-bottom));
+    background: linear-gradient(
+      0deg,
+      #f5f3ec 0%,
+      #f0f3effa 24%,
+      #e4eef0b3 42%,
+      transparent 70%
+    );
+  }
+
+  .title-screen h1 {
+    font-size: clamp(30px, 9vw, 78px);
+  }
+
+  .begin-button {
+    margin-left: 0;
+    margin-top: 24px;
+  }
+}
+
+@media (max-height: 480px) {
+  .begin-button {
+    margin-top: 20px;
+  }
+}
+
+.reduced-motion .begin-button svg {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .begin-button svg {
+    transform: none !important;
+  }
+}

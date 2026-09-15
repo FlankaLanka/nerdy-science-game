@@ -19,7 +19,14 @@ test("touch circuit controls and keyboard-opened notebook tabs fit a phone viewp
   await expect(
     page.getByRole("region", { name: "Chamber 01 circuit" }),
   ).toBeVisible();
-  await expect(page.locator(".kit-board canvas")).toBeVisible();
+  await expect(page.locator(".kit-board")).toHaveAttribute(
+    "data-ready",
+    "true",
+  );
+  await expect(page.locator(".world canvas")).toHaveAttribute(
+    "data-camera-mode",
+    "bench",
+  );
   await page
     .getByRole("button", { name: "Battery negative", exact: true })
     .tap();

@@ -10,7 +10,8 @@ import type { Telemetry, WorldState } from "./scene/renderWorld";
 import { SPAWN } from "./scene/navigation";
 import type { Player } from "./scene/navigation";
 import type { ChamberId } from "./chambers";
-export type WorldHandle = {
+import type { BenchControls, BenchView } from "./scene/benchView";
+export type WorldHandle = BenchControls & {
   capture: () => void;
   release: () => void;
   reset: () => void;
@@ -25,6 +26,7 @@ type Props = WorldState & {
   onError: () => void;
   onStep: () => void;
   onEnvironment: (sound: "door" | "power") => void;
+  onBenchView: (view: BenchView | null) => void;
 };
 export default forwardRef<WorldHandle, Props>(function World(props, ref) {
   const host = useRef<HTMLDivElement>(null),
@@ -41,6 +43,12 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
       release: () => controls.current?.release(),
       reset: () => controls.current?.reset(),
       position: () => controls.current?.position() ?? { ...SPAWN },
+      setBenchInteraction: (interaction) =>
+        controls.current?.setBenchInteraction(interaction),
+      benchPoint: (x, y) => controls.current?.benchPoint(x, y) ?? null,
+      projectBench: (point, elevation) =>
+        controls.current?.projectBench(point, elevation) ?? null,
+      pickBench: (x, y) => controls.current?.pickBench(x, y) ?? null,
     }),
     [],
   );
@@ -62,6 +70,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
         pause: () => latest.current.onPause(),
         step: () => latest.current.onStep(),
         environment: (sound) => latest.current.onEnvironment(sound),
+        benchView: (view) => latest.current.onBenchView(view),
       });
     });
     return () => {

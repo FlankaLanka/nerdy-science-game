@@ -7,15 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  Check,
-  ChevronRight,
-  Play,
-  RotateCcw,
-  Volume2,
-  VolumeX,
-  X,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import {
   campaignReducer,
   completedIds,
@@ -29,9 +21,10 @@ import { CHAMBERS } from "./chambers";
 import type { ChamberId } from "./chambers";
 import type { KitAction } from "./circuitKit";
 import type { WorldHandle } from "./World";
+import type { BenchView } from "./scene/benchView";
 import { PLAYER_KEY, SPAWN } from "./scene/navigation";
 import { useSound } from "./audio";
-import { Dialog } from "./Dialog";
+import PauseMenu from "./PauseMenu";
 import Notebook from "./Notebook";
 import TitleScreen from "./TitleScreen";
 import type { NotebookTab } from "./Notebook";
@@ -54,8 +47,8 @@ export default function App() {
   const [active, setActive] = useState<number | null>(null),
     [room, setRoom] = useState(0),
     [menu, setMenu] = useState<"pause" | "notebook" | null>(null);
+  const [benchView, setBenchView] = useState<BenchView | null>(null);
   const [tab, setTab] = useState<NotebookTab>("parts"),
-    [confirmReset, setConfirmReset] = useState(false),
     [storageFailed, setStorageFailed] = useState(false);
   const [subtitle, setSubtitle] = useState<{ id: string; text: string } | null>(
     null,
@@ -68,7 +61,7 @@ export default function App() {
     heard = useRef(new Set(state.heard)),
     transition = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completed = completedIds(state),
-    playing = started && active === null && menu === null;
+    playing = started && active === null && menu === null && benchView === null;
   const reduced = useReducedMotion(state.reducedMotion);
   useEffect(() => {
     try {
@@ -132,9 +125,14 @@ export default function App() {
     world.current?.release();
     setMenu("pause");
   }, []);
+  const openNotebook = useCallback((nextTab: NotebookTab = "parts") => {
+    world.current?.release();
+    setTab(nextTab);
+    current.current.sound.play("tablet-open");
+    setMenu("notebook");
+  }, []);
   function resume() {
     setMenu(null);
-    setConfirmReset(false);
   }
   useEffect(() => {
     if (menu && transition.current) {
@@ -180,10 +178,7 @@ export default function App() {
         // Tab remains normal focus navigation while working at the bench.
         if (e.code === "Tab" && current.current.active !== null) return;
         e.preventDefault();
-        world.current?.release();
-        setTab(e.code === "KeyM" ? "map" : "parts");
-        current.current.sound.play("tablet-open");
-        setMenu("notebook");
+        openNotebook(e.code === "KeyM" ? "map" : "parts");
       }
       if (e.key === "Escape") {
         e.preventDefault();
@@ -193,7 +188,7 @@ export default function App() {
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [leaveBench, pause]);
+  }, [leaveBench, pause, openNotebook]);
   function begin() {
     if (!ready || started) return;
     setStarted(true);
@@ -230,7 +225,6 @@ export default function App() {
     setRoom(0);
     setActive(null);
     setMenu(null);
-    setConfirmReset(false);
     setStarted(false);
   }
   return (
@@ -242,6 +236,8 @@ export default function App() {
           ref={world}
           playing={playing && !failed}
           preview={!started}
+          activeBench={failed ? null : active}
+          onBenchView={setBenchView}
           completed={completed}
           circuits={state.rooms}
           reducedMotion={reduced}
@@ -259,6 +255,7 @@ export default function App() {
           onReady={() => setReady(true)}
           onError={() => {
             setFailed(true);
+            setBenchView(null);
             setReady(true);
           }}
           onStep={() => sound.play("step")}
@@ -269,15 +266,14 @@ export default function App() {
         <TitleScreen
           ready={ready}
           returning={state.visited.length > 0}
-          sound={state.sound}
-          onSound={() => dispatch({ type: "SOUND" })}
           onBegin={begin}
         />
       )}
       {started && active === null && (
         <header className="game-chrome">
           <span className="room-marker">
-            {CHAMBERS[room]?.number ?? "01"}
+            <span className="hud-room-number">{CHAMBERS[room]?.number ?? "01"}</span>
+            <span className="hud-room-name">{CHAMBERS[room]?.name ?? "Wake"}</span>
             <i className={state.proofs[room] ? "powered" : ""} />
           </span>
         </header>
@@ -295,14 +291,19 @@ export default function App() {
             restored={!!state.proofs[active]}
             canUndo={!!state.history[active].length}
             reducedMotion={reduced}
+            world={failed ? null : world.current}
+            view={benchView}
+            suspended={menu !== null}
             onAction={action}
             onUndo={() => dispatch({ type: "UNDO", room: active })}
             onReset={() => dispatch({ type: "RESET_CIRCUIT", room: active })}
             onBack={leaveBench}
+            onNotebook={() => openNotebook()}
           />
         </Suspense>
       )}
-      {started && subtitle && !menu && (
+      {started && subtitle && !menu &&
+        (active === null || subtitle.id !== `hint:${CHAMBERS[active].id}`) && (
         <div className="narration" role="status">
           <span>ASTER</span>
           <p key={subtitle.id}>{subtitle.text}</p>
@@ -344,61 +345,15 @@ export default function App() {
         />
       )}
       {menu === "pause" && (
-        <Dialog
-          title="Pause"
-          onClose={resume}
-          className="pause-dialog"
+        <PauseMenu
+          sound={state.sound}
           reducedMotion={reduced}
-        >
-          <h1>Paused</h1>
-          <button className="pause-resume" onClick={resume}>
-            <Play />
-            Resume
-          </button>
-          <div className="pause-options">
-            <button
-              onClick={() => dispatch({ type: "SOUND" })}
-              aria-pressed={state.sound}
-            >
-              {state.sound ? <Volume2 /> : <VolumeX />}Sound
-            </button>
-            <button
-              onClick={() => dispatch({ type: "MOTION" })}
-              aria-pressed={reduced}
-            >
-              <span className="checkbox">{reduced && <Check />}</span>Reduced
-              motion
-            </button>
-          </div>
-          {confirmReset ? (
-            <div className="reset-confirm">
-              <p>Start a new run?</p>
-              <button onClick={restart}>
-                <RotateCcw />
-                New run
-              </button>
-              <button onClick={() => setConfirmReset(false)}>
-                <X />
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              className="quiet-button"
-              onClick={() => setConfirmReset(true)}
-            >
-              New run
-            </button>
-          )}
-          <a
-            className="credits-link"
-            href="/credits.html"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Credits
-          </a>
-        </Dialog>
+          onResume={resume}
+          onNotebook={() => openNotebook()}
+          onSound={() => dispatch({ type: "SOUND" })}
+          onMotion={() => dispatch({ type: "MOTION" })}
+          onRestart={restart}
+        />
       )}
     </main>
   );

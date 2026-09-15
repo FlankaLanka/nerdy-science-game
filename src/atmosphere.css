@@ -1,0 +1,121 @@
+/* Daylit research-station palette. The notebook retains its own device display. */
+.circuit-lab,
+.narration,
+.game-chrome,
+.world-hud,
+.fallback-navigation {
+  --bone: #294b60;
+  --muted: #526b7a;
+  --line: #66849640;
+  --mint: #23738d;
+  --amber: #925423;
+  color: var(--bone);
+}
+
+.game.has-started::after {
+  background: #e8ece7;
+}
+.room-marker {
+  color: #294b60;
+  background: #f6f4eced;
+  padding: 9px 12px;
+  border-radius: 5px;
+  border: 1px solid #718b982e;
+  text-shadow: none;
+}
+.room-marker i {
+  background: #cb8252;
+}
+.room-marker i.powered {
+  background: #238672;
+  box-shadow: 0 0 8px #7fc7b54d;
+}
+.reticle {
+  background: #315d73;
+  box-shadow: 0 0 0 1px #fff9;
+}
+.reticle.focused {
+  background: #f8f8ed40;
+}
+.use-prompt kbd {
+  color: #29556a;
+  background: #fffaf0ee;
+  border-color: #527c8d;
+  box-shadow: 0 3px 12px #3b62732b;
+}
+.narration {
+  background: #faf8f0ed;
+  border: 1px solid #96adb640;
+  box-shadow: 0 4px 22px #42607812;
+  text-shadow: none;
+}
+.narration > span {
+  color: #26748a;
+}
+.circuit-lab:not(.in-world) {
+  background: radial-gradient(ellipse at 50% 35%, #f9f6eb 0%, #e6eeec 65%, #d3e2e7 100%);
+}
+.in-world .lab-header,
+.in-world .history-tools,
+.in-world .tool-tray,
+.in-world .selection-bar:not(:empty) {
+  background: #f8f7eff2;
+  border-color: #90aab64d;
+  box-shadow: 0 5px 18px #365c701a;
+}
+.circuit-lab .icon-button {
+  color: #426579;
+}
+.circuit-lab button:not(:disabled):hover {
+  color: #1e526d;
+}
+.circuit-lab .icon-button:hover:not(:disabled) {
+  background: #5e8b9e1a;
+}
+.chamber-id > span,
+.selection-bar,
+.selection-bar > span:first-child {
+  color: #506b7b;
+}
+.status-dot {
+  background: #b87340;
+}
+.kit-board {
+  filter: drop-shadow(0 16px 24px #365c7029);
+}
+.kit-fallback {
+  background: #7598ab;
+  border-color: #c9d8dc;
+}
+.part-value {
+  color: #fff8e6;
+  background: #294b60eb;
+}
+.selection-bar .value-options {
+  border-color: #7895a355;
+}
+.value-options button {
+  border-color: #7895a333;
+}
+.value-options button[aria-pressed="true"] {
+  color: #245d75;
+  background: #c3dde6;
+}
+.tool-tray {
+  background: #f9faf4ed;
+  border-color: #90aab64d;
+  box-shadow: 0 5px 18px #365c7012;
+}
+.kit-tool[aria-pressed="true"] {
+  color: #235e78;
+  background: #d5e7eb;
+  border-color: #7cabbc88;
+}
+.bench-loading,
+.fallback-navigation {
+  background: #e6eeec;
+}
+.fallback-navigation button:hover:not(:disabled) {
+  color: #235e78;
+  background: #d5e7eb;
+}

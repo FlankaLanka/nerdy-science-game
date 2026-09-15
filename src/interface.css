@@ -1,0 +1,378 @@
+/* The station's interface: ivory mission plates, blue instrument panels,
+   and amber for the next action. Layout leaves the physical bench unobscured. */
+.ui-eyebrow {
+  display: block;
+  font: 9px/1.4 var(--mono);
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+.world > canvas:focus { outline: none; }
+.circuit-lab {
+  --bone: #edf3ef;
+  --muted: #abc0c9;
+  --mint: #8fdbd1;
+  --amber: #f0c091;
+  color: var(--bone);
+  padding: 0;
+}
+.circuit-lab .lab-header {
+  position: absolute;
+  top: 22px;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+.lab-header > button {
+  pointer-events: auto;
+}
+.circuit-lab .lab-header .icon-button {
+  width: 46px;
+  height: 46px;
+  color: #dce9eb;
+  border: 1px solid #9dbbc347;
+  border-radius: 50%;
+  background: #193440e8;
+  box-shadow: 0 4px 16px #071c2929;
+}
+.circuit-lab .lab-header .icon-button:hover {
+  color: #fff5dc;
+  background: #2d5262;
+  border-color: #b7d4d7;
+}
+.circuit-lab .chamber-id {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 23px 12px 12px;
+  border-radius: 3px 12px 12px 3px;
+  border-left: 3px solid #b87748;
+  background: #f2f2eaf2;
+  box-shadow: 0 5px 22px #102e4024;
+}
+.chamber-id .chamber-number {
+  color: #315b70;
+  font: 500 32px/1 "Space Grotesk", sans-serif;
+  letter-spacing: -.05em;
+  padding-right: 15px;
+  border-right: 1px solid #879fab55;
+}
+.mission-copy .ui-eyebrow { color: #526e7c; }
+.mission-copy h1 {
+  font: 500 23px/1.15 "Space Grotesk", sans-serif;
+  color: #223f50;
+  letter-spacing: -.02em;
+  margin-top: 3px;
+}
+.lab-status-block {
+  margin-left: auto;
+  align-self: center;
+  min-width: 152px;
+  padding: 11px 15px;
+  border: 1px solid #9cb7c344;
+  border-radius: 8px;
+  background: #183440eb;
+  box-shadow: 0 4px 20px #061d2826;
+}
+.circuit-lab .lab-state {
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  color: #edc29c;
+  font: 10px/1.5 var(--mono);
+}
+.circuit-lab .status-dot {
+  width: 6px;
+  height: 6px;
+  background: #e5ac77;
+  box-shadow: 0 0 0 3px #e5ac7717;
+}
+.chamber-progress {
+  display: flex;
+  gap: 4px;
+  margin-top: 9px;
+}
+.chamber-progress i {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: #7395a13d;
+}
+.chamber-progress .complete { background: #8dd2c5; }
+.chamber-progress .current { background: #e7b383; }
+.circuit-lab.restored .lab-state { color: #a3e4d4; }
+.circuit-lab.has-fault .lab-state { color: #ffc5ac; }
+.lab-objective {
+  position: absolute;
+  top: 103px;
+  left: 89px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  max-width: calc(100% - 118px);
+  color: #f0f3e9;
+  text-shadow: 0 1px 4px #092635;
+  font: 12px/1.5 "Space Grotesk", sans-serif;
+  pointer-events: none;
+}
+.lab-objective svg { width: 15px; height: 15px; flex-shrink: 0; color: #f1c18e; }
+.lab-objective p { background: #16323eeb; padding: 3px 9px; border-radius: 3px; }
+.circuit-lab .kit-toolbar {
+  position: absolute;
+  top: auto;
+  left: 50%;
+  right: auto;
+  bottom: 86px;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 10px 12px;
+  padding: 11px 12px 12px;
+  border: 1px solid #9cb8c34d;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #284955f5, #142f3bf7);
+  box-shadow: inset 0 1px #d5ebeb12, 0 10px 35px #071e3440;
+  pointer-events: auto;
+  width: max-content;
+  max-width: calc(100% - 32px);
+}
+.tool-instruction {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #b4cbd2;
+  font: 10px/1.4 var(--mono);
+  padding-left: 4px;
+}
+.tool-instruction svg { width: 12px; height: 12px; color: #e0b68e; flex-shrink: 0; }
+.circuit-lab .tool-tray,
+.circuit-lab .history-tools {
+  display: flex;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.circuit-lab .kit-tool {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-width: 78px;
+  min-height: 65px;
+  padding: 10px 16px 8px;
+  color: #c5d9df;
+  border: 1px solid #83a8b538;
+  border-radius: 8px;
+  background: #8cbbca09;
+  transition: background .16s, border-color .16s, transform .16s, color .16s;
+}
+.tool-glyph { display: grid; place-items: center; height: 25px; }
+.tool-glyph svg { width: 33px; height: 25px; stroke-width: 1.5; }
+.tool-name { font: 10px/1.2 var(--mono); }
+.tool-stock { position: absolute; right: 6px; top: 5px; color: #94b5c1; font: 9px/1 var(--mono); }
+.circuit-lab .kit-tool[aria-pressed="true"] {
+  color: #263e4d;
+  background: #e9e9d9;
+  border-color: #fff8dc;
+  box-shadow: 0 0 0 2px #dec99819, inset 0 -3px #d5b68b;
+}
+.kit-tool[aria-pressed="true"] .tool-stock { color: #52717e; }
+.circuit-lab .kit-tool:hover:not(:disabled) { color: #fff6e0; border-color: #b4d2d6; background: #446674; transform: translateY(-2px); }
+.circuit-lab .kit-tool[aria-pressed="true"]:hover { color: #203f51; background: #fff5dd; }
+.circuit-lab .kit-tool:disabled { opacity: .4; }
+.circuit-lab .history-tools { border-left: 1px solid #a3c0cc26; padding-left: 12px; align-items: stretch; }
+.circuit-lab .history-tools .icon-button {
+  width: 48px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #bfd4dd;
+  border-radius: 7px;
+  font: 9px var(--mono);
+}
+.circuit-lab .icon-button:hover:not(:disabled) { color: #fff2d6; background: #b9d9dd14; }
+.circuit-lab .selection-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 210px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 40px);
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  gap: 14px;
+  color: #d7e6e8;
+  border-radius: 9px;
+  pointer-events: auto;
+}
+.circuit-lab .selection-bar:not(:empty) {
+  padding: 9px 12px;
+  border: 1px solid #96b6c342;
+  background: #193845f7;
+  box-shadow: 0 6px 22px #071e3433;
+}
+.selection-identity { display: flex; align-items: center; gap: 9px; }
+.selection-identity > svg { width: 27px; height: 25px; color: #e7c296; }
+.selection-identity small,
+.meter small { display: block; color: #a4c0ca; font: 8px/1.4 var(--mono); margin-bottom: 3px; }
+.selection-identity strong { display: block; font: 500 12px "Space Grotesk", sans-serif; color: #eaf2ef; }
+.selection-bar .meter { display: flex; gap: 15px; }
+.selection-bar .meter > span { margin: 0; color: #e4eeec; }
+.meter strong { font: 13px var(--mono); }
+.meter em { font: normal 10px var(--mono); color: #b7d0d8; }
+.circuit-lab .value-options { border-color: #749ead66; }
+.circuit-lab .value-options button { min-width: 51px; min-height: 40px; color: #d5e5e9; border-color: #749ead33; }
+.circuit-lab .value-options button[aria-pressed="true"] { background: #d5e8e6; color: #204354; }
+.circuit-lab .value-options button:hover { background: #547787; color: #fff9e4; }
+.circuit-lab .selection-bar .icon-button { color: #bdd5de; }
+.circuit-lab .part-value { border: 1px solid #a4c4cf44; border-radius: 4px; background: #163746eb; padding: 4px 7px; }
+.circuit-lab:not(.in-world) .bench-shell { position: absolute; inset: 140px 24px 250px; padding: 0; }
+.circuit-lab:not(.in-world) .kit-board { width: min(100%, calc((100dvh - 400px) * 1.8)); }
+.narration {
+  color: #e5eeee;
+  background: #17343eea;
+  border: 1px solid #9bbec038;
+  border-left: 2px solid #dbb17d;
+  border-radius: 4px 9px 9px 4px;
+  box-shadow: 0 5px 20px #00172521;
+  padding: 10px 20px 12px;
+  max-width: min(640px, calc(100% - 40px));
+}
+.narration > span { color: #ebc596; font-size: 8px; letter-spacing: .22em; }
+.narration p { font-size: 13px; }
+.room-marker { padding: 9px 14px; gap: 11px; background: #193745e8; color: #dce8e9; border-color: #a8c5cb36; border-radius: 6px; }
+.hud-room-number { color: #ecc494; font-size: 18px; }
+.hud-room-name { font: 12px "Space Grotesk", sans-serif; }
+/* The notebook remains a physical device, with more legible, generous content. */
+.notebook { border-color: #819ca8; background: linear-gradient(145deg, #71858d, #344a55 12%, #1b303c 85%, #657e89); }
+.tablet-display { background: radial-gradient(ellipse at 0 0, #3a687459, transparent 60%), #142f3d; }
+.tablet-display::before { opacity: .25; }
+.notebook-header { padding-top: 19px; padding-bottom: 17px; gap: 20px; }
+.notebook-header h1 { color: #e9eeea; font-size: 25px; letter-spacing: -.025em; }
+.notebook-status { margin-left: auto; display: flex; align-items: center; gap: 7px; color: #accdcf; font: 9px var(--mono); white-space: nowrap; }
+.notebook-status i { width: 5px; height: 5px; border-radius: 50%; background: #d7b184; }
+.notebook-tabs button { height: 55px; font-size: 12px; color: #aec5cf; }
+.notebook-tabs [aria-current="page"] { color: #f1dfba; background: linear-gradient(0deg, #e0bb8412, transparent); }
+.notebook-tabs::after { background: #ddb783; box-shadow: none; }
+.part-index { gap: 13px; padding: 22px 24px; }
+.part-index article { border: 0; border-bottom: 1px solid #8bb2c126; border-radius: 0; background: none; box-shadow: none; padding: 15px 0; gap: 14px; }
+.part-index h2,
+.formula-index h2 { font-size: 15px; color: #e6edeb; margin-bottom: 7px; }
+.part-index p,
+.formula-index p:not(.equation) { font-size: 12px; line-height: 1.7; color: #b2cbd4; }
+.part-index small { color: #d1c6a8; }
+.part-specimen { background: none; border: 0; border-radius: 0; }
+.formula-index { display: grid; gap: 12px; padding: 22px 24px; }
+.formula-index article { border: 1px solid #8bb2c139; border-left: 3px solid #c2a179; border-radius: 4px 9px 9px 4px; padding: 18px 22px; background: #729baf0b; }
+.formula-index .equation { color: #f0dfb8; font-size: 29px; letter-spacing: .02em; }
+.notebook-close-button { top: 43px; color: #bfdae0; border-color: #98bac333; background: #16313e; }
+.notebook-page:focus-visible { outline-offset: -3px; }
+.notebook-footnote { color: #afc8d1 !important; }
+.notebook .map-room.current rect { stroke: #efd2a2; }
+
+@media (max-width: 640px) {
+  .circuit-lab .lab-header { top: 15px; left: 15px; right: 15px; gap: 7px; }
+  .circuit-lab .lab-header .icon-button { width: 37px; height: 42px; }
+  .circuit-lab .chamber-id { gap: 9px; padding: 10px; flex: 1; min-width: 0; }
+  .chamber-id .chamber-number { font-size: 26px; padding-right: 9px; }
+  .mission-copy { min-width: 0; }
+  .mission-copy .ui-eyebrow { font-size: 7px; letter-spacing: .05em; }
+  .mission-copy h1 { font-size: 18px; overflow: hidden; text-overflow: ellipsis; }
+  .lab-status-block { position: absolute; right: 0; top: 71px; min-width: 0; padding: 6px 8px; }
+  .circuit-lab .lab-state { font-size: 8px; }
+  .chamber-progress { margin-top: 6px; gap: 3px; }
+  .lab-objective { left: 15px; top: 96px; right: 127px; max-width: calc(100% - 140px); font-size: 10px; align-items: flex-start; }
+  .lab-objective p { padding: 3px 7px; }
+  .lab-objective svg { margin-top: 4px; width: 13px; height: 13px; }
+  .circuit-lab .kit-toolbar { bottom: 99px; gap: 8px; padding: 9px; max-width: calc(100% - 24px); }
+  .tool-instruction { font-size: 8px; max-width: 310px; }
+  .circuit-lab .kit-tool { min-width: 62px; min-height: 63px; padding: 8px 10px 7px; }
+  .tool-glyph svg { width: 29px; }
+  .tool-name { font-size: 9px; }
+  .circuit-lab .history-tools { padding-left: 7px; gap: 2px; }
+  .circuit-lab .history-tools .icon-button { width: 34px; font-size: 8px; }
+  .circuit-lab .selection-bar { bottom: 223px; gap: 8px; max-width: calc(100% - 24px); }
+  .circuit-lab .selection-bar:not(:empty) { padding: 7px 9px; }
+  .selection-identity > svg { display: none; }
+  .selection-identity strong { font-size: 11px; }
+  .selection-identity small { font-size: 7px; }
+  .selection-bar .meter { gap: 8px; }
+  .meter strong { font-size: 11px; }
+  .circuit-lab .selection-bar .icon-button { width: 32px; min-height: 42px; }
+  .circuit-lab .value-options button { min-width: 44px; font-size: 10px; }
+  .narration { padding: 9px 14px; bottom: 20px; max-width: calc(100% - 32px); }
+  .narration p { font-size: 11px; line-height: 1.5; }
+  .hud-room-name { display: none; }
+  .notebook-header { gap: 10px; }
+  .notebook-close-button { top: 36px; }
+  .notebook-header h1 { font-size: 23px; }
+  .notebook-status { display: none; }
+  .part-index { padding: 14px 12px; }
+  .part-index article { padding: 12px 0; gap: 12px; }
+  .part-index h2 { font-size: 14px; }
+  .part-index p { font-size: 11px; }
+  .formula-index { padding: 16px; }
+  .formula-index article { padding: 15px; }
+  .formula-index .equation { font-size: 24px; }
+}
+@media (max-height: 480px) and (min-width: 641px) {
+  .circuit-lab .lab-header { top: 12px; left: 20px; right: 20px; gap: 9px; }
+  .circuit-lab .chamber-id { padding: 7px 13px 7px 10px; }
+  .chamber-id .chamber-number { font-size: 26px; }
+  .mission-copy h1 { font-size: 18px; }
+  .mission-copy .ui-eyebrow { font-size: 7px; }
+  .lab-objective { top: 66px; left: 80px; font-size: 10px; }
+  .lab-status-block { padding: 7px 10px; }
+  .circuit-lab .kit-toolbar { left: auto; right: 13px; top: 91px; bottom: auto; transform: none; grid-template-columns: 1fr; gap: 7px; padding: 8px; width: 123px; }
+  .tool-instruction { display: none; }
+  .circuit-lab .tool-tray { flex-direction: row; flex-wrap: wrap; gap: 4px; }
+  .circuit-lab .kit-tool { min-width: 49px; flex: 1; padding: 7px 5px; min-height: 55px; }
+  .tool-name { font-size: 8px; }
+  .tool-glyph { height: 20px; }
+  .tool-glyph svg { height: 20px; }
+  .circuit-lab .history-tools { border-left: 0; padding: 5px 0 0; border-top: 1px solid #8cabb438; justify-content: space-around; }
+  .circuit-lab .history-tools .icon-button { height: 42px; font-size: 8px; }
+  .circuit-lab .selection-bar { bottom: 48px; left: calc(50% - 72px); gap: 8px; }
+  .circuit-lab .selection-bar:not(:empty) { padding: 4px 9px; }
+  .narration { bottom: 9px; padding: 6px 12px; max-width: calc(100% - 320px); }
+  .narration > span { display: none; }
+  .narration p { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .circuit-lab .kit-tool:hover { transform: none; }
+}
+@media (max-width: 360px) {
+  .circuit-lab .kit-tool { min-width: 56px; padding-inline: 8px; }
+  .circuit-lab .history-tools .icon-button { width: 30px; }
+}
+@media (max-height: 690px) and (max-width: 640px) {
+  .circuit-lab .lab-header { top: 12px; }
+  .circuit-lab .chamber-id { padding-block: 8px; }
+  .mission-copy .ui-eyebrow { display: none; }
+  .lab-status-block { top: 58px; }
+  .chamber-progress { display: none; }
+  .lab-objective { top: 78px; font-size: 9px; }
+  .circuit-lab .kit-toolbar { bottom: 65px; gap: 6px; padding: 7px; }
+  .circuit-lab .kit-tool { min-height: 53px; }
+  .circuit-lab .selection-bar { bottom: 171px; gap: 6px; }
+  .selection-bar .selection-identity,
+  .selection-bar .meter > span:last-child { display: none; }
+  .circuit-lab .selection-bar:not(:empty) { padding: 5px 7px; }
+  .narration { bottom: 8px; padding: 7px 10px; }
+  .narration > span { display: none; }
+  .narration p { font-size: 10px; }
+}

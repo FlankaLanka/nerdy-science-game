@@ -8,38 +8,29 @@ import { DECK, FURNITURE, PORTALS, windowAt } from "./shipLayout";
 import { shipArt, surface } from "./shipArt";
 import type { Obstacle, Player } from "./navigation";
 import { buildSpace } from "./space";
+import { BENCH_HEIGHT, KIT_SCALE } from "./benchView";
+import type { BenchInteraction } from "./benchView";
 /** A fixed modular kit, placed against a connected deck plan. No procedural room generation. */
 export function buildSpaceship(scene: THREE.Scene) {
   const root = new THREE.Group();
-  root.name = "Asterion / maintenance station";
+  root.name = "Asterion / research station";
   scene.add(root);
   const { box, bevel, rod, mesh, label, batch } = shipArt(root);
   const obstacles: Obstacle[] = FURNITURE.map((f) => ({ ...f }));
   const mat = (color: string, metalness = 0.35, roughness = 0.65) =>
     new THREE.MeshStandardMaterial({ color, metalness, roughness });
-  const ivory = mat("#979c90", 0.18, 0.76),
-    frame = mat("#46504c", 0.65, 0.42),
-    charcoal = mat("#202724", 0.45, 0.68),
-    rubber = mat("#0e1412", 0.03, 0.96),
-    steel = mat("#73827b", 0.8, 0.32),
-    copper = mat("#89613d", 0.75, 0.42),
-    ochre = mat("#b28e4d", 0.2, 0.7);
+  const ivory = mat("#f3f0e6", 0.05, 0.72),
+    frame = mat("#9badb7", 0.25, 0.48),
+    charcoal = mat("#526e80", 0.18, 0.7),
+    rubber = mat("#344957", 0.03, 0.9),
+    steel = mat("#c4d3da", 0.55, 0.36),
+    copper = mat("#dea074", 0.35, 0.5),
+    ochre = mat("#eba772", 0.08, 0.7),
+    ceiling = mat("#edf1ef", 0.02, 0.85);
   ivory.map = surface("panel");
-  const floor = mat("#777d73", 0.7, 0.8);
-  const loader = new THREE.TextureLoader();
-  const maps = ["deck-color", "deck-normal", "deck-roughness"].map((name) => {
-    const t = loader.load(`/materials/${name}.jpg`, () => {
-      root.userData.textureRevision = (root.userData.textureRevision ?? 0) + 1;
-    });
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.anisotropy = 4;
-    return t;
-  });
-  maps[0].colorSpace = THREE.SRGBColorSpace;
-  floor.map = maps[0];
-  floor.normalMap = maps[1];
-  floor.normalScale.set(0.45, 0.45);
-  floor.roughnessMap = maps[2];
+  const floor = mat("#dde2e1", 0.08, 0.68);
+  floor.map = surface("deck");
+  floor.map.wrapS = floor.map.wrapT = THREE.RepeatWrapping;
   const emission = (color: string, power = 1) =>
     new THREE.MeshStandardMaterial({
       color,
@@ -48,13 +39,12 @@ export function buildSpaceship(scene: THREE.Scene) {
       roughness: 0.4,
     });
   const trims = new Map<string, THREE.Material>();
-  const amber = emission("#edb56a", 0.7);
+  const amber = emission("#96dcec", 0.5);
   const fixtures: {
     x: number;
     y: number;
     z: number;
     system: ChamberId;
-    color: THREE.Color;
     material: THREE.MeshStandardMaterial;
   }[] = [];
   const glass = new THREE.MeshBasicMaterial({
@@ -248,6 +238,8 @@ export function buildSpaceship(scene: THREE.Scene) {
       );
     });
   for (const room of DECK) {
+    // The visible ceiling diffusers and local illumination share this room's circuit.
+    const lamp = emission("#fff0d9", 0.035);
     const x0 = room.x - room.width / 2,
       x1 = room.x + room.width / 2,
       z0 = room.z - room.depth / 2,
@@ -265,7 +257,7 @@ export function buildSpaceship(scene: THREE.Scene) {
       room.width,
       0.2,
       room.depth,
-      charcoal,
+      ceiling,
     );
     edge(
       room.width,
@@ -317,7 +309,7 @@ export function buildSpaceship(scene: THREE.Scene) {
         Math.max(1, room.width - 0.8),
         0.08,
         0.45,
-        rubber,
+        lamp,
       );
       for (const dx of [-0.5, 0.5])
         box(room.x + dx, room.height - 0.52, z, 0.22, 0.25, 0.14, charcoal);
@@ -325,18 +317,18 @@ export function buildSpaceship(scene: THREE.Scene) {
     const lx = room.x + (room.width > 8 ? room.width * 0.22 : 0),
       lz = room.z;
     if (clearsPortal(lx, lz, 1.45, 0.52)) {
-      const lamp = emission(room.color, 1);
-      bevel(lx, room.height - 0.32, lz, 1.45, 0.22, 0.52, rubber, 0.04);
+      bevel(lx, room.height - 0.32, lz, 1.45, 0.22, 0.52, ivory, 0.04);
       box(lx, room.height - 0.445, lz, 1.2, 0.02, 0.32, lamp);
-      fixtures.push({
-        x: lx,
-        y: room.height - 0.75,
-        z: lz,
-        system: room.system,
-        color: new THREE.Color(room.color),
-        material: lamp,
-      });
     }
+    // Corridors also have powered ceiling strips, even when a portal occupies
+    // the central fixture position.
+    fixtures.push({
+      x: lx,
+      y: room.height - 0.75,
+      z: lz,
+      system: room.system,
+      material: lamp,
+    });
     if (room.width > 6) {
       // Structural haunches soften the rectangular silhouette at ceiling junctions.
       for (const side of [-1, 1]) {
@@ -388,7 +380,7 @@ export function buildSpaceship(scene: THREE.Scene) {
     }
     bevel(0, 2.99, 0, 3.8, 0.38, 0.7, frame, 0.045, g);
     box(0, 3.29, 0, 3.8, 0.22, 0.4, charcoal, g);
-    label(p.name, "", 0, 3.01, 0.385, 0.52, 0.15, "#b7c7b9", 0, false, g);
+    label(p.name, "", 0, 3.01, 0.385, 0.52, 0.15, "#234959", 0, false, g);
     box(0, 0.012, 0, 3.24, 0.024, 0.7, rubber, g);
     const door = dynamic(p.x, 0, p.z);
     door.rotation.y = p.rotation;
@@ -419,12 +411,23 @@ export function buildSpaceship(scene: THREE.Scene) {
     doors.push({ portal: p, leaves, colliders, status, opening: 1 });
   }
   const benches = CHAMBERS.map((c) => {
-    bevel(c.bench.x, 0.47, c.bench.z, 2.9, 0.94, 1.5, charcoal, 0.09);
+    // Large chamber numbers make the experiments feel like a considered test suite.
+    const sign = new THREE.Group();
+    sign.position.set(c.x + 4.8, 2.05, c.z - 4.61);
+    root.add(sign);
+    bevel(0, 0, 0, 1.18, 1.62, 0.06, ivory, 0.035, sign);
+    box(-0.51, 0, 0.036, 0.045, 1.46, 0.012, ochre, sign);
+    label(c.number, "", 0, 0.2, 0.04, 0.93, 0.83, "#2f708a", 0, false, sign);
+    label("CIRCUIT LAB", "", 0, -0.5, 0.04, 0.93, 0.12, "#526b7a", 0, false, sign);
+    bevel(c.bench.x, 0.47, c.bench.z, 2.9, 0.94, 1.5, ivory, 0.09);
+    box(c.bench.x, 0.66, c.bench.z + 0.758, 2.55, 0.12, 0.018, charcoal);
+    label(c.number, "", c.bench.x - 0.99, 0.38, c.bench.z + 0.764,
+      0.35, 0.25, "#28728b", 0, false);
     for (const dx of [-1.2, 1.2])
       box(c.bench.x + dx, 0.6, c.bench.z + 0.77, 0.075, 0.7, 0.055, steel);
     const kit = buildKit();
-    kit.root.position.set(c.bench.x, 1.03, c.bench.z);
-    kit.root.scale.setScalar(0.0032);
+    kit.root.position.set(c.bench.x, BENCH_HEIGHT, c.bench.z);
+    kit.root.scale.setScalar(KIT_SCALE);
     root.add(kit.root);
     kit.sync(c.initial, simulate(c.initial));
     // The few wall posters appear only where a new equation becomes useful.
@@ -442,7 +445,7 @@ export function buildSpaceship(scene: THREE.Scene) {
         0.065,
         1.55,
         1.05,
-        "#d2dbc6",
+        "#276980",
         0,
         true,
         g,
@@ -469,6 +472,7 @@ export function buildSpaceship(scene: THREE.Scene) {
   return {
     root,
     obstacles,
+    pickBench: (index: number, raycaster: THREE.Raycaster) => benches[index]?.kit.pick(raycaster) ?? null,
     dispose() {
       benches.forEach((b) => b.kit.dispose());
     },
@@ -481,6 +485,8 @@ export function buildSpaceship(scene: THREE.Scene) {
       playing: boolean,
       circuits?: Circuit[],
       preview = false,
+      activeBench: number | null = null,
+      interaction: BenchInteraction | null = null,
     ) {
       const events: ("door" | "power")[] = [];
       root.userData.shadowsDirty = !initialized;
@@ -515,22 +521,23 @@ export function buildSpaceship(scene: THREE.Scene) {
           door.colliders[i].x = p.x + x * Math.cos(p.rotation);
           door.colliders[i].z = p.z - x * Math.sin(p.rotation);
         });
-        door.status.color.set(online.has(p.system) ? "#91c3aa" : "#b39059");
+        door.status.color.set(online.has(p.system) ? "#65cbb4" : "#edac79");
         door.status.emissive.copy(door.status.color);
       }
       benches.forEach((b, i) => {
-        const circuit = circuits?.[i] ?? CHAMBERS[i].initial;
+        const circuit = (i === activeBench ? interaction?.circuit : null) ?? circuits?.[i] ?? CHAMBERS[i].initial;
         if (circuit !== b.previous) {
           b.kit.sync(circuit, simulate(circuit));
           b.previous = circuit;
           root.userData.shadowsDirty = true;
         }
-        b.rail.emissiveIntensity = online.has(CHAMBERS[i].id) ? 1.5 : 0.08;
+        b.kit.interact(i === activeBench ? interaction : null, time, reduced);
+        b.rail.emissiveIntensity = online.has(CHAMBERS[i].id) ? 1.6 : 0.08;
       });
       for (const f of fixtures)
         f.material.emissiveIntensity = THREE.MathUtils.damp(
           f.material.emissiveIntensity,
-          online.has(f.system) ? 2.3 : 0.16,
+          online.has(f.system) ? 1.6 : 0.035,
           2,
           dt,
         );
@@ -543,8 +550,8 @@ export function buildSpaceship(scene: THREE.Scene) {
         .slice(0, 4);
       nearest.forEach((f, i) => {
         pools[i].position.set(f.x, f.y, f.z);
-        pools[i].color.set(online.has(f.system) ? "#e4e6d6" : "#d39b5e");
-        pools[i].intensity = online.has(f.system) ? 32 : 7;
+        pools[i].color.set(online.has(f.system) ? "#fff0d9" : "#b3d3ef");
+        pools[i].intensity = online.has(f.system) ? 32 : 3.5;
       });
       space.update(time, reduced, preview);
       if (root.userData.textureRevision !== textureRevision) {

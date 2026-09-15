@@ -83,6 +83,7 @@ export default function Notebook({
       <div className="tablet-display" data-dialog-surface>
         <header className="notebook-header">
           <h1>Notebook</h1>
+          <span className="notebook-status"><i />{unlocked} / 6 restored</span>
         </header>
         <nav
           className="notebook-tabs"
@@ -114,7 +115,13 @@ export default function Notebook({
             </button>
           ))}
         </nav>
-        <div className={`notebook-page page-${tab}`} key={tab}>
+        <div
+          className={`notebook-page page-${tab}`}
+          key={tab}
+          role="region"
+          aria-label={`${tab[0].toUpperCase()}${tab.slice(1)} notes`}
+          tabIndex={0}
+        >
           {tab === "parts" && (
             <div className="part-index">
               {parts.has("wire") && (

@@ -39,7 +39,14 @@ export async function bench(page: Page, index = 0) {
       name: `Chamber ${CHAMBERS[index].number} circuit`,
     }),
   ).toBeVisible();
-  await expect(page.locator(".kit-board canvas")).toBeVisible();
+  await expect(page.locator(".kit-board")).toHaveAttribute(
+    "data-ready",
+    "true",
+  );
+  await expect(page.locator(".world canvas")).toHaveAttribute(
+    "data-camera-mode",
+    "bench",
+  );
 }
 export async function connect(page: Page, a: string, b: string) {
   await page.getByRole("button", { name: a, exact: true }).click();

@@ -1,6 +1,6 @@
-# Asterion — Restore the light
+# Asterion — A place for bright ideas
 
-A quiet circuit-building game aboard a dark space station. Connect physical parts, watch current flow, and restore power to open the next chamber. ASTER, the station's stranded maintenance intelligence, accompanies the player through six short chambers to an observation deck.
+A relaxed circuit-building game aboard a research station waiting for power. Connect physical parts, watch current flow, and restore the lights to open the next chamber. ASTER, the station's gently playful research companion, accompanies the player through six short chambers to an observation deck. Clean ivory panels and blue and apricot accents sit in dim, cool standby light; solving a circuit brings on warm overhead lights and illuminated floor rails.
 
 ## Run
 
@@ -27,6 +27,8 @@ The default address is **http://127.0.0.1:5174**; set `PORT` to change it. No ac
 
 Touch controls provide a movement stick, drag-to-look and a bench interaction button. Circuit contacts also work by tapping. The interface uses the full viewport, including portrait screens.
 
+Using a bench glides the room camera directly overhead. Parts, wires, and live drag previews stay on the original 3D table, with a small parts tray and selection controls around it. Leaving glides back to the same standing position and viewing direction. Reduced motion switches views immediately; a flat kit is used only when WebGL is unavailable.
+
 ## Sample progression
 
 | Chamber           | New idea                         | Player action                                             |
@@ -36,11 +38,11 @@ Touch controls provide a movement stick, drag-to-look and a bench interaction bu
 | 03 · Assembly     | Constructing with familiar parts | Add a battery and bulb; make a loop                       |
 | 04 · Balance      | Resistance and voltage           | Add and adjust a resistor for a 6 V lamp on a 12 V supply |
 | 05 · Shared light | Series circuits                  | Power two 6 V lamps from one 12 V source                  |
-| 06 · Stay alive   | Parallel circuits and isolation  | Give the second lamp an independent path                  |
+| 06 · Independence | Parallel circuits and isolation  | Give the second lamp an independent path                  |
 
 Circuits run continuously. There is no Test button, hypothesis form, measurement log or commissioning step. A working circuit lights its chamber and permanently unlocks the next door. The first successful restoration returns the player to the room; the bench remains available for experimentation.
 
-The notebook has **Parts**, **Formulas** and **Map** tabs. Components and equations appear as they are encountered. Three wall posters introduce Ohm's law, series voltage sharing and parallel voltage. The walking HUD contains a room number, reticle, contextual interaction key, notebook and pause icons. ASTER speaks through short, transient subtitles.
+The notebook has **Parts**, **Formulas** and **Map** tabs. Components and equations appear as they are encountered. Three wall posters introduce Ohm's law, series voltage sharing and parallel voltage. The walking HUD contains a room number, reticle, and contextual interaction key. Open the notebook with N and pause with Esc. The pause menu uses a sparse list over the scene, with sound and motion controls under Options; arrow keys navigate and Esc goes back. ASTER speaks through short, transient subtitles.
 
 Eleven window banks provide 38 hull openings onto textured Earth, Moon, Saturn and a star field. The final observation deck has windows on three sides. These views are composed for the fictional setting; they are not a scale model of the Solar System. Asset attribution is available through Pause → Credits.
 

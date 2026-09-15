@@ -49,6 +49,10 @@ test("the tablet respects live motion preferences, retains focus, and stays read
   await expect(
     page.getByRole("heading", { name: "Ohm's law", exact: true }),
   ).toBeVisible();
+  const formulas = page.getByRole("region", { name: "Formulas notes" });
+  await formulas.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(() => formulas.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
   expect(
     (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze())
       .violations,

@@ -1,0 +1,86 @@
+/* A quiet game menu over the player's view. One list, one selection. */
+.dialog.pause-dialog {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #f2f4f3;
+  overflow: auto;
+  animation: none;
+}
+.dialog.pause-dialog::backdrop {
+  background: linear-gradient(90deg, #080e14eb 0%, #0b141dcc 38%, #101c2778 100%);
+  backdrop-filter: saturate(.4);
+}
+.pause-dialog .screen-content {
+  display: flex;
+  align-items: center;
+  min-height: 100%;
+  padding: max(36px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(36px, env(safe-area-inset-bottom)) max(10vw, env(safe-area-inset-left));
+}
+.pause-panel { width: min(360px, 100%); min-height: 400px; }
+.pause-panel h1 {
+  margin: 0 0 34px 16px;
+  font: 400 clamp(30px, 3.1vw, 44px)/1.1 "Space Grotesk", sans-serif;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.pause-menu { display: flex; flex-direction: column; gap: 3px; }
+.pause-menu > :is(button, a) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 47px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #c6cdd1;
+  font: 400 19px/1.25 "Space Grotesk", sans-serif;
+  letter-spacing: .035em;
+  text-align: left;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.pause-dialog .pause-menu > :is(button, a):hover { color: #c6cdd1; }
+.pause-dialog .pause-menu > :is(button, a):focus {
+  background: #e6ecef;
+  color: #172631;
+  outline: none;
+}
+.pause-dialog .pause-menu > :is(button, a):active { background: #b7dbe6; color: #172631; }
+.pause-value { font-size: 14px; letter-spacing: .07em; }
+.pause-warning { margin: -16px 16px 24px; color: #c6cdd1; font-size: 14px; line-height: 1.5; }
+.pause-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin: 30px 0 0 16px;
+  padding: 0;
+  color: #b2bec7;
+  font-size: 12px;
+}
+.pause-back kbd { border: 1px solid #9eafbc; padding: 3px 5px; text-transform: uppercase; }
+.pause-back:focus-visible { outline-color: #e6ecef; }
+@media (max-width: 640px) {
+  .pause-dialog .screen-content { padding-left: max(24px, env(safe-area-inset-left)); }
+  .pause-menu > :is(button, a) { font-size: 17px; }
+}
+@media (max-height: 480px) {
+  .pause-dialog .screen-content { padding-block: 24px; }
+  .pause-panel { min-height: 0; }
+  .pause-panel h1 { font-size: 28px; margin-bottom: 18px; }
+  .pause-menu { gap: 0; }
+  .pause-menu > :is(button, a) { min-height: 44px; padding-block: 8px; font-size: 17px; }
+  .pause-back { margin-top: 12px; }
+}

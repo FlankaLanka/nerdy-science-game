@@ -2,47 +2,44 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { rounded, rng } from "./art";
 
-/** Code-authored industrial surfaces: deterministic grain, seams and fasteners. */
+/** Clean ceramic panels and large mineral floor tiles, with subtle surface grain. */
 export function surface(kind: "deck" | "panel") {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 512;
   const c = canvas.getContext("2d")!;
-  c.fillStyle = kind === "deck" ? "#778187" : "#d1d0c9";
+  c.fillStyle = kind === "deck" ? "#e0e5e4" : "#faf8f2";
   c.fillRect(0, 0, 512, 512);
   for (let i = 0; i < 12000; i++) {
-    c.fillStyle = `rgba(${i % 2 ? "255,255,255" : "0,0,0"},${rng(i + 30) * 0.06})`;
+    c.fillStyle = `rgba(${i % 2 ? "255,255,255" : "74,98,112"},${rng(i + 30) * 0.025})`;
     c.fillRect(
       rng(i + 17) * 512,
       rng(i + 73) * 512,
-      kind === "deck" ? 8 : 2,
+      2,
       1,
     );
   }
   if (kind === "deck") {
-    for (let x = 16; x < 512; x += 32)
-      for (let y = 16; y < 512; y += 32) {
-        c.strokeStyle = "#414a50";
-        c.lineWidth = 3;
-        c.beginPath();
-        c.moveTo(x - 6, y + 6);
-        c.lineTo(x + 6, y - 6);
-        c.stroke();
-        c.strokeStyle = "#939ca0";
-        c.lineWidth = 1;
-        c.beginPath();
-        c.moveTo(x - 6, y + 7);
-        c.lineTo(x + 6, y - 5);
-        c.stroke();
-      }
+    c.fillStyle = "#d8dfdf";
+    c.fillRect(0, 0, 256, 256);
+    c.fillRect(256, 256, 256, 256);
+    c.strokeStyle = "#becbce";
+    c.lineWidth = 1.5;
+    c.strokeRect(1, 1, 510, 510);
+    c.beginPath();
+    c.moveTo(256, 0);
+    c.lineTo(256, 512);
+    c.moveTo(0, 256);
+    c.lineTo(512, 256);
+    c.stroke();
   }
-  c.strokeStyle = "rgba(0,0,0,.36)";
-  c.lineWidth = 5;
+  c.strokeStyle = "rgba(74,98,112,.12)";
+  c.lineWidth = 2;
   c.strokeRect(3, 3, 506, 506);
-  for (const x of [18, 494])
+  if (kind === "panel") for (const x of [18, 494])
     for (const y of [18, 494]) {
-      c.fillStyle = "#434b50";
+      c.fillStyle = "#b2bfc2";
       c.beginPath();
-      c.arc(x, y, 4, 0, Math.PI * 2);
+      c.arc(x, y, 2, 0, Math.PI * 2);
       c.fill();
       c.strokeStyle = "#949b9c";
       c.lineWidth = 1;
@@ -170,18 +167,18 @@ export function shipArt(root: THREE.Group) {
       const ch = canvas.height;
       c.clearRect(0, 0, 1024, ch);
       if (background) {
-        c.fillStyle = "#091216";
+        c.fillStyle = "#f4f1e7";
         c.fillRect(0, 0, 1024, ch);
         c.fillStyle = tint;
         c.fillRect(0, 0, 5, ch);
-        c.fillStyle = "#26353b";
+        c.fillStyle = "#c5d1d2";
         c.fillRect(24, ch - 15, 970, 1);
       }
       c.fillStyle = tint;
-      c.font = `600 ${Math.min(115, ch * (caption ? 0.33 : 0.62))}px "Space Grotesk", sans-serif`;
+      c.font = `600 ${Math.min(caption ? 115 : 500, ch * (caption ? 0.33 : 0.62))}px "Space Grotesk", sans-serif`;
       c.fillText(title, 28, ch * (caption ? 0.49 : 0.73), 968);
       if (caption) {
-        c.fillStyle = background ? "#a8b9bc" : tint;
+        c.fillStyle = background ? "#4c6572" : tint;
         c.font = `400 ${Math.min(38, ch * 0.15)}px "IBM Plex Mono", monospace`;
         c.fillText(caption, 30, ch * 0.79, 960);
       }

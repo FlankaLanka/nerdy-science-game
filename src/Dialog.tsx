@@ -13,6 +13,7 @@ export function Dialog({
   onDismiss,
   dismissKeys = [],
   closeControl,
+  initialFocus,
 }: {
   title: string;
   children: ReactNode | ((close: () => void) => ReactNode);
@@ -24,6 +25,7 @@ export function Dialog({
   onDismiss?: () => void;
   dismissKeys?: readonly string[];
   closeControl?: (close: () => void) => ReactNode;
+  initialFocus?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [closing, setClosing] = useState(false);
@@ -87,6 +89,8 @@ export function Dialog({
         ? document.activeElement
         : null;
     dialog.showModal();
+    if (initialFocus)
+      dialog.querySelector<HTMLElement>(initialFocus)?.focus({ preventScroll: true });
     // Fullscreen joins the browser's top layer above an already-open dialog.
     // Reopen the dialog above it, preserving the player's focused control.
     const fullscreenChanged = () => {
@@ -108,7 +112,7 @@ export function Dialog({
           document.querySelector<HTMLElement>(".world canvas")
         )?.focus({ preventScroll: true });
     };
-  }, [open]);
+  }, [open, initialFocus]);
   return createPortal(
     <dialog
       ref={ref}

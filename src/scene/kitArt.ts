@@ -2,8 +2,27 @@ import * as THREE from "three";
 import { rounded } from "./art";
 import { endpoints, lampState } from "../circuitKit";
 import type { Circuit, CircuitResult, Part } from "../circuitKit";
+import type { BenchInteraction, BenchPoint } from "./benchView";
 
-/** The same physical parts appear on the room bench and in the close-up. */
+function cableCurve(a: BenchPoint, b: BenchPoint) {
+  const sag = Math.min(42, Math.hypot(a.x - b.x, a.y - b.y) * 0.13);
+  return new THREE.CubicBezierCurve3(
+    new THREE.Vector3(a.x - 450, 11, a.y - 250),
+    new THREE.Vector3(
+      a.x + (b.x - a.x) / 3 - 450,
+      13,
+      a.y + (b.y - a.y) / 3 + sag - 250,
+    ),
+    new THREE.Vector3(
+      a.x + (2 * (b.x - a.x)) / 3 - 450,
+      13,
+      a.y + (2 * (b.y - a.y)) / 3 + sag - 250,
+    ),
+    new THREE.Vector3(b.x - 450, 11, b.y - 250),
+  );
+}
+
+/** One physical kit per room, also used during overhead editing. */
 export function buildKit() {
   const root = new THREE.Group();
   root.userData.dynamic = true;
@@ -14,12 +33,12 @@ export function buildKit() {
     materials.add(m);
     return m;
   };
-  const steel = material("#6e807b", 0.8, 0.34),
+  const steel = material("#b1c5cd", 0.55, 0.34),
     brass = material("#b2955a", 0.78, 0.35),
     rubber = material("#111b1a", 0.1, 0.92),
-    board = material("#283735", 0.35, 0.8),
-    ceramic = material("#bfc4af", 0.05, 0.73),
-    battery = material("#627c70", 0.55, 0.55),
+    board = material("#547a92", 0.08, 0.8),
+    ceramic = material("#f0eee3", 0.05, 0.73),
+    battery = material("#dc9565", 0.25, 0.55),
     copper = material("#b18759", 0.7, 0.48);
   const cached = (key: string, make: () => THREE.BufferGeometry) => {
     if (!geometry.has(key)) geometry.set(key, make());
@@ -94,14 +113,54 @@ export function buildKit() {
   >();
   const wires = new THREE.Group();
   root.add(wires);
+  const cableRecords = new Map<
+    string,
+    {
+      mesh: THREE.Mesh<THREE.TubeGeometry, THREE.MeshStandardMaterial>;
+      curve: THREE.CubicBezierCurve3;
+      current: number;
+      dots: THREE.Mesh[];
+    }
+  >();
+  const flowMaterial = new THREE.MeshBasicMaterial({ color: "#f3dca1" });
+  materials.add(flowMaterial);
+  const selectionMaterial = new THREE.LineBasicMaterial({
+    color: "#c9dcc0",
+    transparent: true,
+    opacity: 0.65,
+  });
+  materials.add(selectionMaterial);
+  const selection = new THREE.LineLoop(
+    cached("selection", () =>
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-65, 2, -40),
+        new THREE.Vector3(65, 2, -40),
+        new THREE.Vector3(65, 2, 40),
+        new THREE.Vector3(-65, 2, 40),
+      ]),
+    ),
+    selectionMaterial,
+  );
+  selection.visible = false;
+  root.add(selection);
+  let lead: THREE.Mesh | null = null;
+  let leadKey = "";
+  const leadMaterial = new THREE.MeshStandardMaterial({
+    color: "#c9e2bc",
+    emissive: "#8da779",
+    emissiveIntensity: 0.5,
+  });
+  materials.add(leadMaterial);
   let previous: Circuit | null = null;
   function buildPart(part: Part) {
     const g = new THREE.Group();
+    g.userData.kitId = part.id;
     root.add(g);
     for (const x of [-76, 76]) {
-      cylinder(12, 5, steel, g, x, 4);
-      cylinder(8, 4, brass, g, x, 8);
-      cylinder(3.5, 1, rubber, g, x, 10.5);
+      const id = `${part.id}:${x < 0 ? "a" : "b"}`;
+      cylinder(12, 5, steel, g, x, 4).userData.kitId = id;
+      cylinder(8, 4, brass, g, x, 8).userData.kitId = id;
+      cylinder(3.5, 1, rubber, g, x, 10.5).userData.kitId = id;
       box(27, 5, 7, brass, g, x > 0 ? 61 : -61, 8, 0, 1);
     }
     const record: {
@@ -181,6 +240,7 @@ export function buildKit() {
     return record;
   }
   function clearWires() {
+    cableRecords.clear();
     for (const o of [...wires.children]) {
       const w = o as THREE.Mesh;
       w.geometry.dispose();
@@ -216,21 +276,7 @@ export function buildKit() {
         const a = points[w.a],
           b = points[w.b];
         if (!a || !b) continue;
-        const sag = Math.min(42, Math.hypot(a.x - b.x, a.y - b.y) * 0.13);
-        const curve = new THREE.CubicBezierCurve3(
-          new THREE.Vector3(a.x - 450, 11, a.y - 250),
-          new THREE.Vector3(
-            a.x + (b.x - a.x) / 3 - 450,
-            13,
-            a.y + (b.y - a.y) / 3 + sag - 250,
-          ),
-          new THREE.Vector3(
-            a.x + (2 * (b.x - a.x)) / 3 - 450,
-            13,
-            a.y + (2 * (b.y - a.y)) / 3 + sag - 250,
-          ),
-          new THREE.Vector3(b.x - 450, 11, b.y - 250),
-        );
+        const curve = cableCurve(a, b);
         const m = new THREE.MeshStandardMaterial({
           color: "#ab7945",
           roughness: 0.75,
@@ -239,7 +285,25 @@ export function buildKit() {
           emissiveIntensity:
             Math.abs(result.wires[w.id] ?? 0) > 0.005 ? 0.18 : 0,
         });
-        mesh(new THREE.TubeGeometry(curve, 18, 3.4, 5, false), m, wires);
+        const wire = mesh(
+          new THREE.TubeGeometry(curve, 24, 3.4, 7, false),
+          m,
+          wires,
+        ) as THREE.Mesh<THREE.TubeGeometry, THREE.MeshStandardMaterial>;
+        wire.userData.kitId = w.id;
+        const current = result.wires[w.id] ?? 0;
+        const dots =
+          Math.abs(current) > 0.005
+            ? Array.from({ length: 7 }, () => {
+                const dot = new THREE.Mesh(
+                  cached("flow-dot", () => new THREE.SphereGeometry(2.3, 6, 4)),
+                  flowMaterial,
+                );
+                wire.add(dot);
+                return dot;
+              })
+            : [];
+        cableRecords.set(w.id, { mesh: wire, curve, current, dots });
       }
       previous = circuit;
     }
@@ -247,9 +311,75 @@ export function buildKit() {
   return {
     root,
     sync,
+    interact(
+      interaction: BenchInteraction | null,
+      time: number,
+      reduced: boolean,
+    ) {
+      const part = interaction?.circuit.parts.find(
+        (p) => p.id === interaction.selected,
+      );
+      selection.visible = !!part;
+      if (part) {
+        selection.position.set(part.x - 450, 0, part.y - 250);
+        selection.rotation.y = -part.angle;
+      }
+      for (const [id, wire] of cableRecords) {
+        wire.mesh.material.color.set(
+          interaction?.selected === id ? "#e6e3b3" : "#ab7945",
+        );
+        wire.dots.forEach((dot, i) => {
+          const travel = reduced
+            ? 0
+            : time *
+              Math.sign(wire.current) *
+              Math.min(0.7, Math.abs(wire.current) * 0.3);
+          dot.position.copy(
+            wire.curve.getPoint((((i / 7 + travel) % 1) + 1) % 1),
+          );
+          dot.position.y += 3;
+          dot.visible = !!interaction;
+        });
+      }
+      const nextLead = interaction?.lead;
+      const key = nextLead
+        ? `${nextLead.a.x}:${nextLead.a.y}:${nextLead.b.x}:${nextLead.b.y}`
+        : "";
+      if (leadKey !== key) {
+        lead?.geometry.dispose();
+        lead?.removeFromParent();
+        lead = nextLead
+          ? new THREE.Mesh(
+              new THREE.TubeGeometry(
+                cableCurve(nextLead.a, nextLead.b),
+                24,
+                2.7,
+                7,
+                false,
+              ),
+              leadMaterial,
+            )
+          : null;
+        if (lead) root.add(lead);
+        leadKey = key;
+      }
+    },
+    pick(raycaster: THREE.Raycaster): string | null {
+      root.updateWorldMatrix(true, true);
+      for (const hit of raycaster.intersectObject(root, true)) {
+        for (
+          let object: THREE.Object3D | null = hit.object;
+          object && object !== root;
+          object = object.parent
+        )
+          if (object.userData.kitId) return object.userData.kitId as string;
+      }
+      return null;
+    },
     dispose() {
       root.removeFromParent();
       clearWires();
+      lead?.geometry.dispose();
       geometry.forEach((g) => g.dispose());
       materials.forEach((m) => m.dispose());
     },
