@@ -96,7 +96,7 @@ test("two lamps can share a twelve-volt supply in series", async ({ page }) => {
   await bench(page, 4);
   await add(page, "Bulb", 440, 155);
   await page.getByRole("button", { name: "Select Bulb", exact: true }).click();
-  await page.getByRole("button", { name: "Rotate Bulb" }).click();
+  await page.getByRole("button", { name: "Rotate Bulb", exact: true }).click();
   await add(page, "Bulb", 665, 295);
   await connect(page, "Battery negative", "Bulb 1 contact A");
   await connect(page, "Bulb 1 contact B", "Bulb 2 contact B");
@@ -112,7 +112,7 @@ test("final chamber requires an independent branch, and permits testing it after
   await page
     .getByRole("button", { name: "Select Bulb 2", exact: true })
     .click();
-  await page.getByRole("button", { name: "Rotate Bulb" }).click();
+  await page.getByRole("button", { name: "Rotate Bulb", exact: true }).click();
   await connect(page, "Battery positive", "Bulb 2 contact A");
   await connect(page, "Battery negative", "Bulb 2 contact B");
   await restored(page, 5);

@@ -147,7 +147,7 @@ function sanitizeCircuit(raw: unknown, index: number): Circuit {
       kind: p.kind,
       x: Math.max(105, Math.min(795, p.x)),
       y: Math.max(105, Math.min(395, p.y)),
-      angle: (Math.round(p.angle / (Math.PI / 2)) % 4) * (Math.PI / 2),
+      angle: p.angle % (2 * Math.PI),
       value:
         p.kind === "battery"
           ? c.voltage

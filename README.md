@@ -23,7 +23,8 @@ The default address is **http://127.0.0.1:5174**; set `PORT` to change it. No ac
 | Connect                   | Click two contacts, or drag between them                        |
 | Add a part                | Choose a tray item, then click the board; or drag from the tray |
 | Move a part               | Drag its body; select and use arrow keys with a keyboard        |
-| Rotate / remove selection | R / Delete                                                      |
+| Rotate selection          | Drag a corner; Shift snaps to 15°; R turns 90°                   |
+| Remove selection          | Delete                                                          |
 
 Touch controls provide a movement stick, drag-to-look and a bench interaction button. Circuit contacts also work by tapping. The interface uses the full viewport, including portrait screens.
 

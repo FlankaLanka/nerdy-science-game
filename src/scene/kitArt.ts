@@ -5,6 +5,7 @@ import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js
 import { rounded } from "./art";
 import { buildCable } from "./cable";
 import { endpoints, lampState } from "../circuitKit";
+import { PART_SELECTION_CORNERS, PART_SELECTION_COLORS } from "../partSelection";
 import type { Circuit, CircuitResult, Part } from "../circuitKit";
 import type { BenchInteraction, BenchPoint } from "./benchView";
 
@@ -125,12 +126,20 @@ export function buildKit() {
   selection.name = "Part selection";
   selection.renderOrder = 1000;
   const brackets = new LineSegmentsGeometry().setPositions(
-    [-1, 1].flatMap(x => [-1, 1].flatMap(z => [
-      x * 94, 2.5, z * 52, x * 72, 2.5, z * 52,
-      x * 94, 2.5, z * 52, x * 94, 2.5, z * 30,
-    ])),
+    PART_SELECTION_CORNERS.flatMap(([x, z]) => [
+      x, 2.5, z, x - Math.sign(x) * 22, 2.5, z,
+      x, 2.5, z, x, 2.5, z - Math.sign(z) * 22,
+    ]),
   );
   geometry.set("selection", brackets);
+  const fixedBrackets = new LineSegmentsGeometry().setPositions(
+    PART_SELECTION_CORNERS.flatMap(([x, z]) => [
+      x, 2.5, z, x - Math.sign(x) * 14, 2.5, z,
+      x, 2.5, z, x, 2.5, z - Math.sign(z) * 14,
+    ]),
+  );
+  geometry.set("fixed-selection", fixedBrackets);
+  const selectionMaterials: LineMaterial[] = [];
   // Screen-width strokes stay legible at any zoom. Both passes render above
   // transparent glass and cables without writing depth or changing part picking.
   for (const [color, linewidth] of [["#102630", 5.5], ["#d9fbff", 3]] as const) {
@@ -144,6 +153,7 @@ export function buildKit() {
       toneMapped: false,
     });
     materials.add(m);
+    selectionMaterials.push(m);
     const corners = new LineSegments2(brackets, m);
     corners.renderOrder = selection.children.length;
     corners.raycast = () => {};
@@ -321,6 +331,12 @@ export function buildKit() {
       if (part) {
         selection.position.set(part.x - 450, 0, part.y - 250);
         selection.rotation.y = -part.angle;
+        selectionMaterials[1].color.set(PART_SELECTION_COLORS[part.fixed ? "fixed" : "movable"]);
+        selectionMaterials[0].linewidth = part.fixed ? 4 : 5.5;
+        selectionMaterials[1].linewidth = part.fixed ? 2 : 3;
+        selection.children.forEach(corner => {
+          (corner as LineSegments2).geometry = part.fixed ? fixedBrackets : brackets;
+        });
       }
       for (const [id, wire] of cableRecords) {
         wire.cable.select(interaction?.selected === id);

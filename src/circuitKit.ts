@@ -239,7 +239,7 @@ export type KitAction =
   | { type: "wire"; a: string; b: string }
   | { type: "add"; kind: PartKind; x: number; y: number }
   | { type: "move"; id: string; x: number; y: number }
-  | { type: "rotate"; id: string }
+  | { type: "rotate"; id: string; angle?: number }
   | { type: "remove"; id: string }
   | { type: "value"; id: string; value: number }
   | { type: "toggle"; id: string };
@@ -320,9 +320,11 @@ export function editCircuit(
     ) {
       part.x = clamp(action.x, KIT_SIZE.width);
       part.y = clamp(action.y, KIT_SIZE.height);
-    } else if (action.type === "rotate" && !part.fixed)
-      part.angle = (part.angle + Math.PI / 2) % (2 * Math.PI);
-    else if (
+    } else if (action.type === "rotate" && !part.fixed) {
+      const angle = action.angle ?? part.angle + Math.PI / 2;
+      if (!Number.isFinite(angle)) return circuit;
+      part.angle = angle % (2 * Math.PI);
+    } else if (
       action.type === "value" &&
       part.kind === "resistor" &&
       rules.resistorValues.includes(action.value)

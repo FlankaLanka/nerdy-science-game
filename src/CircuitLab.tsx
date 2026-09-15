@@ -2,7 +2,6 @@ import { useEffect, useMemo, useId, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import {
   ArrowLeft,
-  RotateCw,
   Trash2,
 } from "lucide-react";
 import {
@@ -19,6 +18,7 @@ import { PartIcon } from "./PartIcon";
 import { PartPreview } from "./PartPreview";
 import { TabletIcon } from "./TabletIcon";
 import { HistoryIcon } from "./HistoryIcon";
+import { PART_SELECTION_CORNERS, PART_SELECTION_COLORS } from "./partSelection";
 import type { BenchControls, BenchView } from "./scene/benchView";
 type Props = {
   chamber: Chamber;
@@ -54,6 +54,18 @@ export default function CircuitLab(props: Props) {
   const [start, setStart] = useState<string | null>(null),
     [cursor, setCursor] = useState<Point | null>(null);
   const [preview, setPreview] = useState<Circuit | null>(null);
+  const [rotating, setRotating] = useState(false);
+  const rotation = useRef<{
+    id: string;
+    center: Point;
+    x: number;
+    y: number;
+    startAngle: number;
+    lastPointerAngle: number;
+    total: number;
+    angle: number;
+    moved: boolean;
+  } | null>(null);
   const drag = useRef<{
     id: string;
     x: number;
@@ -120,6 +132,24 @@ export default function CircuitLab(props: Props) {
   function move(e: ReactPointerEvent) {
     if (!benchReady || props.suspended) return;
     const p = point(e.clientX, e.clientY);
+    const turn = rotation.current;
+    if (turn) {
+      const pointerAngle = Math.atan2(p.y - turn.center.y, p.x - turn.center.x);
+      const delta = pointerAngle - turn.lastPointerAngle;
+      turn.total += Math.atan2(Math.sin(delta), Math.cos(delta));
+      turn.lastPointerAngle = pointerAngle;
+      if (Math.hypot(e.clientX - turn.x, e.clientY - turn.y) > 4) turn.moved = true;
+      if (turn.moved) {
+        const angle = turn.startAngle + turn.total;
+        const step = Math.PI / 12;
+        turn.angle = e.shiftKey ? Math.round(angle / step) * step : angle;
+        setPreview({
+          ...circuit,
+          parts: circuit.parts.map(part => part.id === turn.id ? { ...part, angle: turn.angle } : part),
+        });
+      }
+      return;
+    }
     if (start || wireDrag.current) setCursor(p);
     if (
       wireDrag.current &&
@@ -147,6 +177,15 @@ export default function CircuitLab(props: Props) {
       });
   }
   function up(e: ReactPointerEvent) {
+    const turn = rotation.current;
+    if (turn) {
+      rotation.current = null;
+      if (turn.moved && !props.suspended && benchReady)
+        props.onAction({ type: "rotate", id: turn.id, angle: turn.angle });
+      setPreview(null);
+      setRotating(false);
+      return;
+    }
     const w = wireDrag.current;
     wireDrag.current = null;
     if (w) {
@@ -196,8 +235,27 @@ export default function CircuitLab(props: Props) {
   function cancel() {
     drag.current = null;
     wireDrag.current = null;
+    rotation.current = null;
+    setRotating(false);
     setPreview(null);
     setCursor(null);
+  }
+  function grabRotation(part: Part, e: ReactPointerEvent) {
+    if (part.fixed || e.button !== 0 || !benchReady || props.suspended) return;
+    e.preventDefault();
+    e.stopPropagation();
+    cancel();
+    setStart(null);
+    setTool("wire");
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const p = point(e.clientX, e.clientY);
+    rotation.current = {
+      id: part.id, center: { x: part.x, y: part.y },
+      x: e.clientX, y: e.clientY, startAngle: part.angle,
+      lastPointerAngle: Math.atan2(p.y - part.y, p.x - part.x),
+      total: 0, angle: part.angle, moved: false,
+    };
+    setRotating(true);
   }
   function grab(part: Part, e: ReactPointerEvent) {
     if (e.button !== 0 || !benchReady || props.suspended) return;
@@ -224,6 +282,11 @@ export default function CircuitLab(props: Props) {
     wireDrag.current = { a: id, x: e.clientX, y: e.clientY, moved: false };
     setCursor(points[id]);
   }
+  useEffect(() => {
+    if (!rotating) return;
+    window.document.body.classList.add("rotating-part");
+    return () => window.document.body.classList.remove("rotating-part");
+  }, [rotating]);
   useEffect(() => {
     const blur = () => {
       cancel();
@@ -268,7 +331,9 @@ export default function CircuitLab(props: Props) {
         setSelected(null);
         setTool("wire");
         setCursor(null);
+        return;
       }
+      if (rotation.current) return;
       if ((e.key === "Delete" || e.key === "Backspace") && selected) {
         e.preventDefault();
         latest.current.onAction({ type: "remove", id: selected });
@@ -536,6 +601,7 @@ export default function CircuitLab(props: Props) {
             >
               <button
                 className="part-body"
+                data-mobility={part.fixed ? "fixed" : "movable"}
                 style={{
                   ...position(part, 32),
                   ...(!fallback
@@ -550,6 +616,7 @@ export default function CircuitLab(props: Props) {
                     ? `${part.closed ? "Open" : "Close"} switch`
                     : `Select ${name(part)}`
                 }
+                aria-description={part.fixed ? "Fixed to the bench. Cannot be moved." : "Movable. Drag to move; drag a corner to rotate. Shift snaps to 15°. Arrow keys move; R rotates 90°."}
                 onPointerDown={(e) => grab(part, e)}
                 onClick={(e) => {
                   if (e.detail !== 0) return;
@@ -558,7 +625,7 @@ export default function CircuitLab(props: Props) {
                     props.onAction({ type: "toggle", id: part.id });
                 }}
               >
-                <span className="fallback-part">
+                <span className="fallback-part" style={{ transform: `rotate(${part.angle}rad)` }}>
                   <PartIcon kind={part.kind} closed={part.closed} />
                 </span>
                 <span
@@ -610,6 +677,37 @@ export default function CircuitLab(props: Props) {
               })}
             </div>
           ))}
+          {chosen && !chosen.fixed && PART_SELECTION_CORNERS.map(([x, y], i) => {
+            const cosine = Math.cos(chosen.angle), sine = Math.sin(chosen.angle);
+            const corner = {
+              x: chosen.x + x * cosine - y * sine,
+              y: chosen.y + x * sine + y * cosine,
+            };
+            const radius = Math.hypot(x, y);
+            const offsetX = (corner.x - chosen.x) / radius * 8;
+            const offsetY = (corner.y - chosen.y) / radius * 8;
+            return (
+              <button
+                key={i}
+                className="rotation-corner"
+                style={{ ...position(corner, 2.5), transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))` }}
+                tabIndex={-1}
+                aria-label={`Rotate ${name(chosen)} from corner ${i + 1}`}
+                onPointerDown={e => grabRotation(chosen, e)}
+                onLostPointerCapture={() => { if (rotation.current) cancel(); }}
+                onClick={e => {
+                  if (e.detail === 0) props.onAction({ type: "rotate", id: chosen.id });
+                }}
+              />
+            );
+          })}
+          {chosen?.fixed && <span className="fixed-part-label" style={{
+            ...position({ x: chosen.x, y: chosen.y + Math.abs(Math.sin(chosen.angle)) * 94 + Math.abs(Math.cos(chosen.angle)) * 52 }, 2.5),
+            color: PART_SELECTION_COLORS.fixed,
+          }}>Fixed</span>}
+          <span className="visually-hidden" role="status">
+            {chosen ? `${name(chosen)}. ${chosen.fixed ? "Fixed to the bench." : "Movable."}` : ""}
+          </span>
           {fallback && tool !== "wire" && (
             <span className="placement-ghost" aria-hidden="true">
               <PartIcon kind={tool} />
@@ -648,15 +746,18 @@ export default function CircuitLab(props: Props) {
               <div className="selection-actions">
               {chosen && !chosen.fixed && (
                 <button
-                  className="icon-button"
+                  className="icon-button rotate-part"
                   aria-label={`Rotate ${PART_NAMES[chosen.kind]}`}
-                  title="Rotate · R"
+                  aria-keyshortcuts="R"
+                  title="Rotate 90° · R"
                   onClick={() =>
                     props.onAction({ type: "rotate", id: chosen.id })
                   }
                 >
-                  <RotateCw />
-                  <span>Rotate</span>
+                  <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M7 21A10 10 0 0 1 22 8M22 3v6h-6M25 11A10 10 0 0 1 10 24M10 29v-6h6" />
+                  </svg>
+                  <span>Rotate <kbd aria-hidden="true">R</kbd></span>
                 </button>
               )}
               {!chosen?.fixed && (

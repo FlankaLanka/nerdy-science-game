@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   cloneCircuit,
   editCircuit,
+  endpoints,
   simulate,
   FUSE_CURRENT,
   LEAD_RESISTANCE,
@@ -20,6 +21,25 @@ import {
 import { chamberFixture, solvedCircuit } from "./chamber-fixtures.ts";
 const near = (actual: number, expected: number, tolerance = 1e-6) =>
   assert.ok(Math.abs(actual - expected) < tolerance, `${actual} ≠ ${expected}`);
+
+test("free rotation preserves connections, electrical behavior and saved angles, with one undo", () => {
+  const state = chamberFixture(2);
+  const before = state.rooms[2] = solvedCircuit(2);
+  const part = before.parts[0];
+  const angle = Math.PI * 0.37;
+  const turned = campaignReducer(state, { type: "EDIT", room: 2, action: { type: "rotate", id: part.id, angle } });
+  near(turned.rooms[2].parts[0].angle, angle);
+  assert.deepEqual(turned.rooms[2].wires, before.wires);
+  assert.deepEqual(simulate(turned.rooms[2]), simulate(before));
+  assert.notDeepEqual(endpoints(turned.rooms[2]), endpoints(before));
+  assert.equal(turned.history[2].length, 1);
+  near(restoreCampaign(serializeCampaign(turned)).rooms[2].parts[0].angle, angle);
+  assert.deepEqual(campaignReducer(turned, { type: "UNDO", room: 2 }).rooms[2], before);
+  for (const invalid of [NaN, Infinity, -Infinity])
+    assert.equal(editCircuit(before, { type: "rotate", id: part.id, angle: invalid }, CHAMBERS[2]), before);
+  const fixed = CHAMBERS[0].initial;
+  assert.equal(editCircuit(fixed, { type: "rotate", id: "source", angle }, CHAMBERS[0]), fixed);
+});
 
 test("an open circuit has voltage at its source and no lamp current; closing the path lights it", () => {
   const c = CHAMBERS[0];

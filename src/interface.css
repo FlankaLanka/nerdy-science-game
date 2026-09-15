@@ -211,6 +211,34 @@
 .circuit-lab .selection-bar:empty { display: none; }
 .selection-actions { display: flex; gap: 4px; }
 .selection-actions:empty { display: none; }
+.rotation-corner,
+.rotation-corner:hover,
+.rotation-corner:active {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: url("/assets/rotate-cursor.svg") 16 16, crosshair;
+}
+body.rotating-part,
+body.rotating-part * { cursor: url("/assets/rotate-cursor.svg") 16 16, crosshair !important; }
+.fixed-part-label {
+  position: absolute;
+  transform: translate(-50%, 8px);
+  z-index: 6;
+  pointer-events: none;
+  font: 10px/1 var(--mono);
+  text-shadow: 0 1px 2px #102630;
+}
+.part-body[data-mobility="fixed"],
+.part-body[data-mobility="fixed"]:active { cursor: pointer; }
 .selection-identity { display: flex; align-items: center; gap: 9px; }
 .meter small { display: block; color: #a4c0ca; font: 8px/1.4 var(--mono); margin-bottom: 3px; }
 .selection-identity strong { display: block; font: 500 12px "Space Grotesk", sans-serif; color: #eaf2ef; }
@@ -223,6 +251,8 @@
 .circuit-lab .value-options button[aria-pressed="true"] { background: #d5e8e6; color: #204354; }
 .circuit-lab .value-options button:hover { background: #547787; color: #fff9e4; }
 .circuit-lab .selection-bar .icon-button { color: #d0dfe2; width: 60px; min-height: 42px; display: flex; flex-direction: column; gap: 4px; font: 10px "Space Grotesk", sans-serif; border-radius: 2px; }
+.rotate-part > span { white-space: nowrap; }
+.rotate-part kbd { margin-left: 3px; font: 9px var(--mono); opacity: 0.7; }
 .circuit-lab .part-value { border: 1px solid #a4c4cf44; border-radius: 4px; background: #163746eb; padding: 4px 7px; }
 .circuit-lab:not(.in-world) .bench-shell { position: absolute; inset: 110px 24px 180px; padding: 0; }
 .circuit-lab:not(.in-world) .kit-board { width: min(100%, calc((100dvh - 290px) * 1.8)); }
@@ -242,6 +272,7 @@
 .hud-room-number { color: #ecc494; font-size: 18px; }
 .hud-room-name { font: 12px "Space Grotesk", sans-serif; }
 @media (max-width: 640px) {
+  .rotate-part kbd { display: none; }
   .circuit-lab .lab-header { top: 15px; left: 15px; right: 15px; gap: 0; max-width: calc(100% - 30px); }
   .circuit-lab .lab-header .icon-button { width: 46px; height: 48px; }
   .circuit-lab .chamber-id { gap: 9px; padding: 0 10px 0 2px; flex: 1; min-width: 0; }
