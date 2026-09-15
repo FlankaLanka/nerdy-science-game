@@ -6,6 +6,8 @@ The player wakes alone on Asterion. A maintenance intelligence, ASTER, has kept 
 
 No scoring, mandatory hypothesis, reflection form, test submission or mission checklist interrupts construction. Circuit behavior is continuous. The notebook is a small reference, not a list of assignments. The world has room numbers and three equations; there is no floor writing or decorative prose.
 
+Each bench has a relay connected to its exit by a visible amber conduit. Empty square indicators mark the unsolved relay and door. Validating the circuit turns the conduit cyan, sends light pulses toward the exit, and replaces the squares with checkmarks. The relay remains powered during later experimentation, matching the saved door unlock. Reduced motion uses steady cyan light and checkmarks. This adds no extra switch or completion requirement.
+
 ## References and design decisions
 
 The [PhET Circuit Construction Kit DC simulation](https://phet.colorado.edu/sims/html/circuit-construction-kit-dc/latest/circuit-construction-kit-dc_en.html) was inspected in its Intro screen. Its component tray, direct connections, lifelike parts and visible current informed this original kit. No PhET code, artwork or interface assets were copied. The station supplies the progression and story around the construction activity.

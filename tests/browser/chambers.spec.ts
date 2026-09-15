@@ -21,6 +21,9 @@ test("first chamber is one connection, automatic restoration, and a quiet HUD", 
   await expect(
     page.getByRole("button", { name: /test|hypothesis|commission|submit/i }),
   ).toHaveCount(0);
+  await expect(page.locator(".tool-instruction")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Wire tool", exact: true })).toHaveAccessibleDescription("Unlimited wire");
+  await expect(page.locator(".tool-stock")).toHaveText("∞");
   await connect(page, "Battery negative", "Bulb contact B");
   await restored(page, 0);
   await expect(page.locator(".room-marker")).toContainText("01");
@@ -29,7 +32,8 @@ test("first chamber is one connection, automatic restoration, and a quiet HUD", 
   await expect(page.getByRole("button", { name: "Pause game", exact: true })).toHaveCount(0);
   await bench(page);
   await page.getByRole("button", { name: "Reset circuit" }).click();
-  await expect(page.getByText("Power restored", { exact: true })).toBeVisible();
+  await expect(page.locator(".circuit-lab")).toHaveClass(/restored/);
+  await expect(page.getByText("Power restored", { exact: true })).toHaveCount(0);
   await expect.poll(async () => !!(await saved(page)).proofs[0]).toBe(true);
   await page.waitForTimeout(1900);
   await expect(
@@ -48,6 +52,18 @@ test("third chamber builds a complete circuit from the parts tray", async ({
 }) => {
   await begin(page, 2);
   await bench(page, 2);
+  await expect(page.locator(".tool-instruction")).toHaveText("Drag a part onto the bench.");
+  await expect(page.getByRole("button", { name: "Add Battery", exact: true })).toHaveAccessibleDescription("1 available");
+  await expect(page.getByRole("button", { name: "Add Bulb", exact: true })).toHaveAccessibleDescription("1 available");
+  await add(page, "Battery", 250, 265);
+  await add(page, "Bulb", 650, 265);
+  await expect(page.locator(".tool-instruction")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Add Bulb", exact: true })).toHaveAccessibleDescription("0 available");
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Add Bulb", exact: true })).toHaveAccessibleDescription("1 available");
+  await expect(page.locator(".tool-instruction")).toBeVisible();
+  await page.getByRole("button", { name: "Reset circuit", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Add Battery", exact: true })).toHaveAccessibleDescription("1 available");
   await add(page, "Battery", 250, 265);
   await add(page, "Bulb", 650, 265);
   await expect(

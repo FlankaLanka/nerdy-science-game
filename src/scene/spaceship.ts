@@ -4,12 +4,13 @@ import type { ChamberId } from "../chambers";
 import { simulate } from "../circuitKit";
 import type { Circuit } from "../circuitKit";
 import { buildKit } from "./kitArt";
-import { DECK, FURNITURE, PORTALS, windowAt } from "./shipLayout";
+import { DECK, FURNITURE, PORTALS, insideDeck, windowAt } from "./shipLayout";
 import { shipArt, surface } from "./shipArt";
 import type { Obstacle, Player } from "./navigation";
 import { buildSpace } from "./space";
 import { BENCH_HEIGHT, KIT_SCALE } from "./benchView";
 import type { BenchInteraction } from "./benchView";
+import { buildPowerLink } from "./powerLink";
 /** A fixed modular kit, placed against a connected deck plan. No procedural room generation. */
 export function buildSpaceship(scene: THREE.Scene) {
   const root = new THREE.Group();
@@ -39,7 +40,6 @@ export function buildSpaceship(scene: THREE.Scene) {
       roughness: 0.4,
     });
   const trims = new Map<string, THREE.Material>();
-  const amber = emission("#96dcec", 0.5);
   const fixtures: {
     x: number;
     y: number;
@@ -107,6 +107,46 @@ export function buildSpaceship(scene: THREE.Scene) {
     g.position.set(x, 0, z);
     g.rotation.y = rotation;
     root.add(g);
+    // At outside corners, perpendicular trim must end before the other wall's
+    // trim begins. Overlapping their horizontal faces causes depth flicker.
+    const corner = (side: number) => {
+      const along = side * (w / 2 + 0.01);
+      return !insideDeck(
+        x + Math.cos(rotation) * along + Math.sin(rotation) * 0.5,
+        z - Math.sin(rotation) * along + Math.cos(rotation) * 0.5,
+      );
+    };
+    const leftCorner = corner(-1);
+    const rightCorner = corner(1);
+    const trimSpan = (width: number, front: number) => {
+      const inset = (w - width) / 2;
+      const left = leftCorner ? Math.max(inset, front + 0.015) : inset;
+      const right = rightCorner ? Math.max(inset, front + 0.015) : inset;
+      return { x: (left - right) / 2, width: w - left - right };
+    };
+    const trimBox = (
+      y: number,
+      z: number,
+      width: number,
+      height: number,
+      depth: number,
+      material: THREE.Material,
+    ) => {
+      const span = trimSpan(width, z + depth / 2);
+      return box(span.x, y, z, span.width, height, depth, material, g);
+    };
+    const trimBevel = (
+      y: number,
+      z: number,
+      width: number,
+      height: number,
+      depth: number,
+      material: THREE.Material,
+      radius: number,
+    ) => {
+      const span = trimSpan(width, z + depth / 2);
+      return bevel(span.x, y, z, span.width, height, depth, material, radius, g);
+    };
     const window = windowAt(x, z, rotation);
     if (window) {
       const { sill, head } = window;
@@ -131,7 +171,7 @@ export function buildSpaceship(scene: THREE.Scene) {
           (sill + head) / 2,
           0.17,
           0.14,
-          head - sill + 0.24,
+          head - sill - 0.19,
           0.5,
           steel,
           0.025,
@@ -163,25 +203,25 @@ export function buildSpaceship(scene: THREE.Scene) {
       return;
     }
     box(0, h / 2, 0, w, h, 0.3, charcoal, g);
-    bevel(0, 1.85, 0.19, w - 0.14, 2.25, 0.18, ivory, 0.07, g);
-    bevel(0, 0.42, 0.25, w - 0.1, 0.66, 0.25, frame, 0.04, g);
-    box(0, 1.05, 0.33, w - 0.14, 0.06, 0.06, ochre, g);
-    box(0, 3.02, 0.25, w - 0.12, 0.16, 0.23, frame, g);
+    trimBevel(1.85, 0.19, w - 0.14, 2.25, 0.18, ivory, 0.07);
+    trimBevel(0.42, 0.25, w - 0.1, 0.66, 0.25, frame, 0.04);
+    trimBox(1.05, 0.33, w - 0.14, 0.06, 0.06, ochre);
+    trimBox(3.02, 0.25, w - 0.12, 0.16, 0.23, frame);
     for (const side of [-1, 1]) {
       // End faces sit inside the shell boundary, including at exposed doorway reveals.
       box(side * (w / 2 - 0.085), h / 2, 0.25, 0.11, h - 0.04, 0.35, steel, g);
       for (const y of [0.83, 2.88]) bolt(side * (w / 2 - 0.22), y, 0.304, g);
     }
     for (let y = 3.28; y < h - 0.18; y += 0.24)
-      box(0, y, 0.18, w - 0.24, 0.085, 0.15, frame, g);
-    box(0, 0.96, 0.25, w - 0.14, 0.035, 0.2, rubber, g);
-    box(0, 2.55, 0.302, w - 0.6, 0.024, 0.012, charcoal, g);
+      trimBox(y, 0.18, w - 0.24, 0.085, 0.15, frame);
+    trimBox(0.96, 0.25, w - 0.14, 0.035, 0.2, rubber);
+    trimBox(2.55, 0.302, w - 0.6, 0.024, 0.012, charcoal);
     let trim = trims.get(color);
     if (!trim) {
       trim = mat(color, 0.35, 0.7);
       trims.set(color, trim);
     }
-    box(0, 1.14, 0.303, w - 0.14, 0.025, 0.015, trim, g);
+    trimBox(1.14, 0.303, w - 0.14, 0.025, 0.015, trim);
   }
   function edge(
     length: number,
@@ -223,6 +263,10 @@ export function buildSpaceship(scene: THREE.Scene) {
               charcoal,
             );
             top.rotation.y = rotation;
+            // Keep the header entirely on the tall-room side. Its underside
+            // must not cover the adjacent corridor ceiling at the same height.
+            top.position.x += Math.sin(rotation) * 0.15;
+            top.position.z += Math.cos(rotation) * 0.15;
           }
         }
       t += width;
@@ -233,8 +277,8 @@ export function buildSpaceship(scene: THREE.Scene) {
     PORTALS.every((p) => {
       const turned = Math.abs(Math.sin(p.rotation)) > 0.5;
       return (
-        Math.abs(p.x - x) > (w + (turned ? 0.8 : 3.9)) / 2 ||
-        Math.abs(p.z - z) > (d + (turned ? 3.9 : 0.8)) / 2
+        Math.abs(p.x - x) > (w + (turned ? 1.3 : 3.9)) / 2 ||
+        Math.abs(p.z - z) > (d + (turned ? 3.9 : 1.3)) / 2
       );
     });
   for (const room of DECK) {
@@ -358,7 +402,6 @@ export function buildSpaceship(scene: THREE.Scene) {
     portal: (typeof PORTALS)[number];
     leaves: THREE.Group[];
     colliders: Obstacle[];
-    status: THREE.MeshStandardMaterial;
     opening: number;
   }[] = [];
   for (const p of PORTALS) {
@@ -376,11 +419,10 @@ export function buildSpaceship(scene: THREE.Scene) {
         depth: turned ? 0.28 : 0.7,
       });
       bevel(side * 1.76, 1.4, 0, 0.28, 2.8, 0.7, steel, 0.045, g);
-      box(side * 1.76, 0.9, 0.38, 0.055, 0.75, 0.022, amber, g);
     }
     bevel(0, 2.99, 0, 3.8, 0.38, 0.7, frame, 0.045, g);
     box(0, 3.29, 0, 3.8, 0.22, 0.4, charcoal, g);
-    label(p.name, "", 0, 3.01, 0.385, 0.52, 0.15, "#234959", 0, false, g);
+    label(p.name, "", -1.13, 3.01, 0.385, 0.52, 0.15, "#234959", 0, false, g);
     box(0, 0.012, 0, 3.24, 0.024, 0.7, rubber, g);
     const door = dynamic(p.x, 0, p.z);
     door.rotation.y = p.rotation;
@@ -393,6 +435,10 @@ export function buildSpaceship(scene: THREE.Scene) {
       door.add(leaf);
       leaves.push(leaf);
       bevel(0, 1.4, 0, 1.58, 2.72, 0.22, ivory, 0.045, leaf);
+      // One recessed seal closes the center light leak without overlapping
+      // the visible faces of the two moving panels.
+      if (side === -1)
+        box(0.79, 1.4, -0.14, 0.14, 2.72, 0.03, rubber, leaf);
       box(0, 0.43, 0.165, 1.42, 0.44, 0.07, frame, leaf);
       box(side * 0.57, 1.3, 0.15, 0.15, 0.5, 0.06, charcoal, leaf);
       for (const y of [1, 2.2])
@@ -406,9 +452,7 @@ export function buildSpaceship(scene: THREE.Scene) {
       colliders.push(collider);
       obstacles.push(collider);
     }
-    const status = emission("#c29c62", 0.45);
-    box(1.76, 1.96, 0.38, 0.1, 0.3, 0.03, status, g);
-    doors.push({ portal: p, leaves, colliders, status, opening: 1 });
+    doors.push({ portal: p, leaves, colliders, opening: 1 });
   }
   const benches = CHAMBERS.map((c) => {
     // Large chamber numbers make the experiments feel like a considered test suite.
@@ -456,6 +500,12 @@ export function buildSpaceship(scene: THREE.Scene) {
     for (const side of [-1, 1])
       box(c.x + side * 5.52, 0.25, c.z, 0.025, 0.035, 7, rail);
     return { kit, rail, previous: c.initial };
+  });
+  const powerLinks = CHAMBERS.map((chamber) => {
+    const gate = PORTALS.find(p => p.system === chamber.id)!;
+    const link = buildPowerLink(chamber, gate);
+    root.add(link.root);
+    return link;
   });
   const space = buildSpace(scene, () => {
     root.userData.textureRevision = (root.userData.textureRevision ?? 0) + 1;
@@ -521,8 +571,6 @@ export function buildSpaceship(scene: THREE.Scene) {
           door.colliders[i].x = p.x + x * Math.cos(p.rotation);
           door.colliders[i].z = p.z - x * Math.sin(p.rotation);
         });
-        door.status.color.set(online.has(p.system) ? "#65cbb4" : "#edac79");
-        door.status.emissive.copy(door.status.color);
       }
       benches.forEach((b, i) => {
         const circuit = (i === activeBench ? interaction?.circuit : null) ?? circuits?.[i] ?? CHAMBERS[i].initial;
@@ -533,6 +581,7 @@ export function buildSpaceship(scene: THREE.Scene) {
         }
         b.kit.interact(i === activeBench ? interaction : null, time, reduced);
         b.rail.emissiveIntensity = online.has(CHAMBERS[i].id) ? 1.6 : 0.08;
+        powerLinks[i].update(online.has(CHAMBERS[i].id), time, reduced, !preview && (playing || activeBench !== null));
       });
       for (const f of fixtures)
         f.material.emissiveIntensity = THREE.MathUtils.damp(

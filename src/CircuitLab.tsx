@@ -2,15 +2,10 @@ import { useEffect, useMemo, useId, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import {
   ArrowLeft,
-  BookOpen,
-  Check,
-  Lightbulb,
-  MousePointer2,
   RotateCcw,
   RotateCw,
   Trash2,
   Undo2,
-  Zap,
 } from "lucide-react";
 import {
   cablePath,
@@ -23,6 +18,8 @@ import {
 import type { Circuit, KitAction, Part, PartKind, Tool } from "./circuitKit";
 import type { Chamber } from "./chambers";
 import { PartIcon } from "./PartIcon";
+import { PartPreview } from "./PartPreview";
+import { TabletIcon } from "./TabletIcon";
 import type { BenchControls, BenchView } from "./scene/benchView";
 type Props = {
   chamber: Chamber;
@@ -341,13 +338,16 @@ export default function CircuitLab(props: Props) {
   }, [world, document, selected, held, points, cursor]);
   useEffect(() => () => world?.setBenchInteraction(null), [world]);
   const readout = chosen && result.parts[chosen.id];
-  const instruction = !benchReady
-    ? "Approaching workbench…"
-    : held
-      ? "Choose another contact to finish the wire"
-      : tool !== "wire"
-        ? `Place the ${PART_NAMES[tool].toLowerCase()} on the bench`
-        : "Connect contacts. Follow the current.";
+  const inventory = chamber.tools.map(kind => ({
+    kind,
+    remaining: kind === "wire" ? null : Math.max(0,
+      (chamber.limits[kind] ?? 0) - circuit.parts.filter(p => p.kind === kind).length),
+  }));
+  const canPlace = inventory.some(item => item.remaining !== null && item.remaining > 0);
+  const instruction = !benchReady || held ? null
+    : tool !== "wire" && inventory.some(item => item.kind === tool && item.remaining)
+      ? `Place the ${PART_NAMES[tool].toLowerCase()} on the bench.`
+      : canPlace ? "Drag a part onto the bench." : null;
   // Native modal dialogs isolate background focus. Setting inert here would
   // blur the opener before the dialog can remember it for focus restoration.
   return (
@@ -368,28 +368,14 @@ export default function CircuitLab(props: Props) {
         <div className="chamber-id">
           <span className="chamber-number">{chamber.number}</span>
           <div className="mission-copy">
-            <span className="ui-eyebrow">Asterion · Circuit lab</span>
             <h1>{chamber.name}</h1>
           </div>
         </div>
-        <div className="lab-status-block">
-          <div className="lab-state" role="status">
-            {result.tripped ? <><Zap /><span>Short circuit</span></>
-              : overloaded ? <><Zap /><span>Too much voltage</span></>
-              : restored ? <><Check /><span>Power restored</span></>
-                : <><span className="status-dot" /><span>Awaiting power</span></>}
-          </div>
-          <div className="chamber-progress" role="img" aria-label={`Chamber ${chamber.number} of 6`}>
-            {Array.from({ length: 6 }, (_, i) => (
-              <i key={i} className={i < Number(chamber.number) - 1 || (restored && i === Number(chamber.number) - 1) ? "complete" : i === Number(chamber.number) - 1 ? "current" : ""} />
-            ))}
-          </div>
-        </div>
-        <button className="icon-button lab-notebook" onClick={props.onNotebook} aria-label="Open notebook" title="Notebook · N"><BookOpen /></button>
+        <button className="icon-button lab-notebook" onClick={props.onNotebook} aria-label="Open notebook" title="Notebook · N"><TabletIcon /><kbd aria-hidden="true">N</kbd></button>
       </header>
-      <div className="lab-objective">
-        <Lightbulb aria-hidden="true" />
-        <p>{result.tripped ? "Remove the short or undo your last connection." : overloaded ? "Adjust the circuit to bring each lamp to 6 V." : chamber.hint}</p>
+      <div className="lab-objective" role="status">
+        {(result.tripped || overloaded) && <strong>{result.tripped ? "Short circuit" : "Too much voltage"}</strong>}
+        {(result.tripped || overloaded || !restored) && <p>{result.tripped ? "Remove the short or undo your last connection." : overloaded ? "Adjust the circuit to bring each lamp to 6 V." : chamber.hint}</p>}
       </div>
       <div className="bench-shell">
         <div
@@ -633,7 +619,7 @@ export default function CircuitLab(props: Props) {
           {selected && (
             <>
               <div className="selection-identity">
-                <PartIcon kind={chosen?.kind ?? "wire"} />
+                <PartPreview kind={chosen?.kind ?? "wire"} />
                 <span><small>{chosen?.fixed ? "Fixed component" : "Selected"}</small><strong>{chosen ? name(chosen) : "Wire"}</strong></span>
               </div>
               {chosen?.kind === "resistor" && (
@@ -687,18 +673,10 @@ export default function CircuitLab(props: Props) {
         </div>
       </div>
       <footer className="kit-toolbar" inert={!benchReady}>
-        <div className="tool-instruction" role="status">
-          <MousePointer2 aria-hidden="true" />
-          <span>{instruction}</span>
-        </div>
+        {instruction && <div className="tool-instruction" role="status">{instruction}</div>}
         <div className="tool-tray" aria-label="Circuit parts">
-          {chamber.tools.map((kind) => {
-            const remaining = kind === "wire" ? null : Math.max(0,
-              (chamber.limits[kind] ?? 0) - circuit.parts.filter((p) => p.kind === kind).length);
-            const full =
-              kind !== "wire" &&
-              circuit.parts.filter((p) => p.kind === kind).length >=
-                (chamber.limits[kind] ?? 0);
+          {inventory.map(({ kind, remaining }) => {
+            const full = remaining === 0;
             return (
               <button
                 key={kind}
@@ -707,6 +685,7 @@ export default function CircuitLab(props: Props) {
                   kind === "wire" ? "Wire tool" : `Add ${PART_NAMES[kind]}`
                 }
                 aria-pressed={tool === kind}
+                aria-description={remaining === null ? "Unlimited wire" : `${remaining} available`}
                 disabled={full}
                 title={remaining === null ? "Connect two contacts" : `${PART_NAMES[kind]} · ${remaining} available`}
                 onPointerDown={(e) => {
@@ -740,9 +719,8 @@ export default function CircuitLab(props: Props) {
                   setStart(null);
                 }}
               >
-                <span className="tool-glyph"><PartIcon kind={kind} /></span>
-                <span className="tool-name">{kind === "wire" ? "Wire" : PART_NAMES[kind]}</span>
-                <span className="tool-stock" aria-hidden="true">{remaining === null ? "∞" : remaining}</span>
+                <span className="tool-glyph"><PartPreview kind={kind} /></span>
+                <span className="tool-caption"><span className="tool-name">{kind === "wire" ? "Wire" : PART_NAMES[kind]}</span><span className={`tool-stock${remaining === null ? " unlimited" : ""}`} aria-hidden="true">{remaining === null ? "∞" : `×${remaining}`}</span></span>
               </button>
             );
           })}

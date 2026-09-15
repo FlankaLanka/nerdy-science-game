@@ -1,5 +1,4 @@
-import { Map, Shapes, Sigma, X } from "lucide-react";
-import type { CSSProperties } from "react";
+import { X } from "lucide-react";
 import { Dialog } from "./Dialog";
 import { CHAMBERS, FORMULAS } from "./chambers";
 import type { FormulaId } from "./chambers";
@@ -10,12 +9,13 @@ import type { PartKind } from "./circuitKit";
 import { PartSpecimen } from "./PartSpecimen";
 import { DECK, PORTALS, deckPoint } from "./scene/shipLayout";
 import type { Player } from "./scene/navigation";
+import "./notebook.css";
 export type NotebookTab = "parts" | "formulas" | "map";
 const notes: Record<PartKind, string> = {
-  battery: "Maintains a voltage between its contacts.",
+  battery: "Maintains voltage between its contacts.",
   bulb: "Transfers electrical energy into light and heat.",
-  resistor: "Limits current. Resistance is measured in ohms (Ω).",
-  switch: "Opens or closes a conducting path.",
+  resistor: "Limits current. Measured in ohms (Ω).",
+  switch: "Opens or closes the circuit.",
 } as Record<PartKind, string>;
 const order: PartKind[] = ["battery", "bulb", "switch", "resistor"];
 export default function Notebook({
@@ -83,22 +83,16 @@ export default function Notebook({
       <div className="tablet-display" data-dialog-surface>
         <header className="notebook-header">
           <h1>Notebook</h1>
-          <span className="notebook-status"><i />{unlocked} / 6 restored</span>
         </header>
         <nav
           className="notebook-tabs"
           aria-label="Notebook sections"
-          style={
-            {
-              "--tab-index": ["parts", "formulas", "map"].indexOf(tab),
-            } as CSSProperties
-          }
         >
           {(
             [
-              { id: "parts", name: "Parts", icon: Shapes },
-              { id: "formulas", name: "Formulas", icon: Sigma },
-              { id: "map", name: "Map", icon: Map },
+              { id: "parts", name: "Parts" },
+              { id: "formulas", name: "Formulas" },
+              { id: "map", name: "Map" },
             ] as const
           ).map((t) => (
             <button
@@ -110,7 +104,6 @@ export default function Notebook({
                 onTab(t.id);
               }}
             >
-              <t.icon />
               {t.name}
             </button>
           ))}
@@ -130,7 +123,7 @@ export default function Notebook({
                   <div>
                     <h2>Wire</h2>
                     <p>
-                      An insulated lead. Only its contacts make connections.
+                      Connects parts. Only its contacts conduct.
                     </p>
                   </div>
                 </article>
@@ -143,7 +136,7 @@ export default function Notebook({
                     <div>
                       <h2>{PART_NAMES[kind]}</h2>
                       <p>{notes[kind]}</p>
-                      {kind === "bulb" && <small>Kit lamps: 6 V · 12 Ω</small>}
+                      {kind === "bulb" && <small>6 V · 12 Ω</small>}
                     </div>
                   </article>
                 ))}
@@ -152,8 +145,7 @@ export default function Notebook({
               )}
               {parts.has("wire") && (
                 <small className="notebook-footnote">
-                  Moving dots show conventional current: + to − outside the
-                  battery.
+                  Current flows from + to − outside the battery.
                 </small>
               )}
             </div>

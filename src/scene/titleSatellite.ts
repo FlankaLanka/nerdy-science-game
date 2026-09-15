@@ -80,7 +80,8 @@ export function buildTitleSatellite(scene: THREE.Scene) {
   for (const side of [-1, 1]) {
     box(side * 2.03, 0.15, 0, 2.48, 1.46, 0.07, dark);
     for (const y of [-0.59, 0.89]) box(side * 2.03, y, 0.035, 2.5, 0.025, 0.07);
-    for (const x of [0.8, 3.27]) box(side * x, 0.15, 0.035, 0.035, 1.5, 0.07);
+    // Side rails stop short of the end rails instead of sharing their faces.
+    for (const x of [0.8, 3.27]) box(side * x, 0.15, 0.035, 0.035, 1.44, 0.07);
     for (let x = 0; x < 4; x++)
       for (let y = 0; y < 4; y++) {
         transform.makeTranslation(

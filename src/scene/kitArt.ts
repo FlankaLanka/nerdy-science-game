@@ -178,8 +178,22 @@ export function buildKit() {
       nub.rotation.z = Math.PI / 2;
       const base = cylinder(28, 5, rubber, g, 52, 32);
       base.rotation.z = Math.PI / 2;
-      box(4, 2, 17, ceramic, g, -29, 60, 0, 1);
-      box(17, 2, 4, ceramic, g, -29, 60, 0, 1);
+      // A single embossed plus avoids two bars sharing the same top face.
+      mesh(
+        cached("battery-positive", () => {
+          const cross = new THREE.Shape(
+            [
+              [-2, -8.5], [2, -8.5], [2, -2], [8.5, -2], [8.5, 2], [2, 2],
+              [2, 8.5], [-2, 8.5], [-2, 2], [-8.5, 2], [-8.5, -2], [-2, -2],
+            ].map(([x, y]) => new THREE.Vector2(x, y)),
+          );
+          return new THREE.ExtrudeGeometry(cross, {
+            depth: 2,
+            bevelEnabled: false,
+          }).rotateX(-Math.PI / 2);
+        }),
+        ceramic, g, -29, 59, 0,
+      );
       box(14, 2, 4, ceramic, g, 29, 60, 0, 1);
       for (const x of [-36, 36]) box(10, 9, 68, rubber, g, x, 5, 0, 3);
     } else if (part.kind === "bulb") {

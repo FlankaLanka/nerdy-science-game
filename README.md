@@ -40,7 +40,7 @@ Using a bench glides the room camera directly overhead. Parts, wires, and live d
 | 05 · Shared light | Series circuits                  | Power two 6 V lamps from one 12 V source                  |
 | 06 · Independence | Parallel circuits and isolation  | Give the second lamp an independent path                  |
 
-Circuits run continuously. There is no Test button, hypothesis form, measurement log or commissioning step. A working circuit lights its chamber and permanently unlocks the next door. The first successful restoration returns the player to the room; the bench remains available for experimentation.
+Circuits run continuously. There is no Test button, hypothesis form, measurement log or commissioning step. An amber conduit connects each bench to its exit. A working circuit turns that route cyan, sends light toward the door, and changes the bench and door indicators from empty squares to checkmarks. The chamber lights up and the door stays unlocked. The first successful restoration returns the player to the room; the bench remains available for experimentation.
 
 The notebook has **Parts**, **Formulas** and **Map** tabs. Components and equations appear as they are encountered. Three wall posters introduce Ohm's law, series voltage sharing and parallel voltage. The walking HUD contains a room number, reticle, and contextual interaction key. Open the notebook with N and pause with Esc. The pause menu uses a sparse list over the scene, with sound and motion controls under Options; arrow keys navigate and Esc goes back. ASTER speaks through short, transient subtitles.
 

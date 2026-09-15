@@ -26,6 +26,12 @@ The station has six shared kit benches, six doorway labels and three formula pos
 
 `navigation.ts` applies substepped capsule movement and facing/proximity/occlusion checks before a bench can be used. `renderWorld.ts` manages camera, pointer lock, drag look, touch movement, sound events and throttled room telemetry. The notebook uses the actual saved player pose, and never teleports it.
 
+### Surface joins
+
+Give each exposed surface one owner. End perpendicular wall trim and solar-frame rails before their corners overlap; fit window posts between the sill and header. Ceiling transitions sit entirely on the taller-room side. Embossed symbols use one silhouette, and closed doors use one recessed center seal. Trim conduit sections into rounded corner couplers. Keep ceiling services outside the full door-header depth. Fix these joins in geometry instead of masking them with depth bias.
+
+`tests/browser/surfaces.spec.ts` checks overlapping opaque triangle interiors, including batched and instanced geometry. It samples visibility from walkable room and doorway positions and overhead benches, and checks the exterior and title relay. Buried intersections and touching edges are allowed. The doorway tests also sample both approaches during travel. These checks complement visual review of close and oblique views; they do not model every GPU depth-buffer artifact.
+
 ## Interface and story
 
 `App.tsx` coordinates walking, close-up, notebook and pause. There are no ordinary network requests beyond local runtime assets. ASTER's short authored lines are triggered by room entry, initial bench use, restoration and arrival at the observation deck. Heard identifiers are persisted; subtitle time pauses in menus and hidden tabs.

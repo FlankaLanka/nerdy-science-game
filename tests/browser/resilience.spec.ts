@@ -58,7 +58,7 @@ test("storage failure preserves the playable circuit", async ({ page }) => {
   await page.keyboard.up("w");
   await bench(page);
   await connect(page, "Battery negative", "Bulb contact B");
-  await expect(page.getByText("Power restored", { exact: true })).toBeVisible();
+  await expect(page.locator(".circuit-lab")).toHaveClass(/restored/);
   await expect(
     page.getByLabel("Storage unavailable. This run cannot be saved."),
   ).toBeVisible();
