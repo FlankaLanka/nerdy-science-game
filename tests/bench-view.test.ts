@@ -40,7 +40,8 @@ for (const [width, height] of [
     );
     assert.ok(framing.left >= 0 && framing.top >= 0);
     assert.ok(framing.left + framing.width <= width);
-    assert.ok(framing.top + framing.height < height - 80);
+    assert.ok(framing.top + framing.height <= height - (height <= 480 && width > 640 ? 20 : 170));
+    if (width >= 1280) assert.ok(framing.width > width * 0.59, "the bench dominates the activity view");
     for (const point of [
       { x: 0, y: 0 },
       { x: 900, y: 500 },

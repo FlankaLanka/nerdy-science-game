@@ -97,10 +97,10 @@
   top: auto;
   left: 50%;
   right: auto;
-  bottom: 86px;
+  bottom: 24px;
   transform: translateX(-50%);
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: 1fr;
   gap: 7px 10px;
   padding: 8px;
   border: 1px solid #b2c5ca50;
@@ -127,6 +127,7 @@
   background: none;
   box-shadow: none;
 }
+.circuit-lab .tool-tray { justify-content: center; }
 .circuit-lab .kit-tool {
   position: relative;
   display: flex;
@@ -158,42 +159,59 @@
 .kit-tool[aria-pressed="true"] .tool-stock { color: #c6f5f6; }
 .circuit-lab .kit-tool:hover:not(:disabled) { color: #fff; border-color: #b4d2d6; background: #4b626b; }
 .circuit-lab .kit-tool:disabled { opacity: .45; }
-.circuit-lab .history-tools { border-left: 1px solid #a3c0cc26; padding-left: 12px; align-items: stretch; }
+.circuit-lab .history-tools {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  gap: 4px;
+  padding: 5px;
+  align-items: stretch;
+  border: 1px solid #b2c5ca50;
+  border-radius: 4px;
+  background: #1c2b32f5;
+  box-shadow: 0 4px 16px #071e3426;
+  pointer-events: auto;
+}
 .circuit-lab .history-tools .icon-button {
-  width: 48px;
-  height: auto;
+  width: 86px;
+  height: 48px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  color: #bfd4dd;
+  gap: 5px;
+  color: #d0dfe2;
+  border: 1px solid #afc4c71c;
+  background: #95afb80a;
   border-radius: 2px;
   font: 11px "Space Grotesk", sans-serif;
 }
+.circuit-lab .history-tools .icon-button svg { width: 20px; height: 20px; }
+.circuit-lab .history-tools .icon-button:hover:not(:disabled) { color: #fff; background: #405861; border-color: #b6d5dc8c; }
+.circuit-lab .history-tools .icon-button:active:not(:disabled) { background: #607780; transform: translateY(1px); }
 .circuit-lab .icon-button:hover:not(:disabled) { color: #fff2d6; background: #b9d9dd14; }
 .circuit-lab .selection-bar {
-  position: absolute;
-  left: 50%;
-  bottom: 210px;
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: calc(100% - 40px);
+  position: static;
+  transform: none;
+  width: auto;
+  max-width: none;
   min-height: 0;
   margin: 0;
   padding: 0;
-  gap: 14px;
+  gap: 12px;
   color: #d7e6e8;
-  border-radius: 3px;
+  border-radius: 0;
   pointer-events: auto;
 }
 .circuit-lab .selection-bar:not(:empty) {
-  padding: 9px 12px;
-  border: 1px solid #96b6c342;
-  background: #1c2b32f5;
-  box-shadow: 0 6px 22px #071e3433;
+  padding: 0 4px 8px;
+  border: 0;
+  border-bottom: 1px solid #96b6c342;
+  background: none;
+  box-shadow: none;
 }
+.circuit-lab .selection-bar:empty { display: none; }
+.selection-actions { display: flex; gap: 4px; }
+.selection-actions:empty { display: none; }
 .selection-identity { display: flex; align-items: center; gap: 9px; }
-.selection-identity .part-preview { width: 46px; height: 31px; }
-.selection-identity small,
 .meter small { display: block; color: #a4c0ca; font: 8px/1.4 var(--mono); margin-bottom: 3px; }
 .selection-identity strong { display: block; font: 500 12px "Space Grotesk", sans-serif; color: #eaf2ef; }
 .selection-bar .meter { display: flex; gap: 15px; }
@@ -204,10 +222,10 @@
 .circuit-lab .value-options button { min-width: 51px; min-height: 40px; color: #d5e5e9; border-color: #749ead33; }
 .circuit-lab .value-options button[aria-pressed="true"] { background: #d5e8e6; color: #204354; }
 .circuit-lab .value-options button:hover { background: #547787; color: #fff9e4; }
-.circuit-lab .selection-bar .icon-button { color: #bdd5de; }
+.circuit-lab .selection-bar .icon-button { color: #d0dfe2; width: 60px; min-height: 42px; display: flex; flex-direction: column; gap: 4px; font: 10px "Space Grotesk", sans-serif; border-radius: 2px; }
 .circuit-lab .part-value { border: 1px solid #a4c4cf44; border-radius: 4px; background: #163746eb; padding: 4px 7px; }
-.circuit-lab:not(.in-world) .bench-shell { position: absolute; inset: 140px 24px 250px; padding: 0; }
-.circuit-lab:not(.in-world) .kit-board { width: min(100%, calc((100dvh - 400px) * 1.8)); }
+.circuit-lab:not(.in-world) .bench-shell { position: absolute; inset: 110px 24px 180px; padding: 0; }
+.circuit-lab:not(.in-world) .kit-board { width: min(100%, calc((100dvh - 290px) * 1.8)); }
 .narration {
   color: #e5eeee;
   background: #17343eea;
@@ -232,7 +250,7 @@
   .mission-copy h1 { font-size: 15px; overflow: hidden; text-overflow: ellipsis; }
   .lab-objective { left: 15px; top: 73px; right: 15px; max-width: calc(100% - 30px); font-size: 11px; align-items: flex-start; flex-wrap: wrap; gap: 4px; }
   .lab-objective p { padding: 3px 7px; }
-  .circuit-lab .kit-toolbar { bottom: 99px; gap: 8px; padding: 8px; max-width: calc(100% - 20px); }
+  .circuit-lab .kit-toolbar { bottom: 76px; gap: 8px; padding: 8px; max-width: calc(100% - 20px); }
   .tool-instruction { font-size: 11px; max-width: 310px; }
   .circuit-lab .tool-tray { gap: 4px; }
   .circuit-lab .kit-tool { width: 74px; min-width: 0; min-height: 74px; padding: 3px 5px 6px; }
@@ -240,16 +258,15 @@
   .part-preview { width: 68px; height: 45px; }
   .tool-name { font-size: 10px; }
   .tool-stock { font-size: 12px; }
-  .circuit-lab .history-tools { padding-left: 7px; gap: 2px; }
-  .circuit-lab .history-tools .icon-button { width: 40px; min-height: 44px; font-size: 10px; }
-  .circuit-lab .selection-bar { bottom: 223px; gap: 8px; max-width: calc(100% - 24px); }
-  .circuit-lab .selection-bar:not(:empty) { padding: 7px 9px; }
-  .selection-identity .part-preview { display: none; }
+  .circuit-lab .history-tools { left: 50%; right: auto; bottom: 12px; transform: translateX(-50%); gap: 4px; padding: 4px; }
+  .circuit-lab .history-tools .icon-button { width: 80px; height: 44px; flex-direction: row; gap: 9px; font-size: 11px; }
+  .circuit-lab .selection-bar { gap: 8px; max-width: none; flex-wrap: wrap; justify-content: center; }
+  .circuit-lab .selection-bar:not(:empty) { padding: 0 2px 6px; }
   .selection-identity strong { font-size: 11px; }
-  .selection-identity small { font-size: 7px; }
+  .selection-identity { display: none; }
   .selection-bar .meter { gap: 8px; }
   .meter strong { font-size: 11px; }
-  .circuit-lab .selection-bar .icon-button { width: 32px; min-height: 42px; }
+  .circuit-lab .selection-bar .icon-button { width: 44px; min-height: 42px; }
   .circuit-lab .value-options button { min-width: 44px; font-size: 10px; }
   .narration { padding: 9px 14px; bottom: 20px; max-width: calc(100% - 32px); }
   .narration p { font-size: 11px; line-height: 1.5; }
@@ -261,19 +278,24 @@
   .chamber-id .chamber-number { font-size: 24px; }
   .mission-copy h1 { font-size: 15px; }
   .lab-objective { top: 64px; left: 20px; font-size: 11px; }
-  .circuit-lab .kit-toolbar { left: auto; right: 13px; top: 91px; bottom: auto; transform: none; grid-template-columns: 1fr; gap: 6px; padding: 6px; width: 126px; }
+  .circuit-lab .kit-toolbar { left: auto; right: 13px; top: 98px; bottom: auto; transform: none; grid-template-columns: 1fr; gap: 6px; padding: 6px; width: 164px; max-height: calc(100% - 169px); overflow: auto; }
   .tool-instruction { font-size: 10px; padding: 1px 2px; }
   .circuit-lab .tool-tray { flex-direction: row; flex-wrap: wrap; gap: 4px; }
-  .circuit-lab .kit-tool { width: 52px; min-width: 0; flex: 1 0 48px; padding: 2px 3px 5px; min-height: 57px; }
+  .circuit-lab .kit-tool { width: 68px; min-width: 0; flex: 1 0 60px; padding: 2px 3px 5px; min-height: 57px; }
   .tool-caption { gap: 2px; }
   .tool-name { font-size: 9px; }
   .tool-stock { font-size: 10px; }
   .tool-glyph { height: 33px; }
   .part-preview { width: 49px; height: 33px; }
-  .circuit-lab .history-tools { border-left: 0; padding: 5px 0 0; border-top: 1px solid #8cabb438; justify-content: space-around; }
-  .circuit-lab .history-tools .icon-button { height: 44px; font-size: 10px; gap: 4px; }
-  .circuit-lab .selection-bar { bottom: 48px; left: calc(50% - 72px); gap: 8px; }
-  .circuit-lab .selection-bar:not(:empty) { padding: 4px 9px; }
+  .circuit-lab .history-tools { bottom: 12px; right: 13px; padding: 4px; width: 164px; gap: 4px; }
+  .circuit-lab .history-tools .icon-button { width: 74px; height: 44px; font-size: 10px; gap: 4px; }
+  .circuit-lab .selection-bar { gap: 5px; flex-wrap: wrap; justify-content: center; }
+  .circuit-lab .selection-bar:not(:empty) { padding: 0 0 6px; }
+  .selection-identity { display: none; }
+  .circuit-lab .selection-bar .icon-button { width: 50px; }
+  .circuit-lab .value-options { flex-wrap: wrap; justify-content: center; }
+  .circuit-lab .value-options button { min-width: 44px; }
+  .selection-bar .meter { gap: 7px; }
   .narration { bottom: 9px; padding: 6px 12px; max-width: calc(100% - 320px); }
   .narration > span { display: none; }
   .narration p { font-size: 10px; }
@@ -284,18 +306,22 @@
   .tool-glyph { height: 40px; }
   .tool-caption { gap: 2px; }
   .tool-stock { font-size: 11px; }
-  .circuit-lab .history-tools .icon-button { width: 36px; }
 }
 @media (max-height: 690px) and (max-width: 640px) {
   .circuit-lab .lab-header { top: 12px; }
   .lab-objective { top: 70px; }
-  .circuit-lab .kit-toolbar { bottom: 65px; gap: 6px; padding: 7px; }
+  .circuit-lab .kit-toolbar { bottom: 76px; gap: 6px; padding: 7px; }
   .circuit-lab .kit-tool { min-height: 64px; }
-  .circuit-lab .selection-bar { bottom: 182px; gap: 6px; }
+  .circuit-lab .selection-bar { gap: 6px; }
   .selection-bar .selection-identity,
   .selection-bar .meter > span:last-child { display: none; }
-  .circuit-lab .selection-bar:not(:empty) { padding: 5px 7px; }
+  .circuit-lab .selection-bar:not(:empty) { padding: 0 2px 6px; }
   .narration { bottom: 8px; padding: 7px 10px; }
   .narration > span { display: none; }
   .narration p { font-size: 10px; }
+}
+@media (min-width: 641px) and (max-width: 1000px) and (min-height: 481px) {
+  .circuit-lab .kit-toolbar { bottom: 76px; }
+  .circuit-lab .history-tools { left: 50%; right: auto; bottom: 12px; transform: translateX(-50%); }
+  .circuit-lab .history-tools .icon-button { height: 44px; flex-direction: row; gap: 9px; }
 }

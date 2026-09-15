@@ -551,10 +551,10 @@ export function renderWorld(o: Options) {
       workLight.intensity = state.reducedMotion
         ? activeBench === null
           ? 0
-          : 8
+          : 2.6
         : THREE.MathUtils.damp(
             workLight.intensity,
-            activeBench === null ? 0 : 8,
+            activeBench === null ? 0 : 2.6,
             6,
             dt,
           );
@@ -584,7 +584,9 @@ export function renderWorld(o: Options) {
           : "walk";
     // Warm the station passes before enabling Begin, then omit them in space.
     occlusion.enabled = !coarse && (!state.preview || !ready);
-    bloom.enabled = !state.preview || !ready;
+    const editing = activeBench !== null && !state.preview;
+    bloom.enabled = (!state.preview || !ready) && !editing;
+    renderer.toneMappingExposure = editing ? 0.85 : 1;
     titleSatellite.update(time, state.preview);
     camera.updateMatrixWorld();
     for (const event of model.update(

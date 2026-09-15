@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { Chamber } from "../chambers.ts";
 import type { PORTALS } from "./shipLayout.ts";
 import { shipArt } from "./shipArt";
+import { buildCable, roundedCablePath } from "./cable";
 
 type Gate = (typeof PORTALS)[number];
 type Point = [number, number, number];
@@ -17,34 +18,37 @@ export function powerLinkPath(chamber: Chamber, gate: Gate): Point[] {
     y,
     gate.z - across * Math.sin(gate.rotation) + forward * Math.cos(gate.rotation),
   ];
-  const entry = atGate(1.3, 0.045, 0.48);
+  const entry = atGate(1.45, 0.057, 0.48);
   const path: Point[] = [
     [x + 0.88, 0.26, z + 0.84],
-    [x + 0.88, 0.045, z + 0.84],
-    [x + 1.85, 0.045, z + 0.84],
+    [x + 0.88, 0.057, z + 0.98],
+    [x + 1.85, 0.057, z + 0.98],
   ];
   if (Math.abs(Math.sin(gate.rotation)) > 0.5) {
-    path.push([x + 1.85, 0.045, entry[2]]);
+    path.push([x + 1.85, 0.057, entry[2]]);
   } else {
     const clearZ = z + Math.sign(gate.z - z) * 1.35;
-    path.push([x + 1.85, 0.045, clearZ], [entry[0], 0.045, clearZ]);
+    path.push([x + 1.85, 0.057, clearZ], [entry[0], 0.057, clearZ]);
   }
-  path.push(entry, atGate(1.5, 0.045, 0.48), atGate(1.5, 2.99, 0.48),
+  path.push(entry, atGate(1.7, 0.057, 0.48), atGate(1.7, 2.99, 0.48),
     atGate(0, 2.99, 0.48), atGate(0, INDICATOR_HEIGHT + 0.34, 0.48));
   return path;
 }
 
-/** The station relay latches with the solved chamber; it is not an editable kit lead. */
+export function powerLinkCurve(chamber: Chamber, gate: Gate) {
+  return roundedCablePath(powerLinkPath(chamber, gate).map(p => new THREE.Vector3(...p)));
+}
+
+/** The station relay displays live circuit power; it is not an editable kit lead. */
 export function buildPowerLink(chamber: Chamber, gate: Gate) {
   const root = new THREE.Group();
   root.name = `Power link ${chamber.id}`;
   root.userData.powered = false;
-  const { box, rod, mesh } = shipArt(root);
+  const { box, rod } = shipArt(root);
   const casing = new THREE.MeshStandardMaterial({ color: "#314653", roughness: 0.65, metalness: 0.25 });
   const bezel = new THREE.MeshStandardMaterial({ color: "#c3d0d6", roughness: 0.55, metalness: 0.35 });
   const face = new THREE.MeshBasicMaterial({ color: "#15232d", toneMapped: false });
   const signal = new THREE.MeshBasicMaterial({ color: STANDBY, toneMapped: false });
-  const spark = new THREE.MeshBasicMaterial({ color: "#edffff", toneMapped: false });
   const checks: THREE.Group[] = [];
   const waiting: THREE.Group[] = [];
   function indicator(position: Point, rotation: number, scale: number, name: string) {
@@ -86,61 +90,31 @@ export function buildPowerLink(chamber: Chamber, gate: Gate) {
     box(0, 0.455, 0, 0.09, 0.23, 0.06, casing, panel);
   }
 
-  const points = powerLinkPath(chamber, gate).map(p => new THREE.Vector3(...p));
-  const segments: { a: THREE.Vector3; delta: THREE.Vector3; length: number; start: number }[] = [];
-  let length = 0;
-  for (let i = 1; i < points.length; i++) {
-    const a = points[i - 1], b = points[i];
-    const delta = b.clone().sub(a), distance = delta.length();
-    if (distance < 0.001) continue;
-    segments.push({ a, delta, length: distance, start: length });
-    // Trim straight sections before each bend. A rounded coupler owns the
-    // corner surface, so perpendicular cylinder facets cannot share a plane.
-    const inset = Math.min(0.035, distance / 3) / distance;
-    rod(
-      a.clone().addScaledVector(delta, i > 1 ? inset : 0),
-      b.clone().addScaledVector(delta, i < points.length - 1 ? -inset : 0),
-      0.035,
-      casing,
-    );
-    length += distance;
+  const curve = powerLinkCurve(chamber, gate);
+  const cable = buildCable(curve, {
+    radius: 0.036, color: "#35454c", signal: POWERED, standby: STANDBY,
+    spacing: 1.65, pulseWidth: 0.18,
+  });
+  cable.root.name = "Power conduit";
+  cable.jacket.name = "Current toward door";
+  root.add(cable.root);
+  const mounts = new THREE.Group();
+  mounts.position.set(gate.x, 0, gate.z);
+  mounts.rotation.y = gate.rotation;
+  root.add(mounts);
+  const clipGeometry = new THREE.TorusGeometry(0.041, 0.008, 8, 24);
+  for (const y of [0.65, 1.85, 2.65]) {
+    box(1.7, y, 0.4, 0.12, 0.09, 0.09, casing, mounts);
+    const clip = new THREE.Mesh(clipGeometry, bezel);
+    clip.position.set(1.7, y, 0.48);
+    clip.rotation.x = Math.PI / 2;
+    clip.castShadow = clip.receiveShadow = true;
+    mounts.add(clip);
   }
-  const elbow = new THREE.SphereGeometry(0.055, 16, 12);
-  for (const point of points.slice(1, -1))
-    mesh(elbow, casing, point.x, point.y, point.z);
-  const route = new THREE.Group();
-  route.name = "Power conduit";
-  route.userData.dynamic = true;
-  root.add(route);
-  const count = segments.reduce((n, segment) => n + Math.ceil(segment.length / 0.36), 0);
-  const dashes = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.052, 0.052, 1, 8), signal, count);
-  dashes.name = "Conduit lamps";
-  const transform = new THREE.Object3D(), up = new THREE.Vector3(0, 1, 0);
-  let index = 0;
-  for (const segment of segments) {
-    const slots = Math.ceil(segment.length / 0.36), spacing = segment.length / slots;
-    transform.quaternion.setFromUnitVectors(up, segment.delta.clone().normalize());
-    transform.scale.set(1, spacing * 0.62, 1);
-    for (let j = 0; j < slots; j++) {
-      transform.position.copy(segment.a).addScaledVector(segment.delta, (j + 0.5) / slots);
-      transform.updateMatrix();
-      dashes.setMatrixAt(index++, transform.matrix);
-    }
-  }
-  dashes.instanceMatrix.needsUpdate = true;
-  dashes.computeBoundingSphere();
-  route.add(dashes);
-  const pulses = new THREE.InstancedMesh(new THREE.SphereGeometry(0.071, 8, 6), spark, 3);
-  pulses.name = "Current toward door";
-  pulses.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  // Pulses move along the entire conduit, beyond their initial instance bounds.
-  pulses.frustumCulled = false;
-  pulses.visible = false;
-  route.add(pulses);
   let powered = false;
-  const pulsePosition = new THREE.Vector3(), matrix = new THREE.Matrix4();
   return {
     root,
+    flow: cable.uniforms,
     update(restored: boolean, time: number, reduced: boolean, animate: boolean) {
       if (restored !== powered) {
         powered = restored;
@@ -149,16 +123,7 @@ export function buildPowerLink(chamber: Chamber, gate: Gate) {
         checks.forEach(check => { check.visible = restored; });
         waiting.forEach(pending => { pending.visible = !restored; });
       }
-      pulses.visible = restored && !reduced && animate;
-      if (!pulses.visible) return;
-      for (let i = 0; i < pulses.count; i++) {
-        const distance = (time * 2.6 + i * length / pulses.count) % length;
-        const segment = segments.find(s => distance < s.start + s.length) ?? segments[segments.length - 1];
-        pulsePosition.copy(segment.a).addScaledVector(segment.delta, (distance - segment.start) / segment.length);
-        matrix.makeTranslation(pulsePosition.x, pulsePosition.y, pulsePosition.z);
-        pulses.setMatrixAt(i, matrix);
-      }
-      pulses.instanceMatrix.needsUpdate = true;
+      cable.update(restored, time, reduced, animate, 1.6);
     },
   };
 }

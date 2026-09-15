@@ -29,14 +29,14 @@ export type BenchControls = {
 export function benchFraming(width: number, height: number) {
   const compact = height <= 480 && width > 640;
   const shortPortrait = width <= 640 && height <= 690;
-  const side = width <= 640 ? 20 : 64;
-  const availableWidth = width - side * 2 - (compact ? 145 : 0);
-  const top = compact ? 82 : shortPortrait ? 112 : width <= 640 ? 142 : 130;
-  const bottom = compact ? 120 : shortPortrait ? 235 : width <= 640 ? 265 : 285;
+  const side = width <= 640 ? 10 : 40;
+  const availableWidth = width - side * 2 - (compact ? 180 : 0);
+  const top = compact ? 98 : shortPortrait ? 116 : 110;
+  const bottom = compact ? 24 : width <= 1000 ? 238 : 180;
   const availableHeight = Math.max(90, height - top - bottom);
-  const boardWidth = Math.min(1120, availableWidth, availableHeight * 1.8);
+  const boardWidth = Math.min(availableWidth, availableHeight * 1.8);
   const boardHeight = boardWidth / 1.8;
-  const centerX = (width - (compact ? 145 : 0)) / 2;
+  const centerX = (width - (compact ? 180 : 0)) / 2;
   const centerY = top + availableHeight / 2;
   const distance = 1.9;
   return {

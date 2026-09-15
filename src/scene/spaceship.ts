@@ -579,9 +579,10 @@ export function buildSpaceship(scene: THREE.Scene) {
           b.previous = circuit;
           root.userData.shadowsDirty = true;
         }
-        b.kit.interact(i === activeBench ? interaction : null, time, reduced);
+        const animatePower = !preview && (playing || activeBench !== null);
+        b.kit.interact(i === activeBench ? interaction : null, time, reduced, animatePower);
         b.rail.emissiveIntensity = online.has(CHAMBERS[i].id) ? 1.6 : 0.08;
-        powerLinks[i].update(online.has(CHAMBERS[i].id), time, reduced, !preview && (playing || activeBench !== null));
+        powerLinks[i].update(online.has(CHAMBERS[i].id), time, reduced, animatePower);
       });
       for (const f of fixtures)
         f.material.emissiveIntensity = THREE.MathUtils.damp(

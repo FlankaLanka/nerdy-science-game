@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 // Static tray images use the same meshes and materials as the playable kit.
 // Run against the local dev server; no extra renderer runs inside the HUD.
 const output = "public/assets/kit";
+const selected = new Set(process.argv.slice(2));
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch({
   args: process.platform === "darwin" ? ["--use-angle=metal"] : [],
@@ -12,6 +13,7 @@ try {
   const page = await browser.newPage();
   await page.goto(`${process.env.REVIEW_URL ?? "http://127.0.0.1:5176"}/credits.html`);
   for (const kind of ["wire", "battery", "bulb", "resistor", "switch"]) {
+    if (selected.size && !selected.has(kind)) continue;
     const data = await page.evaluate(async kind => {
       const THREE = await import("/node_modules/.vite/deps/three.js");
       const { buildKit } = await import("/src/scene/kitArt.ts");

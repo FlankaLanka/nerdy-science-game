@@ -143,7 +143,7 @@ test("station, window joints and circuit parts have no visible coplanar interior
   });
   expect(result.triangles).toBeGreaterThan(100000);
   expect(result.viewpoints).toBeGreaterThan(150);
-  expect(result.count).toBe(0);
+  expect(result.count, JSON.stringify(result.samples, null, 2)).toBe(0);
   expect(result.samples).toEqual([]);
 });
 

@@ -45,6 +45,12 @@ const shots = [
   },
   { name: "first-circuit", index: 0, kit: true },
   { name: "circuit-restored", index: 0, completed: 1, kit: true },
+  { name: "circuit-flow", index: 0, completed: 1, kit: true, motion: true },
+  { name: "contact-selected", index: 1, completed: 2, kit: true, select: "Select Battery" },
+  { name: "resistor-selected", index: 3, completed: 4, kit: true, select: "Select Resistor" },
+  { name: "resistor-selected-phone", index: 3, completed: 4, kit: true, select: "Select Resistor", viewport: { width: 390, height: 844 }, touch: true },
+  { name: "resistor-selected-small", index: 3, completed: 4, kit: true, select: "Select Resistor", viewport: { width: 320, height: 568 }, touch: true },
+  { name: "resistor-selected-landscape", index: 3, completed: 4, kit: true, select: "Select Resistor", viewport: { width: 844, height: 390 }, touch: true },
   { name: "assembly-tray", index: 2, kit: true },
   { name: "assembly-phone", index: 2, kit: true, viewport: { width: 390, height: 844 }, touch: true },
   { name: "assembly-small", index: 2, kit: true, viewport: { width: 320, height: 568 }, touch: true },
@@ -143,12 +149,16 @@ try {
     );
     await page.goto(process.env.REVIEW_URL ?? "http://localhost:5176");
     await page.getByRole("button", { name: /^(Begin|Continue)$/ }).waitFor();
-    if (!shot.title)
+    if (!shot.title) {
       await page.getByRole("button", { name: /^(Begin|Continue)$/ }).click();
+      await page.locator('.world canvas[data-camera-mode="walk"]').waitFor();
+      await page.locator(".room-marker").waitFor();
+    }
     if (shot.kit) {
       await page.getByRole("button", { name: "Use circuit bench" }).waitFor();
       await page.keyboard.press("e");
       await page.locator('.kit-board[data-ready="true"]').waitFor();
+      if (shot.select) await page.getByRole("button", { name: shot.select, exact: true }).click();
     }
     if (shot.book) {
       await page.keyboard.press("n");

@@ -1,4 +1,4 @@
-/** The notebook's device silhouette, with its three display tabs. */
+/** The notebook's device silhouette and display navigation. */
 export function TabletIcon() {
   return (
     <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">

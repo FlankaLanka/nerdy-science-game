@@ -2,10 +2,8 @@ import { useEffect, useMemo, useId, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import {
   ArrowLeft,
-  RotateCcw,
   RotateCw,
   Trash2,
-  Undo2,
 } from "lucide-react";
 import {
   cablePath,
@@ -20,6 +18,7 @@ import type { Chamber } from "./chambers";
 import { PartIcon } from "./PartIcon";
 import { PartPreview } from "./PartPreview";
 import { TabletIcon } from "./TabletIcon";
+import { HistoryIcon } from "./HistoryIcon";
 import type { BenchControls, BenchView } from "./scene/benchView";
 type Props = {
   chamber: Chamber;
@@ -344,7 +343,9 @@ export default function CircuitLab(props: Props) {
       (chamber.limits[kind] ?? 0) - circuit.parts.filter(p => p.kind === kind).length),
   }));
   const canPlace = inventory.some(item => item.remaining !== null && item.remaining > 0);
-  const instruction = !benchReady || held ? null
+  const showSelection = !!selected && (!chosen?.fixed || chosen.kind === "resistor"
+    || (!!chamber.formula && !!readout && chosen.kind !== "switch"));
+  const instruction = !benchReady || held || showSelection ? null
     : tool !== "wire" && inventory.some(item => item.kind === tool && item.remaining)
       ? `Place the ${PART_NAMES[tool].toLowerCase()} on the bench.`
       : canPlace ? "Drag a part onto the bench." : null;
@@ -601,7 +602,7 @@ export default function CircuitLab(props: Props) {
                     }}
                   >
                     <i />
-                    {part.kind === "battery" && (
+                    {fallback && part.kind === "battery" && (
                       <span>{end === "a" ? "+" : "−"}</span>
                     )}
                   </button>
@@ -615,12 +616,13 @@ export default function CircuitLab(props: Props) {
             </span>
           )}
         </div>
+      </div>
+      <footer className="kit-toolbar" inert={!benchReady}>
         <div className="selection-bar" aria-live="polite" inert={!benchReady}>
-          {selected && (
+          {showSelection && selected && (
             <>
               <div className="selection-identity">
-                <PartPreview kind={chosen?.kind ?? "wire"} />
-                <span><small>{chosen?.fixed ? "Fixed component" : "Selected"}</small><strong>{chosen ? name(chosen) : "Wire"}</strong></span>
+                <strong>{chosen ? name(chosen) : "Wire"}</strong>
               </div>
               {chosen?.kind === "resistor" && (
                 <div className="value-options" aria-label="Resistance">
@@ -643,6 +645,7 @@ export default function CircuitLab(props: Props) {
                   <span><small>Current</small><strong>{Math.abs(readout.current).toFixed(2)} <em>A</em></strong></span>
                 </span>
               )}
+              <div className="selection-actions">
               {chosen && !chosen.fixed && (
                 <button
                   className="icon-button"
@@ -653,6 +656,7 @@ export default function CircuitLab(props: Props) {
                   }
                 >
                   <RotateCw />
+                  <span>Rotate</span>
                 </button>
               )}
               {!chosen?.fixed && (
@@ -666,13 +670,13 @@ export default function CircuitLab(props: Props) {
                   }}
                 >
                   <Trash2 />
+                  <span>Remove</span>
                 </button>
               )}
+              </div>
             </>
           )}
         </div>
-      </div>
-      <footer className="kit-toolbar" inert={!benchReady}>
         {instruction && <div className="tool-instruction" role="status">{instruction}</div>}
         <div className="tool-tray" aria-label="Circuit parts">
           {inventory.map(({ kind, remaining }) => {
@@ -725,7 +729,8 @@ export default function CircuitLab(props: Props) {
             );
           })}
         </div>
-        <div className="history-tools">
+      </footer>
+        <div className="history-tools" role="group" aria-label="Circuit history" inert={!benchReady}>
           <button
             className="icon-button"
             onClick={() => {
@@ -737,7 +742,7 @@ export default function CircuitLab(props: Props) {
             aria-label="Undo"
             title="Undo"
           >
-            <Undo2 />
+            <HistoryIcon kind="undo" />
             <span>Undo</span>
           </button>
           <button
@@ -750,11 +755,10 @@ export default function CircuitLab(props: Props) {
             aria-label="Reset circuit"
             title="Reset circuit"
           >
-            <RotateCcw />
+            <HistoryIcon kind="reset" />
             <span>Reset</span>
           </button>
         </div>
-      </footer>
     </section>
   );
 }
