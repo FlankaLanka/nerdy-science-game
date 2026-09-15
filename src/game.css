@@ -215,29 +215,18 @@ kbd {
 .icon-button:hover:not(:disabled) {
   background: #b4d5c314;
 }
-.game.has-started::after {
-  content: "";
+.station-arrival {
   position: absolute;
   z-index: 40;
   inset: 0;
   pointer-events: none;
-  background: #020607;
+  background: #081018;
   opacity: 0;
-  animation: station-arrive 0.7s cubic-bezier(0.18, 0.65, 0.2, 1) both;
+  animation: station-arrive 0.32s ease-out both;
 }
 @keyframes station-arrive {
-  0% {
-    opacity: 1;
-    clip-path: inset(0);
-  }
-  30% {
-    opacity: 1;
-    clip-path: inset(0 49.8%);
-  }
-  100% {
-    opacity: 0;
-    clip-path: inset(50% 49.8%);
-  }
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 .narration {
   position: absolute;

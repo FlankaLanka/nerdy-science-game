@@ -11,7 +11,7 @@ const browser = await chromium.launch({
 });
 try {
   const page = await browser.newPage();
-  await page.goto(`${process.env.REVIEW_URL ?? "http://127.0.0.1:5176"}/credits.html`);
+  await page.goto(`${process.env.REVIEW_URL ?? "http://127.0.0.1:5176"}/tests/browser/fixture.html`);
   for (const kind of ["wire", "battery", "bulb", "resistor", "switch"]) {
     if (selected.size && !selected.has(kind)) continue;
     const data = await page.evaluate(async kind => {

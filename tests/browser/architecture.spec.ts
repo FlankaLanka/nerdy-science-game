@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test("doorway faces remain separated on both approaches and during door travel", async ({
   page,
 }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const collisions = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js";
     const shipUrl = "/src/scene/spaceship.ts";
@@ -127,7 +127,7 @@ test("doorway faces remain separated on both approaches and during door travel",
 test("every pressure window opens onto the exterior while the hull blocks escape", async ({
   page,
 }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const windows = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js";
     const shipUrl = "/src/scene/spaceship.ts";
@@ -176,7 +176,7 @@ test("every pressure window opens onto the exterior while the hull blocks escape
 test("orbital shader textures are released when the scene is disposed", async ({
   page,
 }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const disposed = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js";
     const spaceUrl = "/src/scene/space.ts";
@@ -217,7 +217,7 @@ test("orbital shader textures are released when the scene is disposed", async ({
 test("the complete chamber route and its return path remain walkable through all six powered gates", async ({
   page,
 }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const result = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js",
       shipUrl = "/src/scene/spaceship.ts",

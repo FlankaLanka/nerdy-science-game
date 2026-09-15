@@ -89,8 +89,6 @@ export function Dialog({
         ? document.activeElement
         : null;
     dialog.showModal();
-    if (initialFocus)
-      dialog.querySelector<HTMLElement>(initialFocus)?.focus({ preventScroll: true });
     // Fullscreen joins the browser's top layer above an already-open dialog.
     // Reopen the dialog above it, preserving the player's focused control.
     const fullscreenChanged = () => {
@@ -112,6 +110,10 @@ export function Dialog({
           document.querySelector<HTMLElement>(".world canvas")
         )?.focus({ preventScroll: true });
     };
+  }, [open]);
+  useEffect(() => {
+    if (open && initialFocus)
+      ref.current?.querySelector<HTMLElement>(initialFocus)?.focus({ preventScroll: true });
   }, [open, initialFocus]);
   return createPortal(
     <dialog

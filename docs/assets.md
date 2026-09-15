@@ -11,9 +11,11 @@ The three texture files total 2,237,747 bytes. Original source maps, alternate r
 
 Color uses sRGB; normal and roughness remain linear data. Anisotropy is capped at 4 for these textures. The floor uses a shared material and geometry UV scaling instead of duplicating textures by room.
 
+Space Grotesk and IBM Plex Mono use the SIL Open Font License. [Lucide icons](https://lucide.dev/license) use the ISC license.
+
 ## Orbital exterior
 
-The following published Solar System Scope files are retained unmodified, with shorter local names. Attribution is also accessible in the game through Pause → Credits, served from `public/credits.html`.
+The following published Solar System Scope files are retained unmodified, with shorter local names.
 
 | Runtime file       | Original download                                                                                       |     Bytes |
 | ------------------ | ------------------------------------------------------------------------------------------------------- | --------: |
@@ -31,4 +33,4 @@ Solar System Scope describes its maps as based on NASA imagery and other data wi
 
 Color textures use sRGB; the cloud mask uses linear data. Anisotropy is capped at 2. Shared shader textures are included in scene disposal. The sky uses one textured mesh, and the nearby solar cells use one instanced draw. There is no remote asset request during play.
 
-The art direction draws on industrial retrofuturism and the instrument language discussed by Alien: Isolation's UI designer. No Alien: Isolation textures, meshes, branding, levels or audio have been copied into the project.
+The station uses industrial retrofuturism, restrained instrument displays and geometry authored in this repository.

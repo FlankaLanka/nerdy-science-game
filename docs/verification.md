@@ -45,7 +45,7 @@ The previous local baseline also measured 16.7 ms median/p90. The new samples sh
 
 The world retains four local light slots, one cached directional shadow, existing SSAO/bloom and pixel-ratio caps. Only the active close-up renders, and it draws on document/size changes rather than continuously. Wires and component-owned materials are disposed when replaced or removed. Removed worksheets, instrument display machinery, waypoint code and an unused font weight reduce the active code/assets. No new dependency, downloaded texture, audio recording or image library was added.
 
-All ten retained surface/space maps are used and total **5,439,155 bytes**. Attribution remains in Pause → Credits and [asset provenance](assets.md). The build reports the existing large-Three.js-chunk advisory: 557.19 kB minified, 139.05 kB gzip. It is an advisory, not a compilation failure.
+All ten retained surface/space maps are used and total **5,439,155 bytes**. Attribution is documented in [asset provenance](assets.md). The build reports the existing large-Three.js-chunk advisory: 557.19 kB minified, 139.05 kB gzip. It is an advisory, not a compilation failure.
 
 ## Scope and remaining evidence
 

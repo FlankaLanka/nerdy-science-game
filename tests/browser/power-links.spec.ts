@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("each conduit stays inside the ship and connects its bench to its own exit", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const failures = await page.evaluate(async () => {
     const linkUrl = "/src/scene/powerLink.ts", layoutUrl = "/src/scene/shipLayout.ts", chambersUrl = "/src/chambers.ts";
     const { powerLinkCurve } = await import(linkUrl);
@@ -29,7 +29,7 @@ test("each conduit stays inside the ship and connects its bench to its own exit"
 });
 
 test("door checkmarks and collisions follow live circuit power through reset, reload and repair", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const result = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js", shipUrl = "/src/scene/spaceship.ts";
     const fixtureUrl = "/tests/chamber-fixtures.ts", campaignUrl = "/src/chamberCampaign.ts";
@@ -92,7 +92,7 @@ test("door checkmarks and collisions follow live circuit power through reset, re
 });
 
 test("power flows away from the bench and reduced motion retains a steady checked state", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const result = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js", linkUrl = "/src/scene/powerLink.ts";
     const layoutUrl = "/src/scene/shipLayout.ts", chambersUrl = "/src/chambers.ts", artUrl = "/src/scene/art.ts";
@@ -125,7 +125,7 @@ test("power flows away from the bench and reduced motion retains a steady checke
 
 
 test("cable shaders render moving power and a steady reduced-motion signal", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const errors: string[] = [];
   page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
   const result = await page.evaluate(async () => {

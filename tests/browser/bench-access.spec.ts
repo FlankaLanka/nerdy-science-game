@@ -6,7 +6,7 @@ import { bench, restored, saved } from "./helpers";
 
 async function reachBench(page: Page, index: number) {
   const c = CHAMBERS[index];
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   await page.evaluate(({ key, state, poseKey, pose }) => {
     localStorage.setItem(key, state);
     localStorage.setItem(poseKey, JSON.stringify(pose));

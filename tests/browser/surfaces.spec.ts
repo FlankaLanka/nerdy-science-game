@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("surface audit distinguishes overlapping interiors from seams and occluded faces", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const result = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js";
     const auditUrl = "/tests/browser/surface-audit.js";
@@ -42,7 +42,7 @@ test("surface audit distinguishes overlapping interiors from seams and occluded 
 });
 
 test("circuit kit surfaces stay separated in starter, solved and open-switch states", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const failures = await page.evaluate(async () => {
     const kitUrl = "/src/scene/kitArt.ts";
     const viewUrl = "/src/scene/benchView.ts";
@@ -90,7 +90,7 @@ test("circuit kit surfaces stay separated in starter, solved and open-switch sta
 
 test("station, window joints and circuit parts have no visible coplanar interiors", async ({ page }) => {
   test.setTimeout(120000);
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const result = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js";
     const shipUrl = "/src/scene/spaceship.ts";
@@ -148,7 +148,7 @@ test("station, window joints and circuit parts have no visible coplanar interior
 });
 
 test("exterior solar panels and relay frames do not duplicate surface interiors", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const result = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js";
     const spaceUrl = "/src/scene/space.ts";

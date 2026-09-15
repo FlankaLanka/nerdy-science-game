@@ -3,7 +3,7 @@ import { hold, position, saved } from "./helpers";
 import { PLAYER_KEY, SPAWN } from "../../src/scene/navigation.ts";
 
 test("god mode bypasses a locked door, survives refresh, and leaves lessons untouched", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   await page.evaluate((key) => {
     localStorage.setItem(key, JSON.stringify({ x: -10, z: 15.4, yaw: 0, pitch: 0 }));
   }, PLAYER_KEY);
@@ -52,7 +52,7 @@ test("god mode bypasses a locked door, survives refresh, and leaves lessons unto
 });
 
 test("all six gates open both ways in god mode and safely relock with normal collisions", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const failures = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js", shipUrl = "/src/scene/spaceship.ts";
     const layoutUrl = "/src/scene/shipLayout.ts", navUrl = "/src/scene/navigation.ts", artUrl = "/src/scene/art.ts";

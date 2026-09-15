@@ -53,7 +53,7 @@ test("a saved position in the public station cannot bypass the final circuit", a
 });
 
 test("all public galleries connect, dormant bays stay closed, and observation glass opens onto space", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   const result = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js";
     const shipUrl = "/src/scene/spaceship.ts";

@@ -13,11 +13,30 @@
   box-shadow: none;
   color: #f2f4f3;
   overflow: auto;
-  animation: none;
+  animation: pause-fade-in 180ms ease-out both;
 }
 .dialog.pause-dialog::backdrop {
-  background: linear-gradient(90deg, #080e14eb 0%, #0b141dcc 38%, #101c2778 100%);
-  backdrop-filter: saturate(.4);
+  background: linear-gradient(90deg, #081018e6 0%, #081018bd 38%, #0810184d 100%);
+  backdrop-filter: none;
+  animation: pause-fade-in 180ms ease-out both;
+}
+.dialog.pause-dialog[data-phase="closing"] {
+  animation: pause-fade-out var(--dialog-exit-ms) ease-out both;
+}
+.dialog.pause-dialog[data-phase="closing"]::backdrop {
+  animation: pause-backdrop-out var(--dialog-exit-ms) ease-out both;
+}
+@keyframes pause-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pause-fade-out {
+  from { opacity: var(--close-opacity, 1); }
+  to { opacity: 0; }
+}
+@keyframes pause-backdrop-out {
+  from { opacity: var(--backdrop-close-opacity, 1); }
+  to { opacity: 0; }
 }
 .pause-dialog .screen-content {
   display: flex;
@@ -33,7 +52,7 @@
   text-transform: uppercase;
 }
 .pause-menu { display: flex; flex-direction: column; gap: 3px; }
-.pause-menu > :is(button, a) {
+.pause-menu > button {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -51,13 +70,13 @@
   text-transform: uppercase;
   cursor: pointer;
 }
-.pause-dialog .pause-menu > :is(button, a):hover { color: #c6cdd1; }
-.pause-dialog .pause-menu > :is(button, a):focus {
+.pause-dialog .pause-menu > button:hover { color: #c6cdd1; }
+.pause-dialog .pause-menu > button:focus {
   background: #e6ecef;
   color: #172631;
   outline: none;
 }
-.pause-dialog .pause-menu > :is(button, a):active { background: #b7dbe6; color: #172631; }
+.pause-dialog .pause-menu > button:active { background: #b7dbe6; color: #172631; }
 .pause-value { font-size: 14px; letter-spacing: .07em; }
 .pause-menu small { margin-left: 8px; font: 11px var(--mono); }
 .dev-indicator { font: 10px var(--mono); letter-spacing: .08em; color: #efc58f; }
@@ -76,13 +95,13 @@
 .pause-back:focus-visible { outline-color: #e6ecef; }
 @media (max-width: 640px) {
   .pause-dialog .screen-content { padding-left: max(24px, env(safe-area-inset-left)); }
-  .pause-menu > :is(button, a) { font-size: 17px; }
+  .pause-menu > button { font-size: 17px; }
 }
 @media (max-height: 480px) {
   .pause-dialog .screen-content { padding-block: 24px; }
   .pause-panel { min-height: 0; }
   .pause-panel h1 { font-size: 28px; margin-bottom: 18px; }
   .pause-menu { gap: 0; }
-  .pause-menu > :is(button, a) { min-height: 44px; padding-block: 8px; font-size: 17px; }
+  .pause-menu > button { min-height: 44px; padding-block: 8px; font-size: 17px; }
   .pause-back { margin-top: 12px; }
 }

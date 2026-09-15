@@ -48,6 +48,7 @@ function load() {
 export default function App() {
   const [state, dispatch] = useReducer(campaignReducer, undefined, load);
   const [started, setStarted] = useState(false),
+    [arriving, setArriving] = useState(false),
     [ready, setReady] = useState(false),
     [failed, setFailed] = useState(false);
   const [active, setActive] = useState<number | null>(null),
@@ -85,6 +86,9 @@ export default function App() {
   const fallbackRoom = firstUnpowered < 0 ? 5 : firstUnpowered;
   const publicStation = section === "Arrival gallery" || STATION_DECK.some((r) => r.name === section);
   const reduced = useReducedMotion(state.reducedMotion);
+  useEffect(() => {
+    if (reduced) setArriving(false);
+  }, [reduced]);
   useEffect(() => {
     try {
       if (godMode) sessionStorage.setItem(GOD_MODE_KEY, "on");
@@ -251,6 +255,7 @@ export default function App() {
   }, [leaveBench, leaveFormula, pause, openNotebook]);
   function begin() {
     if (!ready || started) return;
+    setArriving(!reduced);
     setStarted(true);
     sound.unlock();
     sound.play("soft");
@@ -292,6 +297,7 @@ export default function App() {
     setActiveFormula(null);
     setFormulaNotice(null);
     setMenu(null);
+    setArriving(false);
     setStarted(false);
   }
   return (
@@ -345,6 +351,9 @@ export default function App() {
           returning={state.visited.length > 0}
           onBegin={begin}
         />
+      )}
+      {arriving && (
+        <div className="station-arrival" aria-hidden="true" onAnimationEnd={() => setArriving(false)} />
       )}
       {started && active === null && activeFormula === null && (
         <header className="game-chrome">

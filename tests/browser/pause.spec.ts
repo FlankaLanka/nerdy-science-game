@@ -2,6 +2,41 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { begin, position, saved } from "./helpers";
 
+test("pause can close during its fade and keeps the scene covered while changing menus", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await begin(page);
+  await expect(page.locator(".station-arrival")).toHaveCount(0);
+  const dialog = page.getByRole("dialog", { name: "Pause", exact: true });
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator(".world canvas")).toBeFocused();
+
+  await page.keyboard.press("Escape");
+  await dialog.evaluate((node) => { node.dataset.pauseSession = "original"; });
+  const before = await position(page);
+  await page.getByRole("button", { name: "Options", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Sound", exact: true })).toBeFocused();
+  await expect(dialog).toHaveAttribute("data-pause-session", "original");
+  const motion = page.getByRole("button", { name: "Reduced motion", exact: true });
+  await motion.click();
+  await expect(motion).toHaveAttribute("aria-pressed", "true");
+  await motion.click();
+  await expect(motion).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator(".station-arrival")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Options", exact: true })).toBeFocused();
+  await expect(dialog).toHaveAttribute("data-pause-session", "original");
+  await page.getByRole("button", { name: "New run", exact: true }).click();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page.getByRole("button", { name: "New run", exact: true })).toBeFocused();
+  expect(await position(page)).toEqual(before);
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator(".world canvas")).toBeFocused();
+});
+
 test("pause supports keyboard navigation, nested settings, and returning to play", async ({ page }) => {
   await begin(page);
   await page.keyboard.press("Escape");

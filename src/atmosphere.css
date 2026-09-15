@@ -12,9 +12,6 @@
   color: var(--bone);
 }
 
-.game.has-started::after {
-  background: #e8ece7;
-}
 .room-marker {
   color: #294b60;
   background: #f6f4eced;

@@ -10,7 +10,7 @@ import { position, saved } from "./helpers";
 
 async function approach(page: Page, index: number, godMode = false) {
   const screen = formulaScreen(CHAMBERS[index]);
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   await page.evaluate(({ key, state, playerKey, pose, godMode }) => {
     localStorage.setItem(key, state);
     localStorage.setItem(playerKey, JSON.stringify(pose));
@@ -149,11 +149,13 @@ test("the wall explanation scrolls with mouse and keyboard and keeps its place t
   await expect.poll(() => explanation.evaluate(el => el.scrollTop)).toBe(0);
   await expect(page.getByText("Scroll to read", { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 900, height: 600 });
-  const panel = (await page.locator(".formula-reader").boundingBox())!;
-  expect(panel.x).toBeGreaterThan(0);
-  expect(panel.y).toBeGreaterThan(0);
-  expect(panel.x + panel.width).toBeLessThan(900);
-  expect(panel.y + panel.height).toBeLessThan(600);
+  await expect(async () => {
+    const panel = (await page.locator(".formula-reader").boundingBox())!;
+    expect(panel.x).toBeGreaterThan(0);
+    expect(panel.y).toBeGreaterThan(0);
+    expect(panel.x + panel.width).toBeLessThan(900);
+    expect(panel.y + panel.height).toBeLessThan(600);
+  }).toPass({ timeout: 5000 });
   expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze()).violations).toEqual([]);
   await page.keyboard.press("Escape");
   await expect(page.locator(".world canvas")).toHaveAttribute("data-camera-mode", "walk");

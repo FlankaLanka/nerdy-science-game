@@ -35,11 +35,6 @@ export default function PauseMenu({
     setScreen(next);
   }
 
-  function back() {
-    if (screen === "main") onResume();
-    else setScreen("main");
-  }
-
   function navigate(event: KeyboardEvent<HTMLElement>) {
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     const entries = Array.from(menu.current?.querySelectorAll<HTMLElement>("[data-entry]") ?? []);
@@ -65,63 +60,73 @@ export default function PauseMenu({
 
   return (
     <Dialog
-      key={screen}
       title="Pause"
-      onClose={back}
+      onClose={onResume}
       className="pause-dialog"
       reducedMotion={reducedMotion}
+      exitMs={140}
       closeControl={() => null}
       initialFocus={`[data-entry="${screen === "main" ? returnTo.current : screen === "options" ? "sound" : "cancel"}"]`}
     >
-      <section className="pause-panel" aria-labelledby="pause-title">
-        <h1 id="pause-title">{screen === "main" ? "Paused" : screen === "options" ? "Options" : "New run?"}</h1>
-        {screen === "restart" && <p className="pause-warning">Your current progress will be lost.</p>}
-        <nav
-          ref={menu}
-          className="pause-menu"
-          aria-label="Pause menu"
-          onKeyDown={navigate}
-          onPointerMove={(event) => {
-            if (event.pointerType !== "mouse") return;
-            const entry = (event.target as HTMLElement).closest<HTMLElement>("[data-entry]");
-            if (entry && entry !== document.activeElement)
-              entry.focus({ preventScroll: true });
+      {(close) => (
+        <section
+          className="pause-panel"
+          aria-labelledby="pause-title"
+          onKeyDown={(event) => {
+            if (event.key !== "Escape" || screen === "main" || event.altKey || event.ctrlKey || event.metaKey) return;
+            event.preventDefault();
+            event.stopPropagation();
+            if (!event.repeat) setScreen("main");
           }}
         >
-          {screen === "main" && (
-            <>
-              <button data-entry="resume" onClick={onResume}>Resume</button>
-              <button data-entry="notebook" onClick={onNotebook}>Notebook</button>
-              <button data-entry="options" onClick={() => open("options")}>Options</button>
-              <button data-entry="god-mode" onClick={onGodMode} aria-label="God mode (dev)" aria-pressed={godMode} title="Bypass progression doors">
-                <span>God mode <small>Dev</small></span><span className="pause-value" aria-hidden="true">{godMode ? "On" : "Off"}</span>
-              </button>
-              <button data-entry="restart" onClick={() => open("restart")}>New run</button>
-              <a data-entry="credits" href="/credits.html" target="_blank" rel="noreferrer">Credits</a>
-            </>
-          )}
-          {screen === "options" && (
-            <>
-              <button data-entry="sound" onClick={onSound} aria-label="Sound" aria-pressed={sound}>
-                <span>Sound</span><span className="pause-value" aria-hidden="true">{sound ? "On" : "Off"}</span>
-              </button>
-              <button data-entry="motion" onClick={onMotion} aria-label="Reduced motion" aria-pressed={reducedMotion}>
-                <span>Reduced motion</span><span className="pause-value" aria-hidden="true">{reducedMotion ? "On" : "Off"}</span>
-              </button>
-              <button data-entry="back" onClick={back}>Back</button>
-            </>
-          )}
-          {screen === "restart" && (
-            <>
-              <button data-entry="cancel" onClick={back}>Cancel</button>
-              <button data-entry="confirm" onClick={onRestart}>Start new run</button>
-            </>
-          )}
-        </nav>
-        <button className="pause-back" onClick={back} aria-label={screen === "main" ? "Close pause" : "Back to pause menu"}>
-          <kbd>Esc</kbd><span>{screen === "main" ? "Resume" : "Back"}</span>
-        </button>
-      </section>
+          <h1 id="pause-title">{screen === "main" ? "Paused" : screen === "options" ? "Options" : "New run?"}</h1>
+          {screen === "restart" && <p className="pause-warning">Your current progress will be lost.</p>}
+          <nav
+            ref={menu}
+            className="pause-menu"
+            aria-label="Pause menu"
+            onKeyDown={navigate}
+            onPointerMove={(event) => {
+              if (event.pointerType !== "mouse") return;
+              const entry = (event.target as HTMLElement).closest<HTMLElement>("[data-entry]");
+              if (entry && entry !== document.activeElement)
+                entry.focus({ preventScroll: true });
+            }}
+          >
+            {screen === "main" && (
+              <>
+                <button data-entry="resume" onClick={close}>Resume</button>
+                <button data-entry="notebook" onClick={onNotebook}>Notebook</button>
+                <button data-entry="options" onClick={() => open("options")}>Options</button>
+                <button data-entry="god-mode" onClick={onGodMode} aria-label="God mode (dev)" aria-pressed={godMode} title="Bypass progression doors">
+                  <span>God mode <small>Dev</small></span><span className="pause-value" aria-hidden="true">{godMode ? "On" : "Off"}</span>
+                </button>
+                <button data-entry="restart" onClick={() => open("restart")}>New run</button>
+              </>
+            )}
+            {screen === "options" && (
+              <>
+                <button data-entry="sound" onClick={onSound} aria-label="Sound" aria-pressed={sound}>
+                  <span>Sound</span><span className="pause-value" aria-hidden="true">{sound ? "On" : "Off"}</span>
+                </button>
+                <button data-entry="motion" onClick={onMotion} aria-label="Reduced motion" aria-pressed={reducedMotion}>
+                  <span>Reduced motion</span><span className="pause-value" aria-hidden="true">{reducedMotion ? "On" : "Off"}</span>
+                </button>
+                <button data-entry="back" onClick={() => setScreen("main")}>Back</button>
+              </>
+            )}
+            {screen === "restart" && (
+              <>
+                <button data-entry="cancel" onClick={() => setScreen("main")}>Cancel</button>
+                <button data-entry="confirm" onClick={onRestart}>Start new run</button>
+              </>
+            )}
+          </nav>
+          <button className="pause-back" onClick={screen === "main" ? close : () => setScreen("main")} aria-label={screen === "main" ? "Close pause" : "Back to pause menu"}>
+            <kbd>Esc</kbd><span>{screen === "main" ? "Resume" : "Back"}</span>
+          </button>
+        </section>
+      )}
     </Dialog>
   );
 }

@@ -39,7 +39,7 @@ test("progression follows earned circuit completion and ignores god mode", async
 });
 
 test("a completed circuit wing keeps future labs locked across reloads", async ({ page }) => {
-  await page.goto("/credits.html");
+  await page.goto("/tests/browser/fixture.html");
   await page.evaluate(({ key, value, playerKey }) => {
     localStorage.setItem(key, value);
     localStorage.setItem(playerKey, JSON.stringify({ x: 10, z: 31, yaw: Math.PI, pitch: 0 }));
