@@ -1,12 +1,12 @@
 # Main station
 
-Circuits is the first lesson wing. Completing Independence opens the existing final gate; the arrival gallery now leads into Asterion's public habitat. Players can explore and return to any completed circuit bench. No additional lessons, objectives, scores or interactive equipment are introduced.
+Circuits is the first lesson wing. Completing Independence opens the existing final gate; the arrival gallery now leads into Asterion's public habitat. Players can explore and return to any reachable circuit bench. No additional lessons, objectives, scores or interactive equipment are introduced.
 
 ## Spaces
 
 - **Commons:** 36 × 42 m, with an 11.2 m vaulted pressure shell, structural ribs, a glazed zenith light well, suspended lighting, planted islands, a galley and environmental equipment racks.
 - **Earth gallery:** a quiet side lounge with framed viewports, seating and nearby exterior radiators.
-- **Research concourse:** three closed bays marked Kinematics, Electromagnetism and Waves & optics. “In preparation” is an environmental hint, not an available activity.
+- **Research concourse:** three closed bays marked Kinematics, Electromagnetism and Waves & optics. Their “Coming soon” signs mark future activities.
 - **Docking gallery:** observation windows, secured stores and a closed berth facing a docked transfer vehicle.
 
 The open habitat is a fictional extrapolation. Modular functions, environmental racks, protected services and observation framing draw on [ESA's Tranquility module](https://www.esa.int/Science_Exploration/Human_and_Robotic_Exploration/Node-3_Cupola/Node-3_the_most_modern_module_of_the_ISS) and [NASA's Cupola](https://www.nasa.gov/international-space-station/cupola/). The existing flat-deck movement and art-directed planetary scale remain in use.

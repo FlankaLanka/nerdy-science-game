@@ -2,11 +2,11 @@
 
 ## Player experience
 
-The player wakes alone on Asterion. A maintenance intelligence, ASTER, has kept one small reserve running. The player's immediate action is to reconnect a lamp. Its light, a rising equipment hum and a powered door demonstrate the consequence. The same circuit parts recur throughout the station. With each repair, ASTER reveals that independent electrical paths kept it alive while the rest of the station failed. Restoring the final branch releases the observation deck and a brief welcome home.
+The player wakes alone on Asterion. A maintenance intelligence, ASTER, has kept one small reserve running. The player's immediate action is to reconnect a lamp. Its light, a rising equipment hum and a powered door demonstrate the consequence. The same circuit parts recur throughout the station. With each repair, ASTER reveals that independent electrical paths kept it alive while the rest of the station failed. Restoring the final branch opens the main station: a large commons and public galleries to explore. Circuits is the first lesson wing; the closed future laboratories are environmental hints only.
 
 No scoring, mandatory hypothesis, reflection form, test submission or mission checklist interrupts construction. Circuit behavior is continuous. The notebook is a small reference, not a list of assignments. The world has room numbers and three equations; there is no floor writing or decorative prose.
 
-Each bench has a relay connected to its exit by a visible amber conduit. Empty square indicators mark the unsolved relay and door. Validating the circuit turns the conduit cyan, sends light pulses toward the exit, and replaces the squares with checkmarks. The relay remains powered during later experimentation, matching the saved door unlock. Reduced motion uses steady cyan light and checkmarks. This adds no extra switch or completion requirement.
+Each bench has a relay connected to its exit by a visible amber conduit. Empty square indicators mark the unsolved relay and door. Validating the circuit turns the conduit cyan, sends light pulses toward the exit, and replaces the squares with checkmarks. The relay follows the current circuit: opening, shorting or failing the goal clears its checkmark and closes the linked door. Repairing the circuit powers it again. Reduced motion uses steady cyan light and checkmarks. This adds no extra switch or completion requirement.
 
 ## References and design decisions
 
@@ -29,11 +29,11 @@ The supplied [game-design framework](/Users/frankyang/Desktop/game_design.md) pr
 | Shared light | 12 V source; two identical 6 V lamps                     | One path produces equal current and shared voltage. Connecting both directly to the supply visibly overdrives them. | Both lamps at 6 V                                                                    |
 | Stay alive   | 6 V source, one lamp behind a switch; one extra bulb     | An independent branch survives isolation of its neighbor.                                                           | Both lamps powered; opening the isolator in the model leaves only the second powered |
 
-The chamber goal checks numerical behavior, not an expected list of wire pairs. Valid alternative layouts work. The player can short contacts, disconnect leads, toggle switches and rebuild after success. The source fuse is virtual and resettable. Door authorization latches to validated evidence so further investigation cannot trap the player.
+The chamber goal checks numerical behavior, not an expected list of wire pairs. Valid alternative layouts work. The player can short contacts, disconnect leads, toggle switches and rebuild after success. The source fuse is virtual and resettable. Door authorization follows live validation. An occupied doorway stays clear until the player leaves its aperture, then closes if its circuit is unpowered.
 
 ## Notebook and equations
 
-Parts are discovered by encountering a chamber containing or offering them. The five entries are wire, battery, bulb, switch and resistor. Bulbs are described as energy-transferring loads, not sources. Equations are discovered in the first room where they help:
+Parts are discovered by encountering a chamber containing or offering them. The five entries are wire, battery, bulb, switch and resistor. Bulbs are described as energy-transferring loads, not sources. Equations are added only after the player presses E at a formula screen and the camera arrives. Room entry alone adds no equation. Each screen offers a scrollable explanation and example:
 
 - Balance: `V = I R`, with the units V, A and Ω.
 - Shared light: `Vₛ = V₁ + V₂`; one path has the same current.
@@ -80,7 +80,7 @@ Kit lamps are explicitly idealized fixed 12 Ω loads with a 6 V operating rating
 - Selection → unselected: Esc cancels a lead, placement or selection before leaving the bench.
 - Bench / walking → notebook or pause: release controls; return to the previous activity.
 - Unpowered → powered: a live circuit meets the goal; save a validated proof; authorize the next door.
-- Powered → practice: edits affect the lamp and readings while door access remains latched.
+- Powered → unpowered: an edit, undo or reset fails the goal; clear the relay and close the door. Retain discoveries. Repairing the circuit restores access.
 - Any save → reload: sanitize circuit objects, recompute proofs, keep only a contiguous completed prefix.
 - Rendering failure → kit fallback: maintain electrical behavior and sequential access.
 
@@ -98,7 +98,7 @@ These are implementation starting values, not researched universal tuning consta
 | 1.6 s first-restoration return                                           | Observe the first successful circuit: player notices the lit bulb and restored room without searching for a submit button. Book or another edit cancels the return.         | Lengthen or remove the automatic return if players miss the electrical consequence.                        |
 | Subtitle minimum 5.5 s, about 340 ms per word                            | Players read an entry while walking without losing control or encountering stacked captions.                                                                                | Shorten lines before increasing duration. Pause timing in menus or hidden tabs.                            |
 | 3.5 m/s walk, 6 m/s run, 2.9 m bench interaction, door damping 8/s       | Navigate around every bench, stop at each sealed door, return through powered doors and resume inside an aperture without trapping.                                         | Adjust sightlines and collision geometry first; then interaction range or speed.                           |
-| Offline/online local lights 7/32; four light slots; desktop DPR cap 1.65 | Review dark-to-powered contrast; sample stationary and turning scenes against prior local ~16.7 ms frame intervals.                                                         | Reduce drawing cost before adding any new rendering effect; raise ambient only if targets cannot be found. |
+| Offline/online local lights 3.5/18, reduced to 40% at a bench; four light slots; desktop DPR cap 1.65 | Review dark-to-powered contrast; sample stationary and turning scenes against prior local ~16.7 ms frame intervals.                                                         | Reduce drawing cost before adding any new rendering effect; raise ambient only if targets cannot be found. |
 
 ## Critical assumptions and playtests still needed
 

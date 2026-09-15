@@ -1,6 +1,6 @@
 # Asterion — A place for bright ideas
 
-A relaxed circuit-building game aboard a research station waiting for power. Connect physical parts, watch current flow, and restore the lights to open the next chamber. ASTER, the station's gently playful research companion, accompanies the player through six short chambers to an observation deck. Clean ivory panels and blue and apricot accents sit in dim, cool standby light; solving a circuit brings on warm overhead lights and illuminated floor rails.
+A relaxed circuit-building game aboard a research station waiting for power. Connect physical parts, watch current flow, and restore the lights to open the next chamber. ASTER, the station's gently playful research companion, accompanies the player through six short chambers into the larger, freely explorable station. Clean ivory panels and blue and apricot accents sit in dim, cool standby light; solving a circuit brings on warm overhead lights and illuminated floor rails.
 
 ## Run
 
@@ -27,7 +27,7 @@ The default address is **http://127.0.0.1:5174**; set `PORT` to change it. No ac
 
 Touch controls provide a movement stick, drag-to-look and a bench interaction button. Circuit contacts also work by tapping. The interface uses the full viewport, including portrait screens.
 
-Using a bench glides the room camera directly overhead. Parts, wires, and live drag previews stay on the original 3D table, with a small parts tray and selection controls around it. Leaving glides back to the same standing position and viewing direction. Reduced motion switches views immediately; a flat kit is used only when WebGL is unavailable.
+Press E at any reachable circuit bench to open its activity, regardless of which activities are complete. Edits and completion save independently for each table. Using a bench glides the room camera directly overhead. Parts, wires, and live drag previews stay on the original 3D table, with a small parts tray and selection controls around it. Leaving glides back to the same standing position and viewing direction. Reduced motion switches views immediately; a flat kit is used only when WebGL is unavailable.
 
 ## Sample progression
 
@@ -40,11 +40,11 @@ Using a bench glides the room camera directly overhead. Parts, wires, and live d
 | 05 · Shared light | Series circuits                  | Power two 6 V lamps from one 12 V source                  |
 | 06 · Independence | Parallel circuits and isolation  | Give the second lamp an independent path                  |
 
-Circuits run continuously. There is no Test button, hypothesis form, measurement log or commissioning step. An amber conduit connects each bench to its exit. A working circuit turns that route cyan, sends light toward the door, and changes the bench and door indicators from empty squares to checkmarks. The chamber lights up and the door stays unlocked. The first successful restoration returns the player to the room; the bench remains available for experimentation.
+Circuits run continuously. There is no Test button, hypothesis form, measurement log or commissioning step. An insulated cable with an amber trace connects each bench to its exit. A working circuit turns that trace cyan, sends soft light surges toward the door, and changes the bench and door indicators from empty squares to checkmarks. The chamber lights up and the door opens on approach. Opening, shorting or otherwise invalidating that circuit turns its trace amber and closes its door; repairing it restores power. The first successful restoration returns the player to the room; the bench remains available for experimentation.
 
-The notebook has **Parts**, **Formulas** and **Map** tabs. Components and equations appear as they are encountered. Three wall posters introduce Ohm's law, series voltage sharing and parallel voltage. The walking HUD contains a room number, reticle, and contextual interaction key. Open the notebook with N and pause with Esc. The pause menu uses a sparse list over the scene, with sound and motion controls under Options; arrow keys navigate and Esc goes back. ASTER speaks through short, transient subtitles.
+The notebook has **Parts**, **Formulas**, **Map** and **Progression** tabs. Progression lists the six circuit levels and their saved completion status. Future labs remain locked at zero progress, with placeholder counts of 8 levels for Kinematics, 10 for Electromagnetism and 8 for Waves & optics; their room signs say “Coming soon.” Components appear as their rooms are visited. To collect a formula, approach its wall screen and press E: the camera moves in, then “New formula added!” confirms it is saved in the notebook. Entering the room alone never adds an equation. The three screens introduce Ohm's law, series voltage sharing and parallel voltage. Scroll inside a close-up screen for the equation in words, an explanation, an example and an experiment to try. E or Esc returns from a screen; N opens its notebook page. The walking HUD contains a room number, reticle, and contextual interaction key. Open the notebook with N and pause with Esc. The pause menu uses a sparse list over the scene, with sound and motion controls under Options; arrow keys navigate and Esc goes back. ASTER speaks through short, transient subtitles.
 
-Eleven window banks provide 38 hull openings onto textured Earth, Moon, Saturn and a star field. The final observation deck has windows on three sides. These views are composed for the fictional setting; they are not a scale model of the Solar System. Asset attribution is available through Pause → Credits.
+The circuit wing opens into a vaulted commons, an Earth-facing lounge, a research concourse and a docking gallery. Closed future bays hint at kinematics, electromagnetism, and waves and optics. There are no further lessons yet. Framed observation windows look onto textured planets, stars and a docked transport. See [the main station](docs/main-station.md). These views are composed for the fictional setting; they are not a scale model of the Solar System. Asset attribution is available through Pause → Credits.
 
 ## Physics and pedagogy
 
@@ -54,9 +54,11 @@ These are six foundational DC samples, not a complete AP Physics 2 unit. Capacit
 
 ## Saves
 
-This version uses `signal.asterion.chambers.v1` and `signal.asterion.chambers.player.v1`. Earlier game saves are left untouched. Completed circuits are re-simulated when loading; invalid evidence cannot unlock later chambers. Doors stay unlocked when a completed circuit is subsequently changed or reset. Storage failure permits session-only play. If WebGL is unavailable, the circuit kit and sequential chamber navigation remain playable.
+This version uses `signal.asterion.chambers.v1` and `signal.asterion.chambers.player.v1`. Earlier game saves are left untouched. Completed circuits are re-simulated when loading; invalid evidence cannot unlock later chambers. Door power is recomputed from the current circuits after edits, undo, reset and reload. Earlier discoveries remain available. Storage failure permits session-only play. If WebGL is unavailable, the circuit kit and sequential chamber navigation remain playable.
 
 ## Development
+
+**Esc → God mode (Dev)** opens progression doors on approach without completing circuits. Walls and furniture remain solid. A small DEV marker shows when it is active. The setting survives refreshes in the same tab and resets on a new run; turning it off restores normal door locks. Any reachable bench remains usable; completion still requires a valid repair.
 
 ```sh
 npm test

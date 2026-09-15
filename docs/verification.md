@@ -12,7 +12,7 @@ Verified locally on September 12, 2026, on `codex/asterion-circuit-chambers`, ba
 | `npm run review`       | Twelve current captures; no page or HTTP errors |
 | `git diff --check`     | Passed                                          |
 
-The unit suite checks the new modified nodal solver, source voltage, open circuits, series/parallel behavior, voltage sharing, total power including lead losses, dangling components, shorts, fuse recovery and physically valid goals for all six chambers. It checks sequential completion, latched doors, undo, save validation and safe navigation. Retained earlier physics/coaching tests also pass; they are not all new game features.
+The unit suite checks the new modified nodal solver, source voltage, open circuits, series/parallel behavior, voltage sharing, total power including lead losses, dangling components, shorts, fuse recovery and physically valid goals for all six chambers. It checks sequential discovery, live door power after edits/reset/undo/reload, save validation and safe navigation. Retained earlier physics/coaching tests also pass; they are not all new game features.
 
 Browser play completes each of the six authored circuits using the normal controls. Coverage includes adding and moving components, click and drag wiring, a physical switch, resistance adjustment, independent branches, undo and safe post-completion practice. The first repair opens a door that the test walks through into chamber two. A separate geometry/navigation journey traverses the entire authored route through all six gates and returns along it, with collision enabled.
 
@@ -52,3 +52,19 @@ All ten retained surface/space maps are used and total **5,439,155 bytes**. Attr
 The playable result is six foundational DC chambers, original industrial station geometry and a minimal notebook. It does not claim the asset fidelity of a commercial AAA production or full AP Physics 2 coverage. Lamps are simplified fixed-resistance loads, and current markers are explanatory, not physical electron velocities.
 
 Learning transfer, pacing and comfort still need observed student playtests. The [chamber design](chambers.md) records the assumptions, starting values and pass/fail criteria. Earlier extended curriculum research is retained for subsequent development. Earlier saves and branches are unchanged; no remote branch or deployment was modified.
+
+## Cable refinement — September 15, 2026
+
+The cable update passed the production build, 60 unit tests and 27 selected circuit, camera, power-link and surface browser cases. Shader rendering checks verify moving and reversed flow, steady reduced motion, immediate power loss and a fresh surge after repair. The surface audit covers the rounded routes, end fittings and door-frame brackets. Visual review includes powered/unpowered routes, the doorway close-up, the first circuit and the two-branch kit. The wire inventory image was regenerated from the same physical model.
+
+## Formula inspection — September 15, 2026
+
+The production build, 32 selected formula/circuit/navigation/camera unit tests and 11 selected browser checks passed. Entering a room leaves formulas locked. E moves to the physical screen, arrival registers it, and early cancellation registers nothing. Checks cover returning to the original player pose, duplicate suppression, reload persistence, god-mode inspection without lesson completion, reduced motion, touch controls and notebook focus. Old saves with no explicit discoveries start empty. Captures in `artifacts/formula-*.png` were reviewed at 1280×720, 320×568 and 844×390; screen captions use short lines for phone readability.
+
+The scrollable explanation update passed seven formula discovery/projection unit checks and nine selected browser checks. Tests verify wheel, keyboard and real touch scrolling, notebook scroll-position retention, resizing, screen-reader semantics and automated WCAG A/AA checks. The build passed. Desktop, phone and scrolled reader captures were visually inspected; explanations stay inside the original wall display.
+
+## Combined workspace verification — September 15, 2026
+
+The combined cable, bench, station, progression and formula changes passed all 68 unit tests, TypeScript, the production build and whitespace checks. The full browser run passed 61 of 62 scenarios. Its only failure was an older assertion that god-mode exploration records no room visits; reachable rooms now record visits independently of completion. The corrected scenario passed in a targeted rerun and still verifies that room entry adds no formula and inspection awards no circuit completion.
+
+The first two commit snapshots were also checked independently: both passed TypeScript, with four camera projection tests for the cable/bench snapshot and 22 circuit/navigation tests for the station/progression snapshot. Generated captures and test reports remain ignored. Local development and test servers are stopped after verification.
