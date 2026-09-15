@@ -117,6 +117,7 @@ try {
     if (selected.size && !selected.has(shot.name)) continue;
     const c = CHAMBERS[shot.index],
       state = chamberFixture(shot.completed ?? shot.index);
+    if (shot.book === "Formulas") state.formulas = ["ohm", "series", "parallel"];
     if (shot.example) state.rooms[shot.index] = solvedCircuit(shot.index);
     const page = await browser.newPage({
         viewport: shot.viewport ?? { width: 1440, height: 900 },

@@ -28,9 +28,12 @@ import {
   benchWorldPoint,
 } from "./benchView";
 import type { BenchInteraction, BenchPoint, BenchView } from "./benchView";
+import { focusedFormula, formulaFraming, formulaScreen, projectFormulaScreen } from "./formulaView";
+import type { FormulaView } from "./formulaView";
 
 export type Telemetry = {
   focus: MissionId | null;
+  formula: number | null;
   room: number;
   section: string;
 };
@@ -44,6 +47,7 @@ export type WorldState = {
   circuits: Circuit[];
   preview: boolean;
   activeBench: number | null;
+  activeFormula: number | null;
 };
 type Options = {
   container: HTMLDivElement;
@@ -56,6 +60,10 @@ type Options = {
   step: () => void;
   environment: (sound: "door" | "power") => void;
   benchView: (view: BenchView | null) => void;
+  inspectFormula: (index: number) => void;
+  formulaViewed: (index: number) => void;
+  formulaView: (view: FormulaView | null) => void;
+  cameraMoving: (moving: boolean) => void;
 };
 const empty = {
   capture() {},
@@ -98,7 +106,7 @@ export function renderWorld(o: Options) {
   const canvas = renderer.domElement;
   canvas.setAttribute(
     "aria-label",
-    "First-person view of the research ship Asterion. WASD to move, mouse or arrow keys to look, E to use the circuit bench.",
+    "First-person view of the research ship Asterion. WASD to move, mouse or arrow keys to look, E to use a circuit bench or inspect a formula screen.",
   );
   canvas.setAttribute("role", "img");
   canvas.tabIndex = -1;
@@ -149,6 +157,8 @@ export function renderWorld(o: Options) {
   const workLight = new THREE.PointLight("#e5efdd", 0, 5, 2);
   scene.add(workLight);
   let activeBench: number | null = null;
+  let activeFormula: number | null = null;
+  let formulaReported = false;
   let interaction: BenchInteraction | null = null;
   let interactionRevision = 0;
   let cameraTravel: {
@@ -160,6 +170,7 @@ export function renderWorld(o: Options) {
     elapsed: number;
   } | null = null;
   let publishedView = "";
+  let publishedFormulaView = "";
   const raycaster = new THREE.Raycaster();
   const boardPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -BENCH_HEIGHT);
   const rayPoint = new THREE.Vector3();
@@ -185,6 +196,12 @@ export function renderWorld(o: Options) {
     if (key === publishedView) return;
     publishedView = key;
     o.benchView(view);
+  }
+  function publishFormulaView(view: FormulaView | null) {
+    const key = JSON.stringify(view);
+    if (key === publishedFormulaView) return;
+    publishedFormulaView = key;
+    o.formulaView(view);
   }
   const titleSatellite = buildTitleSatellite(scene);
   const previewAim = new THREE.Vector2(),
@@ -253,7 +270,7 @@ export function renderWorld(o: Options) {
     save();
   }
   function capture() {
-    if (disposed || o.state().activeBench !== null || cameraTravel) return;
+    if (disposed || o.state().activeBench !== null || o.state().activeFormula !== null || cameraTravel) return;
     canvas.focus({ preventScroll: true });
     if (!coarse && document.pointerLockElement !== canvas) {
       try {
@@ -268,7 +285,13 @@ export function renderWorld(o: Options) {
     return focusedSite(player, model.obstacles);
   }
   function interact() {
-    if (!o.state().playing) return;
+    if (!o.state().playing || cameraTravel) return;
+    const formula = focusedFormula(player, model.obstacles);
+    if (formula !== null) {
+      clear();
+      o.inspectFormula(formula);
+      return;
+    }
     const id = availableSite();
     if (id) {
       clear();
@@ -394,8 +417,10 @@ export function renderWorld(o: Options) {
     last = now;
     const state = o.state();
     if (document.hidden) return;
-    if (state.activeBench !== activeBench) {
+    if (state.activeBench !== activeBench || state.activeFormula !== activeFormula) {
       activeBench = state.activeBench;
+      activeFormula = state.activeFormula;
+      formulaReported = false;
       cameraTravel = {
         position: camera.position.clone(),
         rotation: camera.quaternion.clone(),
@@ -404,6 +429,8 @@ export function renderWorld(o: Options) {
         offsetY: camera.view?.enabled ? camera.view.offsetY : 0,
         elapsed: 0,
       };
+      o.cameraMoving(true);
+      publishFormulaView(null);
       clear();
       if (activeBench === null) interaction = null;
       publishBenchView({
@@ -421,7 +448,7 @@ export function renderWorld(o: Options) {
       circuits = state.circuits;
       revision++;
     }
-    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.preview}:${state.powered.join()}:${state.godMode}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}:${activeBench}:${interactionRevision}`;
+    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.preview}:${state.powered.join()}:${state.godMode}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}:${activeBench}:${activeFormula}:${interactionRevision}`;
     if (
       !state.playing &&
       !cameraTravel &&
@@ -433,7 +460,7 @@ export function renderWorld(o: Options) {
       return;
     stillFrame = state.playing ? "" : frameKey;
     let walking = false;
-    if (state.playing && !cameraTravel && activeBench === null) {
+    if (state.playing && !cameraTravel && activeBench === null && activeFormula === null) {
       player.yaw +=
         ((keys.has("ArrowLeft") ? 1 : 0) - (keys.has("ArrowRight") ? 1 : 0)) *
         dt *
@@ -533,6 +560,13 @@ export function renderWorld(o: Options) {
           bench.z - 0.35,
         );
       }
+      if (activeFormula !== null) {
+        const screen = formulaScreen(CHAMBERS[activeFormula]);
+        const view = formulaFraming(width, height);
+        camera.position.set(screen.x - view.distance, screen.y, screen.z);
+        camera.rotation.set(0, -Math.PI / 2, 0, "YXZ");
+        camera.fov = view.fov;
+      }
       if (cameraTravel) {
         cameraTravel.elapsed += dt;
         const progress = state.reducedMotion
@@ -553,7 +587,11 @@ export function renderWorld(o: Options) {
         camera.fov = THREE.MathUtils.lerp(cameraTravel.fov, camera.fov, eased);
         offsetX = THREE.MathUtils.lerp(cameraTravel.offsetX, offsetX, eased);
         offsetY = THREE.MathUtils.lerp(cameraTravel.offsetY, offsetY, eased);
-        if (progress === 1) cameraTravel = null;
+        if (progress === 1) {
+          cameraTravel = null;
+          o.cameraMoving(false);
+          if (activeBench === null && activeFormula === null) canvas.focus({ preventScroll: true });
+        }
       }
       camera.setViewOffset(width, height, offsetX, offsetY, width, height);
       workLight.intensity = state.reducedMotion
@@ -568,6 +606,10 @@ export function renderWorld(o: Options) {
           );
       camera.updateMatrixWorld();
       if (!cameraTravel) {
+        if (activeFormula !== null && !formulaReported) {
+          formulaReported = true;
+          o.formulaViewed(activeFormula);
+        }
         publishBenchView(
           activeBench === null
             ? null
@@ -589,7 +631,7 @@ export function renderWorld(o: Options) {
         ? "transition"
         : activeBench !== null
           ? "bench"
-          : "walk";
+          : activeFormula !== null ? "formula" : "walk";
     // Warm the station passes before enabling Begin, then omit them in space.
     occlusion.enabled = !coarse && (!state.preview || !ready);
     const editing = activeBench !== null && !state.preview;
@@ -597,6 +639,8 @@ export function renderWorld(o: Options) {
     renderer.toneMappingExposure = editing ? 0.85 : 1;
     titleSatellite.update(time, state.preview);
     camera.updateMatrixWorld();
+    publishFormulaView(activeFormula !== null && !cameraTravel && !state.preview
+      ? projectFormulaScreen(activeFormula, camera, width, height) : null);
     for (const event of model.update(
       dt,
       time,
@@ -633,6 +677,7 @@ export function renderWorld(o: Options) {
       lastHud = now;
       o.telemetry({
         focus: state.playing ? availableSite() : null,
+        formula: state.playing ? focusedFormula(player, model.obstacles) : null,
         room: roomAt(player.x, player.z),
         section: deckSection(player.z, player.x),
       });

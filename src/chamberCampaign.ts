@@ -1,5 +1,5 @@
-import { CHAMBERS, CHAMBER_IDS, isRestored } from "./chambers.ts";
-import type { ChamberId } from "./chambers.ts";
+import { CHAMBERS, CHAMBER_IDS, FORMULAS, isRestored } from "./chambers.ts";
+import type { ChamberId, FormulaId } from "./chambers.ts";
 import { cloneCircuit, editCircuit, endpoints } from "./circuitKit.ts";
 import type { Circuit, KitAction, Part } from "./circuitKit.ts";
 
@@ -9,6 +9,7 @@ export type Campaign = {
   rooms: Circuit[];
   proofs: (Circuit | null)[];
   visited: ChamberId[];
+  formulas: FormulaId[];
   heard: string[];
   sound: boolean;
   reducedMotion: boolean;
@@ -20,6 +21,7 @@ export function initialCampaign(): Campaign {
     rooms: CHAMBERS.map((c) => cloneCircuit(c.initial)),
     proofs: CHAMBERS.map(() => null),
     visited: [],
+    formulas: [],
     heard: [],
     sound: true,
     reducedMotion: false,
@@ -41,6 +43,7 @@ export type CampaignAction =
   | { type: "UNDO"; room: number }
   | { type: "RESET_CIRCUIT"; room: number }
   | { type: "VISIT"; id: ChamberId }
+  | { type: "DISCOVER_FORMULA"; id: FormulaId }
   | { type: "HEARD"; id: string }
   | { type: "SOUND" }
   | { type: "MOTION" }
@@ -58,6 +61,10 @@ export function campaignReducer(
   if (action.type === "SOUND") return { ...state, sound: !state.sound };
   if (action.type === "MOTION")
     return { ...state, reducedMotion: !state.reducedMotion };
+  if (action.type === "DISCOVER_FORMULA")
+    return !Object.hasOwn(FORMULAS, action.id) || state.formulas.includes(action.id)
+      ? state
+      : { ...state, formulas: [...state.formulas, action.id] };
   if (action.type === "VISIT") {
     if (
       !CHAMBER_IDS.includes(action.id) ||
@@ -194,6 +201,9 @@ export function restoreCampaign(raw: string | null): Campaign {
       state.visited = CHAMBER_IDS.filter(
         id => data.visited.includes(id),
       );
+    // Older saves have no explicit discoveries; posters must now be inspected.
+    if (Array.isArray(data.formulas))
+      state.formulas = (Object.keys(FORMULAS) as FormulaId[]).filter(id => data.formulas.includes(id));
     if (Array.isArray(data.heard))
       state.heard = data.heard
         .filter(

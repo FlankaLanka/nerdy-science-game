@@ -147,7 +147,7 @@ test("notebook keeps discovered parts, formulas, and a non-teleporting station m
     page.getByRole("heading", { name: "Resistor", exact: true }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Formulas", exact: true }).click();
-  await expect(page.getByText("Find formulas as you explore.")).toBeVisible();
+  await expect(page.getByText("Inspect formula screens to add notes.")).toBeVisible();
   await page.getByRole("button", { name: "Map", exact: true }).click();
   await expect(
     page.getByRole("img", { name: /Space station map/ }),
@@ -292,16 +292,17 @@ test("parts drag without losing their wires and undo restores their position", a
     .poll(async () => (await saved(page)).rooms[2].parts[1].x)
     .toBe(before.parts[1].x);
 });
-test("notebook returns discovered equations in the later chambers", async ({
+test("entering later chambers does not discover their equations", async ({
   page,
 }) => {
   await begin(page, 5);
   await page.keyboard.press("n");
   await page.getByRole("button", { name: "Formulas", exact: true }).click();
+  await expect(page.getByText("Inspect formula screens to add notes.")).toBeVisible();
   for (const name of ["Ohm's law", "Series", "Parallel"])
     await expect(
       page.getByRole("heading", { name, exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
 });
 
 test("Escape cancels a dragged lead and a switch drag does not toggle it", async ({

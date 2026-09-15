@@ -12,6 +12,7 @@ import { BENCH_HEIGHT, KIT_SCALE } from "./benchView";
 import type { BenchInteraction } from "./benchView";
 import { buildPowerLink } from "./powerLink";
 import { buildMainStation } from "./mainStation";
+import { formulaScreen } from "./formulaView";
 /** A fixed modular kit, placed against a connected deck plan. No procedural room generation. */
 export function buildSpaceship(scene: THREE.Scene) {
   const root = new THREE.Group();
@@ -480,19 +481,22 @@ export function buildSpaceship(scene: THREE.Scene) {
     kit.sync(c.initial, simulate(c.initial));
     // The few wall posters appear only where a new equation becomes useful.
     if (c.formula) {
+      const screen = formulaScreen(c);
       const g = new THREE.Group();
-      g.position.set(c.x + 5.5, 0, c.z + 3.85);
+      g.position.set(screen.x, 0, screen.z);
       g.rotation.y = -Math.PI / 2;
       root.add(g);
-      bevel(0, 1.95, 0, 1.64, 1.14, 0.1, frame, 0.03, g);
+      bevel(0, screen.y, 0, screen.width, screen.height, 0.1, frame, 0.03, g);
       label(
         FORMULAS[c.formula].equation,
-        FORMULAS[c.formula].note,
+        c.formula === "ohm"
+          ? FORMULAS[c.formula].note.replace(/ {2,}/g, "\n")
+          : FORMULAS[c.formula].note.replace(" · ", "\n"),
         0,
-        1.95,
-        0.065,
-        1.55,
-        1.05,
+        screen.y,
+        screen.displayDepth,
+        screen.displayWidth,
+        screen.displayHeight,
         "#276980",
         0,
         true,

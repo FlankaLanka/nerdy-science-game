@@ -37,7 +37,7 @@ test("the tablet can be put away during its opening animation and reopened witho
 test("the tablet respects live motion preferences, retains focus, and stays readable", async ({
   page,
 }) => {
-  await begin(page, 5);
+  await begin(page, 5, undefined, ["ohm", "series", "parallel"]);
   await bench(page, 5);
   const open = page.getByRole("button", {
     name: "Battery positive",

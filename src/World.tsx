@@ -11,6 +11,7 @@ import { SPAWN } from "./scene/navigation";
 import type { Player } from "./scene/navigation";
 import type { ChamberId } from "./chambers";
 import type { BenchControls, BenchView } from "./scene/benchView";
+import type { FormulaView } from "./scene/formulaView";
 export type WorldHandle = BenchControls & {
   capture: () => void;
   release: () => void;
@@ -28,6 +29,10 @@ type Props = WorldState & {
   onStep: () => void;
   onEnvironment: (sound: "door" | "power") => void;
   onBenchView: (view: BenchView | null) => void;
+  onInspectFormula: (index: number) => void;
+  onFormulaViewed: (index: number) => void;
+  onFormulaView: (view: FormulaView | null) => void;
+  onCameraMoving: (moving: boolean) => void;
 };
 export default forwardRef<WorldHandle, Props>(function World(props, ref) {
   const host = useRef<HTMLDivElement>(null),
@@ -72,6 +77,10 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
         step: () => latest.current.onStep(),
         environment: (sound) => latest.current.onEnvironment(sound),
         benchView: (view) => latest.current.onBenchView(view),
+        inspectFormula: (index) => latest.current.onInspectFormula(index),
+        formulaViewed: (index) => latest.current.onFormulaViewed(index),
+        formulaView: (view) => latest.current.onFormulaView(view),
+        cameraMoving: (moving) => latest.current.onCameraMoving(moving),
       });
     });
     return () => {
@@ -103,14 +112,14 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
       {props.playing && hud && (
         <div className="world-hud">
           <span
-            className={`reticle ${hud.focus ? "focused" : ""}`}
+            className={`reticle ${hud.focus || hud.formula !== null ? "focused" : ""}`}
             aria-hidden="true"
           />
-          {hud.focus && (
+          {(hud.focus || hud.formula !== null) && (
             <button
               className="use-prompt"
               onClick={() => controls.current?.interact()}
-              aria-label="Use circuit bench"
+              aria-label={hud.formula !== null ? "Inspect formula screen" : "Use circuit bench"}
             >
               <kbd>E</kbd>
             </button>

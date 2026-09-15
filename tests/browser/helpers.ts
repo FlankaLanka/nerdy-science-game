@@ -1,13 +1,15 @@
 import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { CHAMBERS } from "../../src/chambers.ts";
+import type { FormulaId } from "../../src/chambers.ts";
 import { SAVE_KEY, serializeCampaign } from "../../src/chamberCampaign.ts";
 import { PLAYER_KEY } from "../../src/scene/navigation.ts";
 import type { Player } from "../../src/scene/navigation.ts";
 import { chamberFixture } from "../chamber-fixtures.ts";
-export async function begin(page: Page, index = 0, player?: Player) {
+export async function begin(page: Page, index = 0, player?: Player, formulas: FormulaId[] = []) {
   const c = CHAMBERS[index];
   const state = chamberFixture(index);
+  state.formulas = formulas;
   await page.addInitScript(
     ({ key, value, playerKey, position }) => {
       localStorage.setItem(key, value);

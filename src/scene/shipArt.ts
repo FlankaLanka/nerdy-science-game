@@ -166,6 +166,8 @@ export function shipArt(root: THREE.Group) {
     object.castShadow = false;
     function paint(title: string, caption = sub, tint = color) {
       const ch = canvas.height;
+      const lines = caption.split("\n");
+      const multiline = lines.length > 1;
       c.clearRect(0, 0, 1024, ch);
       if (background) {
         c.fillStyle = "#f4f1e7";
@@ -178,11 +180,12 @@ export function shipArt(root: THREE.Group) {
       c.fillStyle = tint;
       c.textAlign = align;
       c.font = `600 ${Math.min(caption ? 115 : 500, ch * (caption ? 0.33 : 0.62))}px "Space Grotesk", sans-serif`;
-      c.fillText(title, align === "center" ? 512 : 28, ch * (caption ? 0.49 : 0.73), 968);
+      c.fillText(title, align === "center" ? 512 : 28, ch * (multiline ? 0.34 : caption ? 0.49 : 0.73), 968);
       if (caption) {
         c.fillStyle = background ? "#4c6572" : tint;
-        c.font = `400 ${Math.min(38, ch * 0.15)}px "IBM Plex Mono", monospace`;
-        c.fillText(caption, align === "center" ? 512 : 30, ch * 0.79, 960);
+        c.font = `400 ${Math.min(multiline ? 54 : 38, ch * 0.15)}px "IBM Plex Mono", monospace`;
+        lines.forEach((line, i) => c.fillText(line, align === "center" ? 512 : 30,
+          ch * (multiline ? 0.57 + i * 0.13 : 0.79), 960));
       }
       texture.needsUpdate = true;
     }

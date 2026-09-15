@@ -124,6 +124,50 @@ kbd {
   font-size: 13px;
   box-shadow: 0 3px 15px #0006;
 }
+.formula-inspection {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.formula-close, .formula-notebook {
+  position: absolute;
+  top: max(22px, env(safe-area-inset-top));
+  right: max(24px, env(safe-area-inset-right));
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: #e5ece5;
+  background: #193745e8;
+  pointer-events: auto;
+}
+.formula-notebook { right: auto; left: max(24px, env(safe-area-inset-left)); }
+.formula-notice {
+  position: absolute;
+  bottom: max(30px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  white-space: nowrap;
+  background: #193745f2;
+  color: #e5ece5;
+  pointer-events: none;
+}
+.formula-notice svg { width: 18px; height: 18px; }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .touch-stick {
   display: none;
 }

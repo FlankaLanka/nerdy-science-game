@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { ChevronRight } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import {
   campaignReducer,
   completedIds,
@@ -19,10 +19,12 @@ import {
   serializeCampaign,
 } from "./chamberCampaign";
 import { CHAMBERS } from "./chambers";
-import type { ChamberId } from "./chambers";
+import type { ChamberId, FormulaId } from "./chambers";
 import type { KitAction } from "./circuitKit";
 import type { WorldHandle } from "./World";
 import type { BenchView } from "./scene/benchView";
+import type { FormulaView } from "./scene/formulaView";
+import { FormulaReader } from "./FormulaReader";
 import { PLAYER_KEY, SPAWN } from "./scene/navigation";
 import { roomAt } from "./scene/shipLayout";
 import { STATION_DECK } from "./scene/stationLayout";
@@ -60,6 +62,10 @@ export default function App() {
     }
   });
   const [benchView, setBenchView] = useState<BenchView | null>(null);
+  const [activeFormula, setActiveFormula] = useState<number | null>(null);
+  const [formulaView, setFormulaView] = useState<FormulaView | null>(null);
+  const [cameraMoving, setCameraMoving] = useState(false);
+  const [formulaNotice, setFormulaNotice] = useState<FormulaId | null>(null);
   const [tab, setTab] = useState<NotebookTab>("parts"),
     [storageFailed, setStorageFailed] = useState(false);
   const [subtitle, setSubtitle] = useState<{ id: string; text: string } | null>(
@@ -67,13 +73,13 @@ export default function App() {
   );
   const world = useRef<WorldHandle>(null),
     sound = useSound(state.sound);
-  const current = useRef({ state, active, menu, started, sound });
-  current.current = { state, active, menu, started, sound };
+  const current = useRef({ state, active, activeFormula, menu, started, sound });
+  current.current = { state, active, activeFormula, menu, started, sound };
   const subtitleTime = useRef(0),
     heard = useRef(new Set(state.heard)),
     transition = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completed = completedIds(state),
-    playing = started && active === null && menu === null && benchView === null;
+    playing = started && active === null && activeFormula === null && menu === null && !cameraMoving;
   const powered = useMemo(() => poweredIds(state), [state.rooms, state.proofs]);
   const firstUnpowered = CHAMBERS.findIndex(c => !powered.includes(c.id));
   const fallbackRoom = firstUnpowered < 0 ? 5 : firstUnpowered;
@@ -143,6 +149,26 @@ export default function App() {
     },
     [speak],
   );
+  const inspectFormula = useCallback((index: number) => {
+    if (!CHAMBERS[index]?.formula) return;
+    world.current?.release();
+    setFormulaNotice(null);
+    setActiveFormula(index);
+    current.current.sound.play("soft");
+  }, []);
+  const formulaViewed = useCallback((index: number) => {
+    const id = CHAMBERS[index]?.formula;
+    if (current.current.activeFormula !== index || !id || current.current.state.formulas.includes(id)) return;
+    dispatch({ type: "DISCOVER_FORMULA", id });
+    setFormulaNotice(id);
+    current.current.sound.play("success");
+  }, []);
+  useEffect(() => {
+    if (!formulaNotice || menu) return;
+    const timer = setTimeout(() => setFormulaNotice(null), 3500);
+    return () => clearTimeout(timer);
+  }, [formulaNotice, menu]);
+  const leaveFormula = useCallback(() => setActiveFormula(null), []);
   const pause = useCallback(() => {
     if (!current.current.started) return;
     world.current?.release();
@@ -204,20 +230,25 @@ export default function App() {
         return;
       if (window.document.querySelector("dialog[open]")) return;
       if (["KeyN", "KeyJ", "Tab", "KeyM"].includes(e.code)) {
-        // Tab remains normal focus navigation while working at the bench.
-        if (e.code === "Tab" && current.current.active !== null) return;
+        // Close-up controls retain normal keyboard focus navigation.
+        if (e.code === "Tab" && (current.current.active !== null || current.current.activeFormula !== null)) return;
         e.preventDefault();
-        openNotebook(e.code === "KeyM" ? "map" : "parts");
+        openNotebook(e.code === "KeyM" ? "map" : current.current.activeFormula !== null ? "formulas" : "parts");
+      }
+      if (e.code === "KeyE" && current.current.activeFormula !== null) {
+        e.preventDefault();
+        leaveFormula();
       }
       if (e.key === "Escape") {
         e.preventDefault();
         if (current.current.active !== null) leaveBench();
+        else if (current.current.activeFormula !== null) leaveFormula();
         else pause();
       }
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [leaveBench, pause, openNotebook]);
+  }, [leaveBench, leaveFormula, pause, openNotebook]);
   function begin() {
     if (!ready || started) return;
     setStarted(true);
@@ -258,6 +289,8 @@ export default function App() {
     setSection("Wake");
     setGodMode(false);
     setActive(null);
+    setActiveFormula(null);
+    setFormulaNotice(null);
     setMenu(null);
     setStarted(false);
   }
@@ -271,7 +304,12 @@ export default function App() {
           playing={playing && !failed}
           preview={!started}
           activeBench={failed ? null : active}
+          activeFormula={failed ? null : activeFormula}
           onBenchView={setBenchView}
+          onInspectFormula={inspectFormula}
+          onFormulaViewed={formulaViewed}
+          onFormulaView={setFormulaView}
+          onCameraMoving={setCameraMoving}
           completed={completed}
           powered={powered}
           godMode={godMode}
@@ -292,6 +330,9 @@ export default function App() {
           onError={() => {
             setFailed(true);
             setBenchView(null);
+            setActiveFormula(null);
+            setFormulaView(null);
+            setCameraMoving(false);
             setReady(true);
           }}
           onStep={() => sound.play("step")}
@@ -305,7 +346,7 @@ export default function App() {
           onBegin={begin}
         />
       )}
-      {started && active === null && (
+      {started && active === null && activeFormula === null && (
         <header className="game-chrome">
           <span className="room-marker">
             {!publicStation && (
@@ -341,7 +382,14 @@ export default function App() {
           />
         </Suspense>
       )}
-      {started && subtitle && !menu &&
+      {started && activeFormula !== null && (
+        <FormulaReader key={activeFormula} index={activeFormula} view={formulaView}
+          suspended={menu !== null} onClose={leaveFormula} onNotebook={() => openNotebook("formulas")} />
+      )}
+      {started && formulaNotice && !menu && (
+        <div className="formula-notice" role="status"><Check aria-hidden="true" />New formula added!</div>
+      )}
+      {started && subtitle && !menu && activeFormula === null && !formulaNotice &&
         (active === null || subtitle.id !== `hint:${CHAMBERS[active].id}`) && (
         <div className="narration" role="status">
           <span>ASTER</span>

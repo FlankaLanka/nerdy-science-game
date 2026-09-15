@@ -1,7 +1,6 @@
 import { Check, LockKeyhole, X } from "lucide-react";
 import { Dialog } from "./Dialog";
 import { CHAMBERS, FORMULAS } from "./chambers";
-import type { FormulaId } from "./chambers";
 import type { Campaign } from "./chamberCampaign";
 import { poweredIds, unlockedIndex } from "./chamberCampaign";
 import { PART_NAMES } from "./circuitKit";
@@ -46,11 +45,7 @@ export default function Notebook({
       ...c.tools,
     ]),
   );
-  const formulas = [
-    ...new Set(
-      discovered.map((c) => c.formula).filter((id): id is FormulaId => !!id),
-    ),
-  ];
+  const formulas = state.formulas;
   const stationMap = inMainStation(player.x, player.z) || (player.x >= 4 && player.x <= 16 && player.z >= 27);
   const unlocked = unlockedIndex(state),
     [px, py] = deckPoint(player.x, player.z);
@@ -164,7 +159,7 @@ export default function Notebook({
                 </article>
               ))}
               {!formulas.length && (
-                <p className="empty-page">Find formulas as you explore.</p>
+                <p className="empty-page">Inspect formula screens to add notes.</p>
               )}
             </div>
           )}
