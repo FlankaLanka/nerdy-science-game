@@ -27,7 +27,6 @@ type Props = WorldState & {
   onPause: () => void;
   onReady: () => void;
   onError: () => void;
-  onStep: () => void;
   onEnvironment: (sound: EnvironmentSound, mix: SoundMix) => void;
   onBenchView: (view: BenchView | null) => void;
   onInspectFormula: (index: number) => void;
@@ -75,7 +74,6 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
         telemetry: setHud,
         interact: (id) => latest.current.onVisit(id),
         pause: () => latest.current.onPause(),
-        step: () => latest.current.onStep(),
         environment: (sound, mix) => latest.current.onEnvironment(sound, mix),
         benchView: (view) => latest.current.onBenchView(view),
         inspectFormula: (index) => latest.current.onInspectFormula(index),

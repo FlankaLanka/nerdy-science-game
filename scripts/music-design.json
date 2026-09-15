@@ -1,0 +1,6 @@
+{
+  "model_id": "music_v2",
+  "music_length_ms": 80000,
+  "force_instrumental": true,
+  "prompt": "Instrumental ambient background music for Asterion, a calm educational science puzzle game set in a bright, sophisticated research space station. Warm, reassuring, quietly curious and optimistic. Soft rounded electric-piano notes, delicate muted synth plucks, smooth airy analog pads, a gentle flowing sense of discovery. Spacious understated arrangement with lots of room for thought and small mechanical game sounds. Consonant D major / G major added-sixth and ninth harmony, a relaxed 72 BPM feel without a drum beat. Keep bass light and above the sub-bass register. Very stable gentle dynamics. No prominent melody or solo; the player should be able to concentrate for a long time. Create a continuous 24-bar background texture with matching D-major harmony and instrumentation at the beginning and end so it can be crossfaded into a seamless loop. Begin with the texture already present; finish with the texture still continuing. No intro, outro, final cadence, fade-out or dramatic build. No percussion, ticking, footsteps, impacts, breathing, vocals, choir, alarms, dissonance, ominous drones, suspense or horror atmosphere. Polished soft stereo production, welcoming and scientific."
+}

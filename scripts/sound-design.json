@@ -19,14 +19,6 @@
     "duration_seconds": 0.55,
     "text": "One sturdy laboratory toggle switch clicked once. Small precise spring-loaded mechanical clack, tight plastic housing resonance and a muted metal tick. Close dry recording, immediate onset, short decay. Understated high quality instrument. No voice, no music, no beeps, no repeated clicks, no electrical arcing."
   },
-  "step-a": {
-    "duration_seconds": 0.6,
-    "text": "One soft rubber-soled boot footstep on a rigid ceramic-coated metal floor inside a research station. Muted heel contact then a very small sole scuff, subtle hollow panel resonance. Natural close dry foley, one step only, immediate onset, short tail. No walking sequence, no voice, no music, no ringing metal clang."
-  },
-  "step-b": {
-    "duration_seconds": 0.6,
-    "text": "Single quiet rubber-soled shoe footstep on a solid metal laboratory deck with ceramic coating. A rounded soft impact, tiny textured sole contact, restrained hollow floor resonance. Close dry foley, immediate onset and short clean tail. One footfall only. No sequence, no music, no voice, no heavy clang, no gravel."
-  },
   "ventilation": {
     "duration_seconds": 6,
     "loop": true,

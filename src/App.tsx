@@ -346,7 +346,6 @@ export default function App() {
             setCameraMoving(false);
             setReady(true);
           }}
-          onStep={() => sound.play("step")}
           onEnvironment={(kind, mix) => { if (started && !menu) sound.play(kind, mix); }}
         />
       </Suspense>

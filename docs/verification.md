@@ -80,3 +80,9 @@ The asset review measured 556,870 bytes across the eight runtime sounds and foun
 The combined changes passed the production build and all 70 unit tests. The full 70-case browser run passed 67 cases initially. Two older circuit tests matched the new corner handles as well as the Rotate button; their locators now use exact names. A fixed-part label check now waits for its position to update after resizing. All three corrected cases passed on a focused rerun. Formula scrolling, pause transitions, audio lifecycle, progression, accessibility, graphics fallbacks and scene surface checks passed in the full run.
 
 The menu and rotation commit snapshots each passed TypeScript independently; the rotation snapshot also passed all 16 circuit unit tests. The audio preparation scripts and prompt JSON passed syntax checks. Eight local sound files total 556,870 bytes. The build retains the existing large Three.js chunk advisory. Generated captures and test reports remain ignored.
+
+## Ambient music refinement — September 15, 2026
+
+Removed the footstep event path, synthesized fallback, both runtime samples and their regeneration prompts. Added a locally bundled 76-second instrumental music loop with a four-second overlap, gradual entrance and quieter menu mix. Ventilation is lower in the mix.
+
+The production build, all 70 unit tests and five audio browser scenarios passed. Checks cover decoded music/ventilation seams and headroom, silence from walking, one music loop across pause/mute cycles, delayed loading, restart disposal, existing spatial effects and all six doors. The seven current runtime audio files total 1,762,222 bytes. No runtime credential or remote music request is needed.

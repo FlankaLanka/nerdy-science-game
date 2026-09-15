@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { begin, hold } from "./helpers";
 
-test("local audio decodes with headroom and the ventilation loop has a continuous seam", async ({ page }) => {
+test("local audio decodes with headroom and continuous music and ventilation loops", async ({ page }) => {
   await page.goto("/tests/browser/fixture.html");
   const checks = await page.evaluate(async () => {
     const url = "/src/soundEngine.ts";
@@ -23,19 +23,25 @@ test("local audio decodes with headroom and the ventilation loop has a continuou
     }
     return results;
   });
-  expect(checks).toHaveLength(8);
+  expect(checks).toHaveLength(7);
   for (const sound of checks) {
     expect(sound.ok, sound.name).toBe(true);
     expect(sound.peak, sound.name).toBeLessThan(.75);
     expect(sound.rms, sound.name).toBeGreaterThan(.005);
-    expect(sound.duration, sound.name).toBeLessThan(6);
+    if (sound.name === "music") {
+      expect(sound.duration).toBeGreaterThan(60);
+      expect(sound.duration).toBeLessThan(90);
+    } else expect(sound.duration, sound.name).toBeLessThan(6);
   }
-  const loop = checks.find(sound => sound.name === "ventilation")!;
-  expect(loop.seam).toBeLessThan(loop.delta * 3);
+  for (const name of ["ventilation", "music"]) {
+    const loop = checks.find(sound => sound.name === name)!;
+    expect(loop.seam, name).toBeLessThan(loop.delta * 3);
+  }
 });
 
 test("the rendered mix respects stereo position, headroom, mute, and missing-file fallbacks", async ({ page }) => {
   await page.route("**/audio/ventilation.wav", route => route.abort());
+  await page.route("**/audio/station-music.mp3", route => route.abort());
   await page.goto("/tests/browser/fixture.html");
   async function render(muted: boolean, hidden: boolean) {
     return page.evaluate(async ({ muted, hidden }) => {
@@ -125,7 +131,7 @@ test("doors emit one opening and closing cue across all gates and both motion se
   expect(failures).toEqual([]);
 });
 
-test("audio starts with play, alternates footsteps, and stays silent while muted", async ({ page }) => {
+test("music starts with play, walking makes no sounds, and mute and restart work", async ({ page }) => {
   await page.addInitScript(() => {
     const trace = { contexts: 0, closed: 0, decoded: 0, starts: [] as { duration: number; loop: boolean }[] };
     Object.assign(window, { audioTrace: trace });
@@ -154,12 +160,16 @@ test("audio starts with play, alternates footsteps, and stays silent while muted
   expect(requests).toHaveLength(0);
   await begin(page);
   await expect.poll(async () => (await trace()).starts.some(source => source.loop)).toBe(true);
-  await expect.poll(async () => (await trace()).decoded).toBe(8);
+  await expect.poll(async () => (await trace()).decoded).toBe(7);
   expect((await trace()).contexts).toBe(1);
-  expect(requests).toHaveLength(8);
+  expect(requests).toHaveLength(7);
+  const loops = (await trace()).starts.filter(source => source.loop);
+  expect(loops).toHaveLength(2);
+  expect(loops.some(source => source.duration > 60)).toBe(true);
+  const beforeWalking = (await trace()).starts.length;
   await hold(page, "s", 1800);
-  const steps = (await trace()).starts.filter(source => !source.loop && source.duration > .19 && source.duration < .42);
-  expect(new Set(steps.map(source => source.duration)).size).toBe(2);
+  expect((await trace()).starts).toHaveLength(beforeWalking);
+  expect(requests.some(url => url.includes("step-"))).toBe(false);
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Options", exact: true }).click();
   await page.getByRole("button", { name: "Sound", exact: true }).click();
@@ -177,7 +187,8 @@ test("audio starts with play, alternates footsteps, and stays silent while muted
   await hold(page, "s", 800);
   expect((await trace()).starts.length).toBeGreaterThan(count);
   expect((await trace()).contexts).toBe(1);
-  expect(requests).toHaveLength(8);
+  expect(requests).toHaveLength(7);
+  expect((await trace()).starts.filter(source => source.loop)).toHaveLength(2);
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "New run", exact: true }).click();
   await page.getByRole("button", { name: "Start new run", exact: true }).click();
@@ -211,10 +222,10 @@ test("late sample loading cannot replay an action or start ambience after mute",
     } }).pendingAudio;
     await engine.ready;
     const afterLoad = starts.length;
-    engine.play("step");
+    engine.play("connect");
     const afterMutedPlay = starts.length;
     engine.setEnabled(true);
-    engine.play("step");
+    engine.play("connect");
     const afterEnable = starts.length;
     engine.dispose();
     await new Promise(resolve => setTimeout(resolve, 30));
@@ -223,7 +234,7 @@ test("late sample loading cannot replay an action or start ambience after mute",
   expect(result.before).toBe(1);
   expect(result.afterLoad).toBe(result.before);
   expect(result.afterMutedPlay).toBe(result.before);
-  expect(result.afterEnable).toBe(result.before + 2);
-  expect(result.loops).toBe(1);
+  expect(result.afterEnable).toBe(result.before + 3);
+  expect(result.loops).toBe(2);
   expect(result.state).toBe("closed");
 });

@@ -59,7 +59,6 @@ type Options = {
   telemetry: (data: Telemetry) => void;
   interact: (id: MissionId) => void;
   pause: () => void;
-  step: () => void;
   environment: (sound: EnvironmentSound, mix: SoundMix) => void;
   benchView: (view: BenchView | null) => void;
   inspectFormula: (index: number) => void;
@@ -241,8 +240,7 @@ export function renderWorld(o: Options) {
     last = performance.now(),
     time = 0,
     lastHud = 0,
-    lastSave = 0,
-    lastStep = 0;
+    lastSave = 0;
   let stillFrame = "";
   let ready = false,
     wasPlaying = false,
@@ -490,14 +488,6 @@ export function renderWorld(o: Options) {
       );
       walking =
         Math.hypot(player.x - previous.x, player.z - previous.z) > 0.002;
-      if (
-        walking &&
-        now - lastStep >
-          (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 290 : 460)
-      ) {
-        lastStep = now;
-        o.step();
-      }
     }
     if (!state.reducedMotion) time += dt;
 

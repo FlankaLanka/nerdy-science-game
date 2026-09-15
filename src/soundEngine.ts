@@ -2,7 +2,7 @@ import type { SoundMix } from "./soundscape";
 
 export type Sound =
   | "connect" | "test" | "place" | "success" | "discover" | "fault" | "soft"
-  | "step" | "door" | "door-close" | "power" | "power-down"
+  | "door" | "door-close" | "power" | "power-down"
   | "tablet-open" | "tablet-close" | "tab" | "pause" | "resume";
 
 export const SOUND_FILES = {
@@ -11,11 +11,15 @@ export const SOUND_FILES = {
   power: "/audio/power-up.mp3",
   connect: "/audio/connector.mp3",
   test: "/audio/relay.mp3",
-  "step-a": "/audio/step-a.mp3",
-  "step-b": "/audio/step-b.mp3",
   ventilation: "/audio/ventilation.wav",
+  music: "/audio/station-music.mp3",
 } as const;
 type Sample = keyof typeof SOUND_FILES;
+const BACKGROUNDS = {
+  ventilation: { normal: .022, quiet: .012, fade: .5 },
+  music: { normal: .22, quiet: .11, fade: 1.5 },
+} as const;
+type Background = keyof typeof BACKGROUNDS;
 const LEVELS: Partial<Record<Sound, number>> = {
   door: .62, "door-close": .5, power: .3, connect: .66, test: .58, place: .42,
 };
@@ -27,7 +31,7 @@ export class SoundEngine {
   readonly ready: Promise<void>;
   private master: GainNode;
   private compressor: DynamicsCompressorNode;
-  private ambience: { source: AudioBufferSourceNode; gain: GainNode } | null = null;
+  private backgrounds = new Map<Background, { source: AudioBufferSourceNode; gain: GainNode }>();
   private buffers = new Map<Sample, AudioBuffer>();
   private voices = new Set<Voice>();
   private recent = new Map<Sound, number>();
@@ -36,7 +40,6 @@ export class SoundEngine {
   private hidden = false;
   private quiet = false;
   private disposed = false;
-  private foot = 0;
 
   constructor() {
     this.context = new AudioContext();
@@ -56,31 +59,34 @@ export class SoundEngine {
         const buffer = await this.context.decodeAudioData(await response.arrayBuffer());
         if (this.disposed) return;
         this.buffers.set(name as Sample, buffer);
-        if (name === "ventilation") this.startAmbience();
+        if (name in BACKGROUNDS) this.startBackgrounds();
       } catch {
         // Missing/offline samples use immediate cues; loading never delays an action.
       }
     })).then(() => {});
   }
 
-  private startAmbience() {
-    if (!this.enabled || this.hidden || this.ambience || this.disposed) return;
-    const buffer = this.buffers.get("ventilation");
-    if (!buffer) return;
-    const source = this.context.createBufferSource(), gain = this.context.createGain();
-    source.buffer = buffer;
-    source.loop = true;
-    gain.gain.value = 0;
-    gain.gain.setTargetAtTime(this.quiet ? .018 : .055, this.context.currentTime, .5);
-    source.connect(gain).connect(this.master);
-    source.start();
-    this.ambience = { source, gain };
+  private startBackgrounds() {
+    if (!this.enabled || this.hidden || this.disposed) return;
+    for (const name of Object.keys(BACKGROUNDS) as Background[]) {
+      const buffer = this.buffers.get(name);
+      if (!buffer || this.backgrounds.has(name)) continue;
+      const source = this.context.createBufferSource(), gain = this.context.createGain();
+      const levels = BACKGROUNDS[name];
+      source.buffer = buffer;
+      source.loop = true;
+      gain.gain.value = 0;
+      gain.gain.setTargetAtTime(this.quiet ? levels.quiet : levels.normal, this.context.currentTime, levels.fade);
+      source.connect(gain).connect(this.master);
+      source.start();
+      this.backgrounds.set(name, { source, gain });
+    }
   }
 
   unlock() {
     if (this.enabled && !this.hidden && !this.disposed) {
       void this.context.resume().catch(() => {});
-      this.startAmbience();
+      this.startBackgrounds();
     }
   }
 
@@ -95,7 +101,10 @@ export class SoundEngine {
 
   setQuiet(quiet: boolean) {
     this.quiet = quiet;
-    this.ambience?.gain.gain.setTargetAtTime(quiet ? .018 : .055, this.context.currentTime, .12);
+    for (const [name, { gain }] of this.backgrounds) {
+      const levels = BACKGROUNDS[name];
+      gain.gain.setTargetAtTime(quiet ? levels.quiet : levels.normal, this.context.currentTime, .4);
+    }
   }
 
   setHidden(hidden: boolean) {
@@ -192,16 +201,10 @@ export class SoundEngine {
     const pan = Number.isFinite(mix.pan) ? Math.max(-1, Math.min(1, mix.pan)) : 0;
     if (gain < .008) return;
     const now = this.context.currentTime;
-    const cooldown = kind === "step" ? .22 : kind === "fault" ? .6 : .045;
+    const cooldown = kind === "fault" ? .6 : .045;
     if (now - (this.recent.get(kind) ?? -Infinity) < cooldown) return;
     this.recent.set(kind, now);
     this.unlock();
-    if (kind === "step") {
-      const side = this.foot++ % 2;
-      if (this.sample(side ? "step-b" : "step-a", .22 * gain, side ? .12 : -.12, .96 + Math.random() * .08)) return;
-      this.texture(.13, 650, .12 * gain, 0);
-      return;
-    }
     if (kind in LEVELS) {
       const name = kind === "place" ? "test" : kind as Sample;
       const rate = kind === "place" ? .84 : kind === "connect" || kind === "test" ? .97 + Math.random() * .06 : 1;
@@ -232,9 +235,12 @@ export class SoundEngine {
     this.disposed = true;
     this.request.abort();
     this.stopVoices();
-    this.ambience?.source.stop();
-    this.ambience?.source.disconnect();
-    this.ambience?.gain.disconnect();
+    for (const { source, gain } of this.backgrounds.values()) {
+      source.stop();
+      source.disconnect();
+      gain.disconnect();
+    }
+    this.backgrounds.clear();
     this.master.disconnect();
     this.compressor.disconnect();
     this.buffers.clear();

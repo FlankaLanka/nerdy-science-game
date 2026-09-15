@@ -75,4 +75,4 @@ Current work is on `codex/asterion-circuit-chambers`, based on `36eeedc` on `cod
 
 ### Sound
 
-Doors have distinct opening and closing sounds with stereo direction and distance falloff. The station also has quiet ventilation, varied deck footsteps, tactile circuit controls and brief UI/repair feedback. Pause → Options → Sound mutes everything. Audio files ship locally and require no API key during play; source prompts and regeneration details are in [asset provenance](docs/assets.md#station-audio).
+Doors have distinct opening and closing sounds with stereo direction and distance falloff. Warm ambient music accompanies exploration and circuit work, with quiet ventilation, tactile controls and brief UI/repair feedback. Walking is silent. Music fades in gently and lowers in menus. Pause → Options → Sound mutes everything. Audio files ship locally and require no API key during play; source prompts and regeneration details are in [asset provenance](docs/assets.md#station-audio).
