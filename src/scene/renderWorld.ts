@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { spatialMix } from "../soundscape";
+import type { EnvironmentSound, SoundMix } from "../soundscape";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
@@ -58,7 +60,7 @@ type Options = {
   interact: (id: MissionId) => void;
   pause: () => void;
   step: () => void;
-  environment: (sound: "door" | "power") => void;
+  environment: (sound: EnvironmentSound, mix: SoundMix) => void;
   benchView: (view: BenchView | null) => void;
   inspectFormula: (index: number) => void;
   formulaViewed: (index: number) => void;
@@ -654,7 +656,7 @@ export function renderWorld(o: Options) {
       interaction,
       state.godMode,
     ))
-      o.environment(event);
+      o.environment(event.kind, spatialMix(event, player));
     // Preserve local shadow resolution as the player reaches the larger habitat.
     // Recenter in coarse steps so the shadow map remains cached during ordinary frames.
     const sx = !state.preview && player.z >= 35 ? Math.round(player.x / 12) * 12 : 0;

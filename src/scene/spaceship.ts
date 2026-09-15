@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { doorMotion } from "../soundscape";
+import type { EnvironmentEvent } from "../soundscape";
 import { CHAMBERS, FORMULAS } from "../chambers";
 import type { ChamberId } from "../chambers";
 import { simulate } from "../circuitKit";
@@ -408,6 +410,7 @@ export function buildSpaceship(scene: THREE.Scene) {
     leaves: THREE.Group[];
     colliders: Obstacle[];
     opening: number;
+    motion: -1 | 0 | 1;
   }[] = [];
   for (const p of PORTALS) {
     const g = new THREE.Group();
@@ -457,7 +460,7 @@ export function buildSpaceship(scene: THREE.Scene) {
       colliders.push(collider);
       obstacles.push(collider);
     }
-    doors.push({ portal: p, leaves, colliders, opening: 1 });
+    doors.push({ portal: p, leaves, colliders, opening: 1, motion: 0 });
   }
   const benches = CHAMBERS.map((c) => {
     // Large chamber numbers make the experiments feel like a considered test suite.
@@ -550,11 +553,15 @@ export function buildSpaceship(scene: THREE.Scene) {
       interaction: BenchInteraction | null = null,
       godMode = false,
     ) {
-      const events: ("door" | "power")[] = [];
+      const events: EnvironmentEvent[] = [];
       root.userData.shadowsDirty = !initialized;
       const online = new Set(powered);
-      if (initialized && powered.some((id) => !previous.has(id)))
-        events.push("power");
+      if (initialized && !preview) {
+        for (const chamber of CHAMBERS) {
+          if (online.has(chamber.id) !== previous.has(chamber.id))
+            events.push({ kind: online.has(chamber.id) ? "power" : "power-down", ...chamber.bench });
+        }
+      }
       for (const door of doors) {
         const p = door.portal,
           dx = player.x - p.x,
@@ -575,8 +582,10 @@ export function buildSpaceship(scene: THREE.Scene) {
           door.opening = Math.max(old, door.opening);
         if (Math.abs(old - door.opening) > 0.001)
           root.userData.shadowsDirty = true;
-        if (initialized && playing && old < 0.02 && door.opening > 0.02)
-          events.push("door");
+        const motion = doorMotion(old, door.opening);
+        if (initialized && !preview && motion !== 0 && motion !== door.motion)
+          events.push({ kind: motion > 0 ? "door" : "door-close", x: p.x, z: p.z });
+        door.motion = motion;
         door.leaves.forEach((leaf, i) => {
           const x = (i ? 1 : -1) * (0.8 + door.opening * 1.8);
           leaf.position.x = x;

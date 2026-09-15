@@ -72,3 +72,7 @@ REVIEW_URL=http://localhost:5176 node scripts/profile-station.mjs
 Browser tests use Chromium and port 5175. Run `npx playwright install chromium` if needed. Reviews are generated into ignored `artifacts/station/`; no screenshots are runtime assets. [Verification](docs/verification.md) records the current checks and their limits.
 
 Current work is on `codex/asterion-circuit-chambers`, based on `36eeedc` on `codex/spaceship-dead-orbit`. The prior station and extended curriculum remain in Git history. Nothing is pushed or deployed by these commands.
+
+### Sound
+
+Doors have distinct opening and closing sounds with stereo direction and distance falloff. The station also has quiet ventilation, varied deck footsteps, tactile circuit controls and brief UI/repair feedback. Pause → Options → Sound mutes everything. Audio files ship locally and require no API key during play; source prompts and regeneration details are in [asset provenance](docs/assets.md#station-audio).

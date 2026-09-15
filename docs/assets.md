@@ -5,6 +5,7 @@
 | `public/materials/deck-color.jpg`, `deck-normal.jpg`, `deck-roughness.jpg`                 | [Poly Haven: Metal Plate](https://polyhaven.com/a/metal_plate), 1K Diffuse / OpenGL normal / Rough maps | [CC0](https://polyhaven.com/license)                      | Locally served floor and maintenance-deck PBR material |
 | Seven files in `public/space/`, listed below                                               | [Solar System Scope textures](https://www.solarsystemscope.com/textures/)                               | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Earth, Moon, Saturn, rings and star field              |
 | Space Grotesk and IBM Plex Mono font files                                                 | Installed `@fontsource` packages                                                                        | License files in their packages                           | Local interface fonts                                  |
+| Eight files in `public/audio/` | Generated with ElevenLabs Sound Effects v2 from project-authored prompts; trimmed and levelled locally | Generated under the account's [ElevenLabs terms](https://elevenlabs.io/terms-of-use); not a CC0 library | Doors, electrical controls, footsteps and ventilation |
 | All pressure-wall geometry, fixtures, instruments, signage, diagrams and interface effects | Authored in this repository                                                                             | Project code                                              | Fixed modular station; no downloaded franchise models  |
 
 The three texture files total 2,237,747 bytes. Original source maps, alternate resolutions, displacement maps, archive downloads and unused model exports are not retained. The metal maps were downloaded from Poly Haven's published asset metadata (`https://api.polyhaven.com/files/metal_plate`) and are not fetched from that service during play.
@@ -12,6 +13,14 @@ The three texture files total 2,237,747 bytes. Original source maps, alternate r
 Color uses sRGB; normal and roughness remain linear data. Anisotropy is capped at 4 for these textures. The floor uses a shared material and geometry UV scaling instead of duplicating textures by room.
 
 Space Grotesk and IBM Plex Mono use the SIL Open Font License. [Lucide icons](https://lucide.dev/license) use the ISC license.
+
+## Station audio
+
+The eight runtime files total **556,870 bytes**. Seven short mono MP3s cover opening and closing doors, power startup, a connector, a relay and two footsteps. `ventilation.wav` is a 5.4-second mono loop with overlapping ends; PCM preserves its loop boundary without encoder padding. UI, discovery, success and fault cues use short Web Audio envelopes.
+
+The source prompts are in `scripts/sound-design.json`. `scripts/generate-sound-effects.py` uses the [ElevenLabs sound-generation API](https://elevenlabs.io/docs/api-reference/text-to-sound-effects/convert) and reads `ELEVENLABS_API_KEY` only from its process environment. It skips already-generated files. Raw outputs and billing metadata stay in ignored `artifacts/audio-source/`. `scripts/prepare-sound-effects.py` trims, filters, levels and exports those sources; it needs Python/numpy and ffmpeg and makes no API requests. The initial eight generations used 149 API credits according to the response headers.
+
+The key is not included in the project. All runtime sounds are bundled locally; playing the game does not contact ElevenLabs. Regeneration is optional and incurs the provider's API charges.
 
 ## Orbital exterior
 

@@ -12,6 +12,7 @@ import type { Player } from "./scene/navigation";
 import type { ChamberId } from "./chambers";
 import type { BenchControls, BenchView } from "./scene/benchView";
 import type { FormulaView } from "./scene/formulaView";
+import type { EnvironmentSound, SoundMix } from "./soundscape";
 export type WorldHandle = BenchControls & {
   capture: () => void;
   release: () => void;
@@ -27,7 +28,7 @@ type Props = WorldState & {
   onReady: () => void;
   onError: () => void;
   onStep: () => void;
-  onEnvironment: (sound: "door" | "power") => void;
+  onEnvironment: (sound: EnvironmentSound, mix: SoundMix) => void;
   onBenchView: (view: BenchView | null) => void;
   onInspectFormula: (index: number) => void;
   onFormulaViewed: (index: number) => void;
@@ -75,7 +76,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
         interact: (id) => latest.current.onVisit(id),
         pause: () => latest.current.onPause(),
         step: () => latest.current.onStep(),
-        environment: (sound) => latest.current.onEnvironment(sound),
+        environment: (sound, mix) => latest.current.onEnvironment(sound, mix),
         benchView: (view) => latest.current.onBenchView(view),
         inspectFormula: (index) => latest.current.onInspectFormula(index),
         formulaViewed: (index) => latest.current.onFormulaViewed(index),

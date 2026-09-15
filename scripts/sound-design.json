@@ -1,0 +1,35 @@
+{
+  "door-open": {
+    "duration_seconds": 1.2,
+    "text": "Single clean close-recorded sound effect of a sophisticated research station sliding door opening. A small latch releases, a smooth electric servo slides two heavy panels apart in 0.65 seconds with a restrained pneumatic exhale, then a soft mechanical stop. Dry intimate mechanical detail, no voices, no music, no alarm, no cinematic boom. One opening only, immediate onset, short natural tail."
+  },
+  "door-close": {
+    "duration_seconds": 1.1,
+    "text": "One research station sliding door closing. Smooth compact electric actuator whirr immediately, two heavy precision panels glide together in 0.6 seconds, ending in a cushioned low mechanical latch and brief air seal hiss. Sophisticated quiet machinery, close dry recording, one action only. No voices, no music, no alarm, no huge bass impact. Short clean tail."
+  },
+  "power-up": {
+    "duration_seconds": 1.8,
+    "text": "One small research station electrical system powering on: tactile contactor click, warm low transformer hum rises gently, a short clean motor spin settles into readiness and fades away. Understated optimistic industrial equipment, precise and believable. Immediate onset, one event with a clean tail. No speech, no music, no alarm, no sparks, no dramatic bass boom."
+  },
+  "connector": {
+    "duration_seconds": 0.55,
+    "text": "One close dry electrical banana plug being firmly seated in a laboratory socket: crisp small metal contact tick followed by a satisfying soft plastic click. Compact, tactile, detailed, not harsh. Immediate single transient with a very short tail and silence afterward. No voice, no music, no electrical zap, no repeated clicks."
+  },
+  "relay": {
+    "duration_seconds": 0.55,
+    "text": "One sturdy laboratory toggle switch clicked once. Small precise spring-loaded mechanical clack, tight plastic housing resonance and a muted metal tick. Close dry recording, immediate onset, short decay. Understated high quality instrument. No voice, no music, no beeps, no repeated clicks, no electrical arcing."
+  },
+  "step-a": {
+    "duration_seconds": 0.6,
+    "text": "One soft rubber-soled boot footstep on a rigid ceramic-coated metal floor inside a research station. Muted heel contact then a very small sole scuff, subtle hollow panel resonance. Natural close dry foley, one step only, immediate onset, short tail. No walking sequence, no voice, no music, no ringing metal clang."
+  },
+  "step-b": {
+    "duration_seconds": 0.6,
+    "text": "Single quiet rubber-soled shoe footstep on a solid metal laboratory deck with ceramic coating. A rounded soft impact, tiny textured sole contact, restrained hollow floor resonance. Close dry foley, immediate onset and short clean tail. One footfall only. No sequence, no music, no voice, no heavy clang, no gravel."
+  },
+  "ventilation": {
+    "duration_seconds": 6,
+    "loop": true,
+    "text": "Seamless constant background ambience inside a calm modern research space station: very soft diffuse ventilation airflow and distant steady equipment fan texture. Smooth warm broadband sound, neutral unobtrusive life-support presence. Absolutely no events or transients, no rhythmic pulse, no voices, no alarms, no melody, no music, no dramatic low rumble. Stable texture suitable for a quiet continuous game loop."
+  }
+}

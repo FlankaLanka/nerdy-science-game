@@ -68,3 +68,15 @@ The scrollable explanation update passed seven formula discovery/projection unit
 The combined cable, bench, station, progression and formula changes passed all 68 unit tests, TypeScript, the production build and whitespace checks. The full browser run passed 61 of 62 scenarios. Its only failure was an older assertion that god-mode exploration records no room visits; reachable rooms now record visits independently of completion. The corrected scenario passed in a targeted rerun and still verifies that room entry adds no formula and inspection awards no circuit completion.
 
 The first two commit snapshots were also checked independently: both passed TypeScript, with four camera projection tests for the cable/bench snapshot and 22 circuit/navigation tests for the station/progression snapshot. Generated captures and test reports remain ignored. Local development and test servers are stopped after verification.
+
+## Station sound — September 15, 2026
+
+The sound pass passed the production build, the existing 69 unit tests, one new spatial-mix unit test, and eight selected audio/pause browser scenarios. Browser checks decode all eight local files, measure sample headroom and the ambience seam, render an overlapping stereo mix, verify silent muted/hidden output and missing-file fallbacks, exercise all six gates with ordinary and reduced motion, and verify gesture-only startup, alternating footsteps, mute/unmute, delayed loading and context disposal. The expanded play/mute/restart scenario passed twice after its sample-readiness wait was made explicit. No new runtime dependency was added.
+
+The asset review measured 556,870 bytes across the eight runtime sounds and found no credential patterns in source, scripts, public assets, build output, tests or documentation. The API is used only by the optional generation script. This verification covers event timing, levels, stereo output and lifecycle behavior; it does not replace listening on players' own speakers or headphones.
+
+## Combined menu, rotation and audio verification — September 15, 2026
+
+The combined changes passed the production build and all 70 unit tests. The full 70-case browser run passed 67 cases initially. Two older circuit tests matched the new corner handles as well as the Rotate button; their locators now use exact names. A fixed-part label check now waits for its position to update after resizing. All three corrected cases passed on a focused rerun. Formula scrolling, pause transitions, audio lifecycle, progression, accessibility, graphics fallbacks and scene surface checks passed in the full run.
+
+The menu and rotation commit snapshots each passed TypeScript independently; the rotation snapshot also passed all 16 circuit unit tests. The audio preparation scripts and prompt JSON passed syntax checks. Eight local sound files total 556,870 bytes. The build retains the existing large Three.js chunk advisory. Generated captures and test reports remain ignored.

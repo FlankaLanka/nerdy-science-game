@@ -30,6 +30,7 @@ type Props = {
   view: BenchView | null;
   suspended: boolean;
   onAction: (action: KitAction) => void;
+  onFault?: () => void;
   onUndo: () => void;
   onReset: () => void;
   onBack: () => void;
@@ -89,6 +90,12 @@ export default function CircuitLab(props: Props) {
   const overloaded = document.parts.some((p) => p.kind === "bulb" && lampState(p, result).overloaded);
   const latest = useRef(props);
   latest.current = props;
+  const fault = result.tripped || overloaded;
+  const previousFault = useRef(fault);
+  useEffect(() => {
+    if (fault && !previousFault.current && !props.suspended) latest.current.onFault?.();
+    previousFault.current = fault;
+  }, [fault, props.suspended]);
   const position = (p: Point, elevation = 0): CSSProperties => {
     const projected = world?.projectBench(p, elevation);
     if (!projected || !view) return flatPosition(p);

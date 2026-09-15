@@ -73,7 +73,7 @@ export default function App() {
     null,
   );
   const world = useRef<WorldHandle>(null),
-    sound = useSound(state.sound);
+    sound = useSound(state.sound, menu !== null || !started);
   const current = useRef({ state, active, activeFormula, menu, started, sound });
   current.current = { state, active, activeFormula, menu, started, sound };
   const subtitleTime = useRef(0),
@@ -165,7 +165,7 @@ export default function App() {
     if (current.current.activeFormula !== index || !id || current.current.state.formulas.includes(id)) return;
     dispatch({ type: "DISCOVER_FORMULA", id });
     setFormulaNotice(id);
-    current.current.sound.play("success");
+    current.current.sound.play("discover");
   }, []);
   useEffect(() => {
     if (!formulaNotice || menu) return;
@@ -175,7 +175,9 @@ export default function App() {
   const leaveFormula = useCallback(() => setActiveFormula(null), []);
   const pause = useCallback(() => {
     if (!current.current.started) return;
+    if (current.current.menu === "pause") return;
     world.current?.release();
+    current.current.sound.play("pause");
     setMenu("pause");
   }, []);
   const openNotebook = useCallback((nextTab: NotebookTab = "parts") => {
@@ -185,6 +187,7 @@ export default function App() {
     setMenu("notebook");
   }, []);
   function resume() {
+    if (menu === "pause") sound.play("resume");
     setMenu(null);
   }
   useEffect(() => {
@@ -276,9 +279,11 @@ export default function App() {
     dispatch({ type: "EDIT", room: active, action });
     if (action.type === "wire") sound.play("connect");
     else if (action.type === "toggle") sound.play("test");
-    else if (action.type !== "move") sound.play("soft");
+    else if (action.type === "add") sound.play("place");
+    else if (action.type !== "move" && action.type !== "rotate") sound.play("soft");
   }
   function restart() {
+    sound.reset();
     if (transition.current) clearTimeout(transition.current);
     transition.current = null;
     heard.current.clear();
@@ -342,7 +347,7 @@ export default function App() {
             setReady(true);
           }}
           onStep={() => sound.play("step")}
-          onEnvironment={(kind) => sound.play(kind)}
+          onEnvironment={(kind, mix) => { if (started && !menu) sound.play(kind, mix); }}
         />
       </Suspense>
       {!started && (
@@ -384,8 +389,9 @@ export default function App() {
             view={benchView}
             suspended={menu !== null}
             onAction={action}
-            onUndo={() => dispatch({ type: "UNDO", room: active })}
-            onReset={() => dispatch({ type: "RESET_CIRCUIT", room: active })}
+            onFault={() => sound.play("fault")}
+            onUndo={() => { dispatch({ type: "UNDO", room: active }); sound.play("soft"); }}
+            onReset={() => { dispatch({ type: "RESET_CIRCUIT", room: active }); sound.play("test"); }}
             onBack={leaveBench}
             onNotebook={() => openNotebook()}
           />
