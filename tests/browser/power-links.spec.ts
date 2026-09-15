@@ -28,7 +28,7 @@ test("each conduit stays inside the ship and connects its bench to its own exit"
   expect(failures).toEqual([]);
 });
 
-test("validated repairs light only their linked checkmarks and survive further experimentation", async ({ page }) => {
+test("door checkmarks and collisions follow live circuit power through reset, reload and repair", async ({ page }) => {
   await page.goto("/credits.html");
   const result = await page.evaluate(async () => {
     const threeUrl = "/node_modules/.vite/deps/three.js", shipUrl = "/src/scene/spaceship.ts";
@@ -37,7 +37,7 @@ test("validated repairs light only their linked checkmarks and survive further e
     const THREE = await import(threeUrl);
     const { buildSpaceship } = await import(shipUrl);
     const { chamberFixture } = await import(fixtureUrl);
-    const { campaignReducer, completedIds, serializeCampaign, restoreCampaign } = await import(campaignUrl);
+    const { campaignReducer, poweredIds, serializeCampaign, restoreCampaign } = await import(campaignUrl);
     const { PORTALS } = await import(layoutUrl);
     const { CHAMBERS } = await import(chambersUrl);
     const { disposeScene } = await import(artUrl);
@@ -60,7 +60,7 @@ test("validated repairs light only their linked checkmarks and survive further e
       const gate = PORTALS[i];
       const player = { x: gate.x + Math.sin(gate.rotation) * 2.4, z: gate.z + Math.cos(gate.rotation) * 2.4, yaw: 0, pitch: 0 };
       function verify(state: ReturnType<typeof chamberFixture>, count: number, stage: string) {
-        model.update(0, 0, player, completedIds(state), true, true, state.rooms);
+        model.update(0, 0, player, poweredIds(state), true, true, state.rooms);
         for (let j = 0; j < CHAMBERS.length; j++) {
           const link = model.root.getObjectByName(`Power link ${CHAMBERS[j].id}`);
           let checked = 0, pending = 0;
@@ -79,8 +79,9 @@ test("validated repairs light only their linked checkmarks and survive further e
       let state = chamberFixture(i + 1);
       verify(state, i + 1, "restored");
       state = campaignReducer(state, { type: "RESET_CIRCUIT", room: i });
-      verify(state, i + 1, "practice");
-      verify(restoreCampaign(serializeCampaign(state)), i + 1, "reload");
+      verify(state, i, "reset");
+      verify(restoreCampaign(serializeCampaign(state)), i, "reload");
+      verify(campaignReducer(state, { type: "UNDO", room: i }), i + 1, "repair");
       verify(campaignReducer(state, { type: "NEW_GAME" }), 0, "new run");
     }
     model.dispose();

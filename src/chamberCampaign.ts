@@ -28,6 +28,10 @@ export function initialCampaign(): Campaign {
 }
 export const completedIds = (state: Campaign) =>
   CHAMBER_IDS.filter((_, i) => !!state.proofs[i]);
+/** Discovery is remembered; door power always follows the current circuit. */
+export const poweredIds = (state: Campaign) =>
+  CHAMBER_IDS.filter((id, i) => !!state.proofs[i] && isRestored(id, state.rooms[i]));
+/** First unfinished chamber on the normal route; bench interaction is independent. */
 export function unlockedIndex(state: Campaign) {
   const i = state.proofs.findIndex((p) => !p);
   return i < 0 ? CHAMBERS.length : i;
@@ -56,7 +60,7 @@ export function campaignReducer(
     return { ...state, reducedMotion: !state.reducedMotion };
   if (action.type === "VISIT") {
     if (
-      CHAMBER_IDS.indexOf(action.id) > unlockedIndex(state) ||
+      !CHAMBER_IDS.includes(action.id) ||
       state.visited.includes(action.id)
     )
       return state;
@@ -70,8 +74,7 @@ export function campaignReducer(
   if (
     !Number.isInteger(index) ||
     index < 0 ||
-    index >= CHAMBERS.length ||
-    index > unlockedIndex(state)
+    index >= CHAMBERS.length
   )
     return state;
   const rooms = [...state.rooms],
@@ -90,7 +93,7 @@ export function campaignReducer(
     history[index] = [...history[index], rooms[index]].slice(-32);
     rooms[index] = next;
   }
-  // A restored door latches. Practising or undoing an edit never traps the player again.
+  // Keep first completion for discovery and narration, independent of live power.
   if (!proofs[index] && isRestored(CHAMBERS[index].id, rooms[index]))
     proofs[index] = cloneCircuit(rooms[index]);
   return { ...state, rooms, history, proofs };
@@ -182,14 +185,14 @@ export function restoreCampaign(raw: string | null): Campaign {
       state.rooms = CHAMBERS.map((_, i) => sanitizeCircuit(data.rooms[i], i));
     if (Array.isArray(data.proofs))
       for (let i = 0; i < CHAMBERS.length; i++) {
-        if (!data.proofs[i]) break;
+        if (!data.proofs[i]) continue;
         const proof = sanitizeCircuit(data.proofs[i], i);
-        if (!isRestored(CHAMBERS[i].id, proof)) break;
+        if (!isRestored(CHAMBERS[i].id, proof)) continue;
         state.proofs[i] = proof;
       }
     if (Array.isArray(data.visited))
       state.visited = CHAMBER_IDS.filter(
-        (id, i) => i <= unlockedIndex(state) && data.visited.includes(id),
+        id => data.visited.includes(id),
       );
     if (Array.isArray(data.heard))
       state.heard = data.heard

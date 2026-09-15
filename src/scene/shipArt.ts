@@ -139,6 +139,7 @@ export function shipArt(root: THREE.Group) {
     rotation = 0,
     background = true,
     parent: THREE.Object3D = root,
+    align: "left" | "center" = "left",
   ) {
     const canvas = document.createElement("canvas");
     canvas.width = 1024;
@@ -175,12 +176,13 @@ export function shipArt(root: THREE.Group) {
         c.fillRect(24, ch - 15, 970, 1);
       }
       c.fillStyle = tint;
+      c.textAlign = align;
       c.font = `600 ${Math.min(caption ? 115 : 500, ch * (caption ? 0.33 : 0.62))}px "Space Grotesk", sans-serif`;
-      c.fillText(title, 28, ch * (caption ? 0.49 : 0.73), 968);
+      c.fillText(title, align === "center" ? 512 : 28, ch * (caption ? 0.49 : 0.73), 968);
       if (caption) {
         c.fillStyle = background ? "#4c6572" : tint;
         c.font = `400 ${Math.min(38, ch * 0.15)}px "IBM Plex Mono", monospace`;
-        c.fillText(caption, 30, ch * 0.79, 960);
+        c.fillText(caption, align === "center" ? 512 : 30, ch * 0.79, 960);
       }
       texture.needsUpdate = true;
     }

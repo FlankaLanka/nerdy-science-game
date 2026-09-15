@@ -3,6 +3,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useMemo,
   useReducer,
   useRef,
   useState,
@@ -11,11 +12,11 @@ import { ChevronRight } from "lucide-react";
 import {
   campaignReducer,
   completedIds,
+  poweredIds,
   initialCampaign,
   restoreCampaign,
   SAVE_KEY,
   serializeCampaign,
-  unlockedIndex,
 } from "./chamberCampaign";
 import { CHAMBERS } from "./chambers";
 import type { ChamberId } from "./chambers";
@@ -23,6 +24,8 @@ import type { KitAction } from "./circuitKit";
 import type { WorldHandle } from "./World";
 import type { BenchView } from "./scene/benchView";
 import { PLAYER_KEY, SPAWN } from "./scene/navigation";
+import { roomAt } from "./scene/shipLayout";
+import { STATION_DECK } from "./scene/stationLayout";
 import { useSound } from "./audio";
 import PauseMenu from "./PauseMenu";
 import Notebook from "./Notebook";
@@ -32,6 +35,7 @@ import { useReducedMotion } from "./useReducedMotion";
 import "./game.css";
 const World = lazy(() => import("./World"));
 const CircuitLab = lazy(() => import("./CircuitLab"));
+const GOD_MODE_KEY = "signal.asterion.god-mode";
 function load() {
   try {
     return restoreCampaign(localStorage.getItem(SAVE_KEY));
@@ -47,6 +51,14 @@ export default function App() {
   const [active, setActive] = useState<number | null>(null),
     [room, setRoom] = useState(0),
     [menu, setMenu] = useState<"pause" | "notebook" | null>(null);
+  const [section, setSection] = useState("Wake");
+  const [godMode, setGodMode] = useState(() => {
+    try {
+      return sessionStorage.getItem(GOD_MODE_KEY) === "on";
+    } catch {
+      return false;
+    }
+  });
   const [benchView, setBenchView] = useState<BenchView | null>(null);
   const [tab, setTab] = useState<NotebookTab>("parts"),
     [storageFailed, setStorageFailed] = useState(false);
@@ -62,7 +74,19 @@ export default function App() {
     transition = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completed = completedIds(state),
     playing = started && active === null && menu === null && benchView === null;
+  const powered = useMemo(() => poweredIds(state), [state.rooms, state.proofs]);
+  const firstUnpowered = CHAMBERS.findIndex(c => !powered.includes(c.id));
+  const fallbackRoom = firstUnpowered < 0 ? 5 : firstUnpowered;
+  const publicStation = section === "Arrival gallery" || STATION_DECK.some((r) => r.name === section);
   const reduced = useReducedMotion(state.reducedMotion);
+  useEffect(() => {
+    try {
+      if (godMode) sessionStorage.setItem(GOD_MODE_KEY, "on");
+      else sessionStorage.removeItem(GOD_MODE_KEY);
+    } catch {
+      /* The toggle still works when storage is unavailable. */
+    }
+  }, [godMode]);
   useEffect(() => {
     try {
       localStorage.setItem(SAVE_KEY, serializeCampaign(state));
@@ -98,7 +122,6 @@ export default function App() {
   }, []);
   const onRoom = useCallback(
     (index: number) => {
-      if (index > unlockedIndex(current.current.state)) return;
       setRoom(index);
       const c = CHAMBERS[index];
       if (!c) return;
@@ -110,7 +133,7 @@ export default function App() {
   const openBench = useCallback(
     (id: ChamberId) => {
       const index = CHAMBERS.findIndex((c) => c.id === id);
-      if (index < 0 || index > unlockedIndex(current.current.state)) return;
+      if (index < 0) return;
       world.current?.release();
       setActive(index);
       setRoom(index);
@@ -140,22 +163,28 @@ export default function App() {
       transition.current = null;
     }
   }, [menu]);
-  const previousCount = useRef(completed.length);
   useEffect(() => {
-    const before = previousCount.current;
-    previousCount.current = completed.length;
-    if (completed.length <= before) return;
-    const index = completed.length - 1,
-      c = CHAMBERS[index];
-    sound.play("success");
+    if (active !== null && !powered.includes(CHAMBERS[active].id) && transition.current) {
+      clearTimeout(transition.current);
+      transition.current = null;
+    }
+  }, [active, powered]);
+  const previousProofs = useRef(state.proofs);
+  useEffect(() => {
+    const before = previousProofs.current;
+    previousProofs.current = state.proofs;
+    const index = state.proofs.findIndex((proof, i) => proof && !before[i]);
+    if (index < 0) return;
+    const c = CHAMBERS[index];
+    current.current.sound.play("success");
     speak(`restore:${c.id}`, c.restored);
-    if (active === index) {
+    if (current.current.active === index) {
       transition.current = setTimeout(() => {
         setActive(null);
         transition.current = null;
       }, 1600);
     }
-  }, [completed.length, speak]);
+  }, [state.proofs, speak]);
   useEffect(
     () => () => {
       if (transition.current) clearTimeout(transition.current);
@@ -194,10 +223,13 @@ export default function App() {
     setStarted(true);
     sound.unlock();
     sound.play("soft");
-    dispatch({ type: "VISIT", id: "wake" });
-    if (failed) openBench(CHAMBERS[Math.min(unlockedIndex(state), 5)].id);
-    else world.current?.capture();
-    speak("entry:wake", CHAMBERS[0].intro);
+    if (failed) openBench(CHAMBERS[fallbackRoom].id);
+    else {
+      world.current?.capture();
+      const player = world.current?.position();
+      const index = player ? roomAt(player.x, player.z) : 0;
+      if (index >= 0) onRoom(index);
+    }
   }
   function action(action: KitAction) {
     if (active === null) return;
@@ -223,6 +255,8 @@ export default function App() {
     }
     world.current?.reset();
     setRoom(0);
+    setSection("Wake");
+    setGodMode(false);
     setActive(null);
     setMenu(null);
     setStarted(false);
@@ -239,16 +273,18 @@ export default function App() {
           activeBench={failed ? null : active}
           onBenchView={setBenchView}
           completed={completed}
+          powered={powered}
+          godMode={godMode}
           circuits={state.rooms}
           reducedMotion={reduced}
           sensitivity={1}
           onVisit={openBench}
           onRoom={onRoom}
-          onObservation={() => {
-            setRoom(5);
+          onSection={setSection}
+          onStation={() => {
             speak(
-              "ending:station",
-              "There you are. I kept this window clear for you. Welcome back to Asterion.",
+              "ending:commons",
+              "Welcome to the main station. Circuits was just the beginning. Take your time; this place is yours to explore.",
             );
           }}
           onPause={pause}
@@ -272,9 +308,12 @@ export default function App() {
       {started && active === null && (
         <header className="game-chrome">
           <span className="room-marker">
-            <span className="hud-room-number">{CHAMBERS[room]?.number ?? "01"}</span>
-            <span className="hud-room-name">{CHAMBERS[room]?.name ?? "Wake"}</span>
-            <i className={state.proofs[room] ? "powered" : ""} />
+            {!publicStation && (
+              <span className="hud-room-number">{CHAMBERS[room].number}</span>
+            )}
+            <span className="hud-room-name">{publicStation ? section : CHAMBERS[room]?.name ?? "Wake"}</span>
+            {!publicStation && <i className={powered.includes(CHAMBERS[room].id) ? "powered" : ""} />}
+            {godMode && <span className="dev-indicator" aria-label="God mode enabled">DEV</span>}
           </span>
         </header>
       )}
@@ -288,7 +327,7 @@ export default function App() {
             key={active}
             chamber={CHAMBERS[active]}
             circuit={state.rooms[active]}
-            restored={!!state.proofs[active]}
+            restored={powered.includes(CHAMBERS[active].id)}
             canUndo={!!state.history[active].length}
             reducedMotion={reduced}
             world={failed ? null : world.current}
@@ -314,10 +353,10 @@ export default function App() {
           <p>3D view unavailable. The circuit kit is ready.</p>
           <button
             onClick={() =>
-              openBench(CHAMBERS[Math.min(unlockedIndex(state), 5)].id)
+              openBench(CHAMBERS[fallbackRoom].id)
             }
           >
-            Chamber {CHAMBERS[Math.min(unlockedIndex(state), 5)].number}
+            Chamber {CHAMBERS[fallbackRoom].number}
             <ChevronRight />
           </button>
         </div>
@@ -348,10 +387,12 @@ export default function App() {
         <PauseMenu
           sound={state.sound}
           reducedMotion={reduced}
+          godMode={godMode}
           onResume={resume}
           onNotebook={() => openNotebook()}
           onSound={() => dispatch({ type: "SOUND" })}
           onMotion={() => dispatch({ type: "MOTION" })}
+          onGodMode={() => setGodMode((enabled) => !enabled)}
           onRestart={restart}
         />
       )}

@@ -11,6 +11,7 @@ import { buildSpace } from "./space";
 import { BENCH_HEIGHT, KIT_SCALE } from "./benchView";
 import type { BenchInteraction } from "./benchView";
 import { buildPowerLink } from "./powerLink";
+import { buildMainStation } from "./mainStation";
 /** A fixed modular kit, placed against a connected deck plan. No procedural room generation. */
 export function buildSpaceship(scene: THREE.Scene) {
   const root = new THREE.Group();
@@ -46,6 +47,9 @@ export function buildSpaceship(scene: THREE.Scene) {
     z: number;
     system: ChamberId;
     material: THREE.MeshStandardMaterial;
+    alwaysOn?: boolean;
+    intensity?: number;
+    reach?: number;
   }[] = [];
   const glass = new THREE.MeshBasicMaterial({
     color: "#9baeb2",
@@ -281,7 +285,7 @@ export function buildSpaceship(scene: THREE.Scene) {
         Math.abs(p.z - z) > (d + (turned ? 3.9 : 1.3)) / 2
       );
     });
-  for (const room of DECK) {
+  for (const room of DECK.filter((r) => !r.station)) {
     // The visible ceiling diffusers and local illumination share this room's circuit.
     const lamp = emission("#fff0d9", 0.035);
     const x0 = room.x - room.width / 2,
@@ -507,6 +511,9 @@ export function buildSpaceship(scene: THREE.Scene) {
     root.add(link.root);
     return link;
   });
+  const station = buildMainStation(root);
+  obstacles.push(...station.obstacles);
+  fixtures.push(...station.lights);
   const space = buildSpace(scene, () => {
     root.userData.textureRevision = (root.userData.textureRevision ?? 0) + 1;
   });
@@ -530,18 +537,19 @@ export function buildSpaceship(scene: THREE.Scene) {
       dt: number,
       time: number,
       player: Player,
-      completed: ChamberId[],
+      powered: ChamberId[],
       reduced: boolean,
       playing: boolean,
       circuits?: Circuit[],
       preview = false,
       activeBench: number | null = null,
       interaction: BenchInteraction | null = null,
+      godMode = false,
     ) {
       const events: ("door" | "power")[] = [];
       root.userData.shadowsDirty = !initialized;
-      const online = new Set(completed);
-      if (initialized && completed.some((id) => !previous.has(id)))
+      const online = new Set(powered);
+      if (initialized && powered.some((id) => !previous.has(id)))
         events.push("power");
       for (const door of doors) {
         const p = door.portal,
@@ -551,7 +559,7 @@ export function buildSpaceship(scene: THREE.Scene) {
           normal = dx * Math.sin(p.rotation) + dz * Math.cos(p.rotation);
         const inAperture = Math.abs(normal) < 0.6 && Math.abs(across) < 1.8;
         const target =
-          (online.has(p.system) || (!initialized && inAperture)) &&
+          (godMode || online.has(p.system) || (!initialized && inAperture)) &&
           Math.hypot(dx, dz) < 5
             ? 1
             : 0;
@@ -587,7 +595,7 @@ export function buildSpaceship(scene: THREE.Scene) {
       for (const f of fixtures)
         f.material.emissiveIntensity = THREE.MathUtils.damp(
           f.material.emissiveIntensity,
-          online.has(f.system) ? 1.6 : 0.035,
+          f.alwaysOn ? 1.3 : online.has(f.system) ? (activeBench === null ? 0.9 : 0.3) : 0.035,
           2,
           dt,
         );
@@ -600,8 +608,10 @@ export function buildSpaceship(scene: THREE.Scene) {
         .slice(0, 4);
       nearest.forEach((f, i) => {
         pools[i].position.set(f.x, f.y, f.z);
-        pools[i].color.set(online.has(f.system) ? "#fff0d9" : "#b3d3ef");
-        pools[i].intensity = online.has(f.system) ? 32 : 3.5;
+        pools[i].color.set(f.alwaysOn ? "#dce9eb" : online.has(f.system) ? "#fff0d9" : "#b3d3ef");
+        pools[i].intensity = f.alwaysOn ? (f.intensity ?? 70)
+          : (online.has(f.system) ? 18 : 3.5) * (activeBench === null ? 1 : 0.4);
+        pools[i].distance = f.reach ?? 14;
       });
       space.update(time, reduced, preview);
       if (root.userData.textureRevision !== textureRevision) {

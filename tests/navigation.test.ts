@@ -82,3 +82,13 @@ test("saved corridor positions respect both sides of each gate", () => {
   assert.equal(progressionStageAt(10, 0), 4);
   assert.equal(progressionStageAt(10, 31), 6);
 });
+
+test("the public station remains part of the final progression stage", () => {
+  for (const [x, z] of [[10, 37], [10, 60], [-16, 61], [34, 60], [10, 87]]) {
+    assert.equal(canWalk(x, z, []), true);
+    assert.equal(progressionStageAt(x, z), 6);
+    assert.equal(focusedSite({ x, z, yaw: 0, pitch: 0 }, []), null);
+  }
+  for (const [x, z] of [[-20.1, 61], [40.1, 60], [10, 93.1], [0, 37]])
+    assert.equal(canWalk(x, z, []), false);
+});

@@ -11,6 +11,7 @@ import { CHAMBERS, isRestored } from "../src/chambers.ts";
 import {
   campaignReducer,
   completedIds,
+  poweredIds,
   initialCampaign,
   restoreCampaign,
   serializeCampaign,
@@ -129,42 +130,93 @@ test("identical and reversed duplicate wires, invalid endpoints and exhausted st
     doc,
   );
 });
-test("completion is automatic, sequential, and latched across undo and practice", () => {
+test("completion remembers discoveries while undo and reload update live power", () => {
   let state = initialCampaign();
-  assert.equal(
-    campaignReducer(state, {
-      type: "EDIT",
-      room: 1,
-      action: { type: "toggle", id: "isolator" },
-    }),
-    state,
-  );
   state = campaignReducer(state, {
     type: "EDIT",
     room: 0,
     action: { type: "wire", a: "source:b", b: "lamp:b" },
   });
   assert.deepEqual(completedIds(state), ["wake"]);
+  assert.deepEqual(poweredIds(state), ["wake"]);
   assert.equal(unlockedIndex(state), 1);
   state = campaignReducer(state, { type: "UNDO", room: 0 });
   assert.equal(isRestored("wake", state.rooms[0]), false);
+  assert.deepEqual(poweredIds(state), []);
+  assert.deepEqual(poweredIds(restoreCampaign(serializeCampaign(state))), []);
   assert.deepEqual(completedIds(state), ["wake"]);
   assert.deepEqual(completedIds(restoreCampaign(serializeCampaign(state))), [
     "wake",
   ]);
 });
-test("saving preserves completed circuits and rejects forged or out-of-order unlocks", () => {
+test("resetting or shorting any solved circuit cuts only its power, and undo repairs it", () => {
+  for (let i = 0; i < CHAMBERS.length; i++) {
+    const solved = chamberFixture(6);
+    const others = CHAMBERS.filter((_, index) => index !== i).map(c => c.id);
+    const source = solved.rooms[i].parts.find(p => p.kind === "battery")!;
+    for (const action of [
+      { type: "RESET_CIRCUIT", room: i } as const,
+      { type: "EDIT", room: i, action: { type: "wire", a: `${source.id}:a`, b: `${source.id}:b` } } as const,
+    ]) {
+      const broken = campaignReducer(solved, action);
+      assert.deepEqual(poweredIds(broken), others);
+      assert.deepEqual(poweredIds(restoreCampaign(serializeCampaign(broken))), others);
+      assert.equal(unlockedIndex(broken), 6, "discovered content stays available");
+      const repaired = campaignReducer(broken, { type: "UNDO", room: i });
+      assert.equal(poweredIds(repaired).length, 6);
+    }
+  }
+});
+test("switches and resistor changes control live power after completion", () => {
+  let state = chamberFixture(4);
+  state = campaignReducer(state, { type: "EDIT", room: 1, action: { type: "toggle", id: "isolator" } });
+  assert.ok(!poweredIds(state).includes("contact"));
+  state = campaignReducer(state, { type: "EDIT", room: 1, action: { type: "toggle", id: "isolator" } });
+  assert.ok(poweredIds(state).includes("contact"));
+  const resistor = state.rooms[3].parts.find(p => p.kind === "resistor")!;
+  state = campaignReducer(state, { type: "EDIT", room: 3, action: { type: "value", id: resistor.id, value: 6 } });
+  assert.ok(!poweredIds(state).includes("resist"));
+  state = campaignReducer(state, { type: "UNDO", room: 3 });
+  assert.ok(poweredIds(state).includes("resist"));
+});
+test("saving validates each completion independently without crediting unsolved circuits", () => {
   const full = chamberFixture(6);
   assert.equal(unlockedIndex(restoreCampaign(serializeCampaign(full))), 6);
   const forged = chamberFixture(6);
   forged.proofs[2] = CHAMBERS[2].initial;
-  assert.equal(unlockedIndex(restoreCampaign(serializeCampaign(forged))), 2);
+  const checked = restoreCampaign(serializeCampaign(forged));
+  assert.equal(unlockedIndex(checked), 2);
+  assert.deepEqual(completedIds(checked), ["wake", "contact", "resist", "share", "branch"]);
   const outOfOrder = initialCampaign();
   outOfOrder.proofs[5] = solvedCircuit(5);
   assert.equal(
     unlockedIndex(restoreCampaign(serializeCampaign(outOfOrder))),
     0,
   );
+  assert.deepEqual(completedIds(restoreCampaign(serializeCampaign(outOfOrder))), ["branch"]);
+});
+
+test("future benches allow visits, edits, completion, undo and reset before earlier repairs", () => {
+  let state = campaignReducer(initialCampaign(), { type: "VISIT", id: "contact" });
+  state = campaignReducer(state, { type: "EDIT", room: 1, action: { type: "toggle", id: "isolator" } });
+  assert.deepEqual(completedIds(state), ["contact"]);
+  assert.deepEqual(poweredIds(state), ["contact"]);
+  assert.equal(unlockedIndex(state), 0);
+  let loaded = restoreCampaign(serializeCampaign(state));
+  assert.deepEqual(loaded.visited, ["contact"]);
+  assert.deepEqual(completedIds(loaded), ["contact"]);
+  assert.deepEqual(poweredIds(loaded), ["contact"]);
+  state = campaignReducer(state, { type: "UNDO", room: 1 });
+  assert.deepEqual(poweredIds(state), []);
+  assert.deepEqual(completedIds(state), ["contact"]);
+  state = campaignReducer(state, { type: "EDIT", room: 2, action: { type: "add", kind: "battery", x: 250, y: 265 } });
+  assert.equal(state.rooms[2].parts.length, 1);
+  loaded = restoreCampaign(serializeCampaign(state));
+  assert.equal(loaded.rooms[2].parts[0].kind, "battery");
+  state = campaignReducer(state, { type: "RESET_CIRCUIT", room: 2 });
+  assert.equal(state.rooms[2].parts.length, 0);
+  state = campaignReducer(state, { type: "UNDO", room: 2 });
+  assert.equal(state.rooms[2].parts[0].kind, "battery");
 });
 test("save sanitization rejects malformed parts and recovers without crashing", () => {
   for (const raw of ["null", "{}", "invalid", "[]"])

@@ -1,6 +1,8 @@
+import { STATION_DECK } from "./stationLayout.ts";
 import { CHAMBERS } from "../chambers.ts";
 import type { ChamberId } from "../chambers.ts";
 type Deck = {
+  station?: boolean;
   x: number;
   z: number;
   width: number;
@@ -87,10 +89,11 @@ export const DECK: Deck[] = [
     width: 12,
     depth: 8,
     height: 5.2,
-    name: "Observation",
+    name: "Arrival gallery",
     system: "branch",
     color: "#acc8d6",
   },
+  ...STATION_DECK,
 ];
 export const PORTALS = [
   { x: -10, z: 13, rotation: 0, system: "wake", name: "02" },
@@ -98,7 +101,7 @@ export const PORTALS = [
   { x: 0, z: -8, rotation: -Math.PI / 2, system: "build", name: "04" },
   { x: 10, z: -1, rotation: Math.PI, system: "resist", name: "05" },
   { x: 10, z: 13, rotation: Math.PI, system: "share", name: "06" },
-  { x: 10, z: 26, rotation: Math.PI, system: "branch", name: "↗" },
+  { x: 10, z: 26, rotation: Math.PI, system: "branch", name: "HUB" },
 ] satisfies {
   x: number;
   z: number;
@@ -209,7 +212,7 @@ export function progressionStageAt(x: number, z: number) {
   const section = DECK.find(
     (r) => Math.abs(x - r.x) <= r.width / 2 && Math.abs(z - r.z) <= r.depth / 2,
   );
-  if (section?.name === "Observation") return CHAMBERS.length;
+  if (section?.station || section?.name === "Arrival gallery") return CHAMBERS.length;
   const portal = PORTALS.find((p) => p.system === section?.system);
   if (!portal) return 0;
   const normal =

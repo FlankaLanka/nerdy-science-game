@@ -59,6 +59,8 @@
 }
 .pause-dialog .pause-menu > :is(button, a):active { background: #b7dbe6; color: #172631; }
 .pause-value { font-size: 14px; letter-spacing: .07em; }
+.pause-menu small { margin-left: 8px; font: 11px var(--mono); }
+.dev-indicator { font: 10px var(--mono); letter-spacing: .08em; color: #efc58f; }
 .pause-warning { margin: -16px 16px 24px; color: #c6cdd1; font-size: 14px; line-height: 1.5; }
 .pause-back {
   display: inline-flex;

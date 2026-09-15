@@ -39,6 +39,7 @@
   color: var(--display);
 }
 .notebook .notebook-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0 28px;
   padding-bottom: 14px;
   gap: 4px;
@@ -155,12 +156,68 @@
 .notebook .map-you { background: #edf5f7; }
 .notebook .map-power { background: #9bc9d7; }
 
+.notebook .progression-index { padding: 20px 28px 24px; }
+.notebook .progression-index section + section { margin-top: 26px; }
+.notebook .progression-index h2 {
+  margin: 0;
+  color: var(--ink);
+  font: 400 16px/1.25 "Space Grotesk", sans-serif;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+.notebook .progression-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.notebook .progression-heading p,
+.notebook .progression-count { color: var(--secondary); font: 12px/1.4 var(--mono); white-space: nowrap; }
+.notebook .progression-levels,
+.notebook .progression-labs { list-style: none; margin: 0; padding: 0; }
+.notebook .progression-levels li {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 37px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  font: 14px/1.3 "Space Grotesk", sans-serif;
+}
+.notebook .progression-number { color: var(--secondary); font: 11px var(--mono); }
+.notebook .progression-status,
+.notebook .progression-labs p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--secondary);
+  font: 12px/1.4 "Space Grotesk", sans-serif;
+}
+.notebook .progression-index svg { width: 13px; height: 13px; flex-shrink: 0; }
+.notebook .progression-levels [data-state="complete"] .progression-status { color: #b9d9ce; }
+.notebook .progression-levels [data-state="in-progress"] .progression-status,
+.notebook .progression-levels [data-state="ready"] .progression-status { color: #e8c590; }
+.notebook .progression-levels [data-state="locked"] .progression-name { color: var(--secondary); }
+.notebook .progression-labs li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.notebook .progression-labs h3 { margin: 0 0 5px; color: var(--ink); font: 400 14px/1.3 "Space Grotesk", sans-serif; }
+
 @media (max-width: 640px) {
   .notebook .notebook-header { min-height: 70px; padding: 20px 60px 18px 16px; }
   .notebook .notebook-header h1 { font-size: 23px; }
   .notebook .notebook-close-button { top: 37px; right: 15px; }
   .notebook .notebook-tabs { margin-inline: 16px; gap: 3px; padding-bottom: 12px; }
   .notebook .notebook-tabs button { font-size: 12px; padding-inline: 5px; }
+  .notebook .notebook-tabs { grid-template-columns: minmax(0, .8fr) minmax(0, 1fr) minmax(0, .7fr) minmax(0, 1.5fr); }
   .notebook .part-index { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 18px; padding: 18px 16px; }
   .notebook .part-specimen { width: 90px; height: 72px; }
   .notebook .part-index article { gap: 10px; }
@@ -170,6 +227,18 @@
   .notebook .formula-index { padding-inline: 16px; }
   .notebook .formula-index .equation { font-size: 24px; }
   .notebook .station-map { padding: 16px; }
+  .notebook .progression-index { padding: 18px 16px; }
+  .notebook .progression-levels li { gap: 6px; grid-template-columns: 20px minmax(0, 1fr) auto; font-size: 13px; }
+  .notebook .progression-status { font-size: 11px; }
+  .notebook .progression-count { font-size: 11px; }
+  .notebook .progression-labs li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .notebook .progression-labs li > div { display: contents; }
+  .notebook .progression-labs h3 { grid-column: 1; grid-row: 1; margin: 0; }
+  .notebook .progression-count { grid-column: 2; grid-row: 1; }
+  .notebook .progression-labs p { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (max-width: 360px) {
+  .notebook .notebook-tabs button { font-size: 11px; padding-inline: 3px; letter-spacing: .015em; }
 }
 @media (max-height: 480px) and (min-width: 641px) {
   .notebook .notebook-header { min-height: 54px; padding-block: 12px; }
@@ -183,4 +252,18 @@
   .notebook .part-index h2 { font-size: 13px; margin-bottom: 5px; }
   .notebook .part-index p { font-size: 11px; }
   .notebook .part-index small { font-size: 10px; }
+}
+
+.map-station-label {
+  font: 17px "Space Grotesk", sans-serif;
+  fill: #b7cfce;
+}
+.map-lab-label {
+  font: 11px "IBM Plex Mono", monospace;
+  fill: #ab9e80;
+}
+.map-furniture {
+  fill: #45685d;
+  stroke: #92ada0;
+  stroke-width: 0.6;
 }

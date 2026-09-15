@@ -32,7 +32,7 @@ test("first chamber is one connection, automatic restoration, and a quiet HUD", 
   await expect(page.getByRole("button", { name: "Pause game", exact: true })).toHaveCount(0);
   await bench(page);
   await page.getByRole("button", { name: "Reset circuit" }).click();
-  await expect(page.locator(".circuit-lab")).toHaveClass(/restored/);
+  await expect(page.locator(".circuit-lab")).not.toHaveClass(/restored/);
   await expect(page.getByText("Power restored", { exact: true })).toHaveCount(0);
   await expect.poll(async () => !!(await saved(page)).proofs[0]).toBe(true);
   await page.waitForTimeout(1900);
@@ -219,6 +219,37 @@ test("restoring the first circuit opens a walkable route to chamber two", async 
   await expect
     .poll(async () => (await saved(page)).visited)
     .toContain("contact");
+});
+test("breaking a repaired circuit closes its door, and undo restores passage", async ({ page }) => {
+  await begin(page);
+  await bench(page);
+  await connect(page, "Battery negative", "Bulb contact B");
+  await restored(page, 0);
+  await bench(page);
+  await page.getByRole("button", { name: "Reset circuit", exact: true }).click();
+  await expect(page.locator(".circuit-lab")).not.toHaveClass(/restored/);
+  await page.getByRole("button", { name: "Leave circuit bench", exact: true }).click();
+  await expect(page.locator(".world canvas")).toHaveAttribute("data-camera-mode", "walk");
+  await hold(page, "d", 720);
+  await hold(page, "w", 1650);
+  await hold(page, "a", 720);
+  await hold(page, "w", 1300);
+  await page.keyboard.press("n");
+  expect((await position(page)).z).toBeGreaterThanOrEqual(13.44);
+  expect((await position(page)).z).toBeLessThan(14.1);
+  await page.getByRole("button", { name: "Map", exact: true }).click();
+  await expect(page.locator(".map-door.powered")).toHaveCount(0);
+  await page.getByRole("button", { name: "Close notebook", exact: true }).click();
+  await hold(page, "s", 950);
+  await hold(page, "ArrowLeft", 1904);
+  await bench(page);
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(page.locator(".circuit-lab")).toHaveClass(/restored/);
+  await page.getByRole("button", { name: "Leave circuit bench", exact: true }).click();
+  await expect(page.locator(".world canvas")).toHaveAttribute("data-camera-mode", "walk");
+  await hold(page, "ArrowLeft", 1904);
+  await hold(page, "w", 2300);
+  await expect(page.locator(".room-marker")).toContainText("02");
 });
 test("wires can be dragged between contacts", async ({ page }) => {
   await begin(page);

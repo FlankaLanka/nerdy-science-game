@@ -37,6 +37,8 @@ export type Telemetry = {
 export type WorldState = {
   playing: boolean;
   completed: MissionId[];
+  powered: MissionId[];
+  godMode: boolean;
   reducedMotion: boolean;
   sensitivity: number;
   circuits: Circuit[];
@@ -118,7 +120,8 @@ export function renderWorld(o: Options) {
   });
   sun.shadow.normalBias = 0.035;
   sun.shadow.bias = -0.0002;
-  scene.add(sun);
+  scene.add(sun, sun.target);
+  let shadowX = 0, shadowZ = 0;
   const fill = new THREE.DirectionalLight("#b7d3e7", 0.14);
   fill.position.set(-10, 12, 20);
   scene.add(fill);
@@ -132,7 +135,9 @@ export function renderWorld(o: Options) {
   let player = { ...SPAWN };
   try {
     player = restorePlayer(localStorage.getItem(PLAYER_KEY), model.obstacles);
-    if (progressionStageAt(player.x, player.z) > o.state().completed.length)
+    const firstIncomplete = CHAMBERS.findIndex(c => !o.state().completed.includes(c.id));
+    const reachedStage = firstIncomplete < 0 ? CHAMBERS.length : firstIncomplete;
+    if (!o.state().godMode && progressionStageAt(player.x, player.z) > reachedStage)
       player = { ...SPAWN };
   } catch {
     /* Session-only play. */
@@ -259,9 +264,12 @@ export function renderWorld(o: Options) {
       }
     }
   }
+  function availableSite() {
+    return focusedSite(player, model.obstacles);
+  }
   function interact() {
     if (!o.state().playing) return;
-    const id = focusedSite(player, model.obstacles);
+    const id = availableSite();
     if (id) {
       clear();
       o.interact(id);
@@ -413,7 +421,7 @@ export function renderWorld(o: Options) {
       circuits = state.circuits;
       revision++;
     }
-    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.preview}:${state.completed.join()}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}:${activeBench}:${interactionRevision}`;
+    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.preview}:${state.powered.join()}:${state.godMode}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}:${activeBench}:${interactionRevision}`;
     if (
       !state.playing &&
       !cameraTravel &&
@@ -593,16 +601,28 @@ export function renderWorld(o: Options) {
       dt,
       time,
       player,
-      state.completed,
+      state.powered,
       state.reducedMotion,
       state.playing,
       state.circuits,
       state.preview,
       activeBench,
       interaction,
+      state.godMode,
     ))
       o.environment(event);
-    renderer.shadowMap.needsUpdate = !!model.root.userData.shadowsDirty;
+    // Preserve local shadow resolution as the player reaches the larger habitat.
+    // Recenter in coarse steps so the shadow map remains cached during ordinary frames.
+    const sx = !state.preview && player.z >= 35 ? Math.round(player.x / 12) * 12 : 0;
+    const sz = !state.preview && player.z >= 35 ? Math.round(player.z / 12) * 12 : 0;
+    const shadowMoved = sx !== shadowX || sz !== shadowZ;
+    if (shadowMoved) {
+      shadowX = sx; shadowZ = sz;
+      sun.position.set(sx + 30, 18, sz - 30);
+      sun.target.position.set(sx, 0, sz);
+      sun.target.updateMatrixWorld(true);
+    }
+    renderer.shadowMap.needsUpdate = shadowMoved || !!model.root.userData.shadowsDirty;
     composer.render();
     if (!ready) {
       ready = true;
@@ -612,7 +632,7 @@ export function renderWorld(o: Options) {
     if (now - lastHud > 100) {
       lastHud = now;
       o.telemetry({
-        focus: state.playing ? focusedSite(player, model.obstacles) : null,
+        focus: state.playing ? availableSite() : null,
         room: roomAt(player.x, player.z),
         section: deckSection(player.z, player.x),
       });

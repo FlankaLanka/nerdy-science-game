@@ -33,7 +33,7 @@ test("touch circuit controls and keyboard-opened notebook tabs fit a phone viewp
   await page.getByRole("button", { name: "Bulb contact B", exact: true }).tap();
   await restored(page, 0);
   await page.keyboard.press("n");
-  for (const name of ["Parts", "Formulas", "Map"]) {
+  for (const name of ["Parts", "Formulas", "Map", "Progression"]) {
     await page.getByRole("button", { name, exact: true }).tap();
     expect(
       await page.evaluate(

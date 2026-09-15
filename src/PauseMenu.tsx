@@ -8,18 +8,22 @@ type Screen = "main" | "options" | "restart";
 export default function PauseMenu({
   sound,
   reducedMotion,
+  godMode,
   onResume,
   onNotebook,
   onSound,
   onMotion,
+  onGodMode,
   onRestart,
 }: {
   sound: boolean;
   reducedMotion: boolean;
+  godMode: boolean;
   onResume: () => void;
   onNotebook: () => void;
   onSound: () => void;
   onMotion: () => void;
+  onGodMode: () => void;
   onRestart: () => void;
 }) {
   const [screen, setScreen] = useState<Screen>("main");
@@ -89,6 +93,9 @@ export default function PauseMenu({
               <button data-entry="resume" onClick={onResume}>Resume</button>
               <button data-entry="notebook" onClick={onNotebook}>Notebook</button>
               <button data-entry="options" onClick={() => open("options")}>Options</button>
+              <button data-entry="god-mode" onClick={onGodMode} aria-label="God mode (dev)" aria-pressed={godMode} title="Bypass progression doors">
+                <span>God mode <small>Dev</small></span><span className="pause-value" aria-hidden="true">{godMode ? "On" : "Off"}</span>
+              </button>
               <button data-entry="restart" onClick={() => open("restart")}>New run</button>
               <a data-entry="credits" href="/credits.html" target="_blank" rel="noreferrer">Credits</a>
             </>

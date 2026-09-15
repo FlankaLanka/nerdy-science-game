@@ -20,7 +20,8 @@ export type WorldHandle = BenchControls & {
 type Props = WorldState & {
   onVisit: (id: ChamberId) => void;
   onRoom: (index: number) => void;
-  onObservation: () => void;
+  onStation: () => void;
+  onSection: (section: string) => void;
   onPause: () => void;
   onReady: () => void;
   onError: () => void;
@@ -81,7 +82,8 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
   }, []);
   useEffect(() => {
     if (props.playing && hud && hud.room >= 0) props.onRoom(hud.room);
-    if (props.playing && hud?.section === "Observation") props.onObservation();
+    if (props.playing && hud) props.onSection(hud.section);
+    if (props.playing && hud?.section === "Station commons") props.onStation();
   }, [hud?.room, hud?.section, props.playing]);
   function stop() {
     controls.current?.stick(0, 0);

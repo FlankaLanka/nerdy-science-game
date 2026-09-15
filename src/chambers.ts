@@ -175,7 +175,7 @@ export const CHAMBERS: Chamber[] = [
       "That switch isolates the first lamp. The second needs its own way home.",
     hint: "Keep the second lamp powered when the first is switched off.",
     restored:
-      "Two independent paths. Nicely done. The observation deck is yours to enjoy.",
+      "Two independent paths. Nicely done. Main station access is open.",
     formula: "parallel",
     tools: ["wire", "bulb"],
     limits: { battery: 1, bulb: 2, switch: 1 },
