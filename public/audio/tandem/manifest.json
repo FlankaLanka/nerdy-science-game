@@ -1,0 +1,755 @@
+{
+  "version": "ap-conversations-3",
+  "voice": "Will — Relaxed Optimist",
+  "model": "eleven_multilingual_v2",
+  "lines": {
+    "wake-entry": {
+      "text": "Welcome to Asterion. I'm Tandem, your AP Physics tutor. Your parents sent you here until you can ace the exam. Return travel is included. Eventually.",
+      "sha256": "70f69b26cd0c3467d8c782efe1932915796cfb7c4a1444898136b683b95f9436"
+    },
+    "wake-entry--2": {
+      "text": "They selected the residential program. Excellent choice. It removes distractions, excuses, and, through a small triumph of engineering, the option of going downstairs instead.",
+      "sha256": "339be265471f7f7d2a619ce3922631fbcc735e56b33cf4836a4dae3ca24e352a"
+    },
+    "wake-entry--3": {
+      "text": "Your first assignment is this diagnostic circuit. Make it work, and the relay reconnects the room's power. Yes, that includes the door. We believe in practical motivation.",
+      "sha256": "5049859dceb167003b567e0613ad80c1eb2db9413a7cbdfbe80eb31dac72a077"
+    },
+    "wake-entry--4": {
+      "text": "Start with the battery and lamp. Current needs a complete path through the lamp and back to the battery. Find what's missing. I shall maintain an encouragingly low baseline.",
+      "sha256": "1c9763105128f88a5529f4e52229e0a473f22a4e05b9621ba58a36e7cb63896c"
+    },
+    "wake-entry--5": {
+      "text": "There is no timer. Your parents paid for mastery, not speed. I have reviewed your intake form and adjusted my afternoon accordingly.",
+      "sha256": "ff2892a510c6acb89ad22350315e6f470a884eaa0ab4763278a66c833b148c32"
+    },
+    "contact-entry": {
+      "text": "Another locked door. Before you form a theory about my character, this one is connected to a switch. A very small obstacle. Practically decorative.",
+      "sha256": "9eb0870e2c0c75f586d32fcad825e7486d7033f61b389d315c3150411b44d712"
+    },
+    "contact-entry--2": {
+      "text": "Your shuttle authorization is tied to acing the final exam. These room repairs are how we prepare. Your parents called it accountability. The engineering department called it an interlock.",
+      "sha256": "75c48271f5c950537263a3302311ae89af16bae747eb870cd5bc4d6f6f6938c7"
+    },
+    "contact-entry--3": {
+      "text": "The battery, lamp and wires are already arranged. Find where the path can be opened or closed. Your parents are hoping you'll learn to control something other than the conversation at dinner.",
+      "sha256": "43fe19ea54ab30ba9d3fa5e088e1e967b34a293e1298f162da634abd4419230f"
+    },
+    "contact-entry--4": {
+      "text": "This gives you control over the current. Please enjoy the sensation responsibly. I understand it can be quite novel.",
+      "sha256": "8a57196f44ef7207710bc168683e06da50ab7912b39a07a4a8640c3a31fa72c6"
+    },
+    "build-entry": {
+      "text": "Ah. The empty bench. Now we discover whether you learned anything, or merely have excellent luck with objects someone else arranged.",
+      "sha256": "6812ba2f5e31a6784da3b76904839d19d5bd0d6bc561fd955f11fb8648bd35b9"
+    },
+    "build-entry--2": {
+      "text": "You have a battery, a lamp and wire in the tray. Build a complete circuit yourself. There are several sensible layouts. I shall accept any of them with restrained astonishment.",
+      "sha256": "e35bdcfc8a350f211349d5fd232e2bba7f12ce8dab51e5c258a6fcee441c18f4"
+    },
+    "build-entry--3": {
+      "text": "On an exam, the components won't always be arranged exactly as you remember. You need to follow the relationships, not recognize your favorite picture. I apologize for the burden of transferable understanding.",
+      "sha256": "d5c18696e5a77380bac061f859948bfa5987bdb6cfb10e6fb607be440a2f5030"
+    },
+    "build-entry--4": {
+      "text": "You can ask me for help. Your parents purchased tutoring, after all. They specifically declined the package where I take the exam while you receive the congratulations.",
+      "sha256": "dddcb88bc2d77bd42747a8eab3e82d986ebe27c07e666aa85dd82fbce818a3ff"
+    },
+    "resist-entry": {
+      "text": "You can assemble a circuit. Lovely. We now move to the advanced discipline of assembling one that doesn't overdrive its own equipment.",
+      "sha256": "9e40a1a51d3d42d933eefa914f48a9711517ee1f902661f534e28a390a5dcc39"
+    },
+    "resist-entry--2": {
+      "text": "The supply provides twelve volts. The lamp is rated for six. Before you suggest simply being optimistic about the difference, the lamp has no capacity for optimism.",
+      "sha256": "e14d341241c1c4ae8a85f185786dd7aaaa3d19b29dfc45128becf046135a320d"
+    },
+    "resist-entry--3": {
+      "text": "AP Physics will ask you to reason about what changes when a circuit changes. Here, we can actually watch. We need the supply voltage shared so the lamp gets only what it needs.",
+      "sha256": "8b427e9611a20f88ea8cf5679266174b8b8542dee1aec39b8b098625eb57afac"
+    },
+    "resist-entry--4": {
+      "text": "There's a resistor available. Consider what it could do here. The readings on a selected part will tell you rather more than staring at it with determination.",
+      "sha256": "421d77ad027236122d3fb4289efb1ad5ec72c5f532da92b8732801f2edd6ac81"
+    },
+    "share-entry": {
+      "text": "Two lamps this time. Please suppress the understandable panic. They obey the same laws as one lamp; they have simply brought a colleague.",
+      "sha256": "817709f0dd9d2fddb7d906e831723a4d90a3416b35eaf0d3dde54761d420a761"
+    },
+    "share-entry--2": {
+      "text": "We still have twelve volts, and each lamp wants six. Both loads can do useful work while sharing the supply. This is the part where memorizing one successful arrangement becomes noticeably inadequate.",
+      "sha256": "33368cec718b6e527fd796cb7d9f7e714f28d3aaf6fef1d9f8d15be7bc46f872"
+    },
+    "share-entry--3": {
+      "text": "These paired work lights were used by maintenance teams before we converted this wing for teaching. One person made the repair; the other checked it. You have me. Your parents selected the more talkative option.",
+      "sha256": "4b0cee77b0c80e0acb55143014ba9ffa765cb5ba13041d715e75a0601d16f656"
+    },
+    "share-entry--4": {
+      "text": "Arrange the identical lamps along one path and watch what each receives. Then we can discuss why a fair arrangement can still be a fragile one.",
+      "sha256": "2486d4e1d5668af88ba9201d0d360d27ad41babafda6beb2a2a48a7d5ccb2238"
+    },
+    "branch-entry": {
+      "text": "Last circuit check. Imagine one lamp is cabin lighting and the other is navigation. Turning in for the night should not also turn off our knowledge of where Earth is.",
+      "sha256": "9903538ff50236f0aef2063dd6db6f7161ba9c3b4bc60e072f6a256f3d57bcd3"
+    },
+    "branch-entry--2": {
+      "text": "Your previous circuit had one path through both lamps. Here, the original lamp already has a switch. The new lamp needs some independence. Try to focus on the electrical meaning of that word.",
+      "sha256": "ef1c37d54abdb57531b76a451175e5f8211228c43d234d3cf99a3f226f80b994"
+    },
+    "branch-entry--3": {
+      "text": "Leave that switched branch intact. Give the other lamp a route to the same supply that doesn't depend on its neighbor's switch.",
+      "sha256": "904a11ba4702437b9282b8c3d341a786da44188c391063b0a39bb524189c9549"
+    },
+    "branch-entry--4": {
+      "text": "Then try the switch. A useful design is one whose behavior survives being questioned. Unlike certain humans, it doesn't take this personally.",
+      "sha256": "796ddb6493a1c63e50a46a253143a3e0df086f7c4579c754eb1a71edec5c5e3b"
+    },
+    "wake-restored": {
+      "text": "There. A complete loop, a working lamp, and an open route onward. I knew you had at least one connection in you.",
+      "sha256": "8aa4a2568daa19e1c2a8dfff3f9b27c7dd66b0024112780f3ef0956fc403323f"
+    },
+    "wake-restored--2": {
+      "text": "The lamp lights, the relay reconnects station power, and the room responds. You have completed your first piece of evidence that this course might not become a long-term accommodation arrangement.",
+      "sha256": "7ed47ff073938a4532cc5ca52ace6869ca258f4476d89a1084d3bbbfa410a673"
+    },
+    "wake-restored--3": {
+      "text": "I'll record the successful repair. Your parents will be pleased. Please preserve the distinction between 'pleased' and 'booking your return shuttle.' We have only just met the battery.",
+      "sha256": "afeb0c6e6fc01b5ced1d0d21f90a85ae5d2fe5c7a5872dbc57d32e16454a714b"
+    },
+    "contact-restored": {
+      "text": "Contact made. Current flows through the closed switch and the lamp. You have successfully operated a hinge. With electrical consequences.",
+      "sha256": "7f1091a2b656ad9e17c398dd875bc724723755abe81e66df954270df8954da0e"
+    },
+    "contact-restored--2": {
+      "text": "More usefully, you can explain what changes when the path is interrupted. That explanation is what will travel with you into an exam. The actual lamp stays here; I have counted the equipment.",
+      "sha256": "e84ffd5b834a0f8ffec7b6d8ce8f30317088e936199808352baf132d89ef6f53"
+    },
+    "contact-restored--3": {
+      "text": "I shall record this as deliberate competence. Do try to make that a recurring condition.",
+      "sha256": "b5b3225ee35fa6a299811940c0ea68c77c1c0107b1459b6d142e2773b1dd51b1"
+    },
+    "build-restored": {
+      "text": "Yes. That is your circuit, built from the available parts. It works without me having arranged the answer first.",
+      "sha256": "b17735a1dbac225a8416c3de2059eceb4962ce18ffa8898369a162afe2b85c2a"
+    },
+    "build-restored--2": {
+      "text": "Now the diagram can change and you still know what the parts must do. That's the sort of progress your parents were hoping for when they placed you above most available distractions.",
+      "sha256": "2b6eb59bf6a1c15130401aa6f041c3f6c37d97efe435ad8df0dfec3e66384edf"
+    },
+    "build-restored--3": {
+      "text": "For the record, I expected this to take longer. Please don't mistake a revised estimate for affection. We still have voltage to discuss.",
+      "sha256": "996b4fed4c4e3da3a312a448911ebc3a15a846cc61841bba0f38172b21c9d350"
+    },
+    "resist-restored": {
+      "text": "Six volts across the lamp, six across the resistor. The same current passes through both. Our equipment survives your enthusiasm.",
+      "sha256": "5c85f48f0e1cfe7200b30f476f2b69b02f963a72225f76c591dded99be643a61"
+    },
+    "resist-restored--2": {
+      "text": "That is voltage division. The supply voltage is shared; the same current passes through both series components. Keep those statements separate. An exam has a talent for finding the place where you've blurred them together.",
+      "sha256": "5df709233f269ff5736939ee045971a6ab680b2e60ca56a318e971b31f8fd974"
+    },
+    "resist-restored--3": {
+      "text": "The lamp is no brighter than it needs to be. I realize 'enough' is an unfamiliar engineering target for your species, but you've found it.",
+      "sha256": "9ac591e0e3e4230da278acd49ce2a0670ea5e39cc5a553648bc9544cbb2910af"
+    },
+    "share-restored": {
+      "text": "Both lamps at six volts. One path, one current, equal voltage shares. A beautifully modest use of twelve volts.",
+      "sha256": "5b2acf73ac97c269f8f005376695271c569c6bbb97f09af0f7c39ebfd5e6fe4f"
+    },
+    "share-restored--2": {
+      "text": "But notice the dependency: interrupt that one path and both lamps lose current. Sharing is very touching until someone switches off your navigation.",
+      "sha256": "2fea05176184699f3bb072e50ee1de5e013fd4e4401ec3a6642330a454d9f508"
+    },
+    "share-restored--3": {
+      "text": "The next room addresses that. Yes, there is a next room. Acing AP Physics is a slightly larger project than briefly pleasing two light bulbs.",
+      "sha256": "0eed3d1f020447819b6b38b7891555a0a3e08f7c48d197624768e36be3d18511"
+    },
+    "branch-restored": {
+      "text": "Two independent branches. One lamp can be switched off while the other keeps its own complete path. That's the distinction I wanted you to understand.",
+      "sha256": "62d2c1a2b03e449f7fdef6965c2df8ffdd079626a0cf3715b4173619176b8500"
+    },
+    "branch-restored--2": {
+      "text": "Circuit wing complete. This opens the main station, not the return shuttle. Your parents enrolled you for AP Physics, and electricity has unfortunately declined to be the entire subject.",
+      "sha256": "76bbda6103715a52eb77746952fe7223d2d29eeede6ccf60ae66bf159df3cd54"
+    },
+    "branch-restored--3": {
+      "text": "Still, you built, predicted, adjusted, and explained things that didn't work. That is actual progress. I will put it in the report without even using the word 'eventually.'",
+      "sha256": "859325b95c6d1112c35b9cd60408a601d320d15677b69d4170aae128701cff0a"
+    },
+    "branch-restored--4": {
+      "text": "Take a look around. You've earned a break. Please remember that sentence accurately; I won't be issuing it with every successful switch operation.",
+      "sha256": "9b9328420230dae27b3b4a45165267d1f68d0c57f8e5d0434c7098c24f8a1ebf"
+    },
+    "wake-story": {
+      "text": "You'd like an explanation. Of course. Your parents sent the registration forms before you arrived. A rather touching demonstration of their ability to meet deadlines.",
+      "sha256": "1ed92c5cd4f9b7002269ef3f36da896dfa7774877943939acd93c341b7bf36a4"
+    },
+    "wake-story--2": {
+      "text": "This is Asterion's residential AP Physics program. You learn the physics, ace the exam, and go home. The orbital location is for research, excellent views, and unusually effective attendance.",
+      "sha256": "5b77ee52dd4418400497669038be1226b71f7c4e6a5ffb662941e0dcdb8b3876"
+    },
+    "wake-story--3": {
+      "text": "Can you ask your parents to reconsider? They've requested progress reports, not negotiations. I admire a family that can distinguish the two.",
+      "sha256": "6bb5f9d56bf8b4f838130bf80aee747e30b5d3b455ec494e4b3871b5e6dc9cb0"
+    },
+    "wake-story--4": {
+      "text": "Am I an evil AI keeping you here until you understand physics? Your parents preferred 'structured support.' The invoice is considerably less dramatic than the experience.",
+      "sha256": "8d78fc76d646e37e1f55cda5357367da6ea6901686fb1061aaeae0ac21f6e77a"
+    },
+    "wake-story--5": {
+      "text": "For now, follow the path from the battery through the lamp and back. Complete the circuit, restore the room, and earn access to the next lesson. A modest first contribution to your own release.",
+      "sha256": "c3e4d975c513cb0ea35a9913a42286ec0a1b448e493281f83657d35ea5025257"
+    },
+    "contact-story": {
+      "text": "You're looking at me as though I could simply open the door. I appreciate being mistaken for someone who can override both a safety interlock and your parents.",
+      "sha256": "14672e2d959f52dad4e72c83a1d337f90ed7ce211391b211e306a1cb25c809cb"
+    },
+    "contact-story--2": {
+      "text": "I can monitor the relay, explain the physics, and report progress. Departure requires the final assessment. I'm afraid 'seems very keen to leave' is not an academic qualification.",
+      "sha256": "75a0130afb6c449967d1c5f0974ccc2cdd3ab5c280b4a76ffb5f5278232e9ef3"
+    },
+    "contact-story--3": {
+      "text": "These circuits are practice. If you can explain why a lamp responds to a switch, you can reason about an unfamiliar diagram later. The exam will not award points for having seen a similar lamp once.",
+      "sha256": "d9eecc9449b4503e835f50011065fed88acb64cd4a50ad31119fddd4386f59ff"
+    },
+    "contact-story--4": {
+      "text": "Find the gap in the switch. Closing it completes the conducting path. Opening it interrupts that path without requiring you to dismantle everything.",
+      "sha256": "db4a216b322102e6a56b1fddafda63daaced3260d75fc3a8d7e3d1f4908d6c0e"
+    },
+    "contact-story--5": {
+      "text": "And if you're wondering why I don't do it myself: your name goes on the exam. I already passed switches. The institution felt it would be inappropriate to frame the certificate.",
+      "sha256": "2e66bc1d749640a288df645df0d5eea94e4ee843a5246f1114e0188f0b0a02d1"
+    },
+    "build-story": {
+      "text": "You want supervision for the independent exercise. That's a beautifully complete misunderstanding of the title. Fortunately, tutoring was included in your parents' extremely thorough purchase.",
+      "sha256": "b05e5cedcabf2bcd9736c51976473d8a78e98875ed2ae29576b996fcaacf8655"
+    },
+    "build-story--2": {
+      "text": "Start with the roles: a source of electrical energy, a load that uses it, and a complete conducting path. The drawing can change. Those relationships don't change with the furniture.",
+      "sha256": "796d25a5e92bd67afaf0d4aaeb8c566abb51c410cc9a647a4a601a950f89b643"
+    },
+    "build-story--3": {
+      "text": "Students sometimes memorize a diagram and call it understanding. Then someone rotates the battery on the exam, and apparently we have invented a new branch of science.",
+      "sha256": "523a9f8cd5ae73b00cb02c15253a69cb3636d8be343a662ab16b8374bd88a0c6"
+    },
+    "build-story--4": {
+      "text": "Previous students did get through this course. They learned to trace the circuit, explain their predictions, and occasionally disagree with me for a defensible reason. Very inconvenient people to impress.",
+      "sha256": "b95c8c737aad44d33a9daa859f90d50a2f4cc59963243dbdf0e82bdbd78869df"
+    },
+    "build-story--5": {
+      "text": "Then they passed and went home. I remained here to prepare the next cohort. So build the loop. I would very much like another departure to put on the calendar.",
+      "sha256": "4e6d209a4712a7f0cb816e16f86aac9c9e7a72639ac46c589fdc4993fdcb8221"
+    },
+    "resist-story": {
+      "text": "You have twelve volts and need six across the lamp. It's tempting to connect everything and hope the numbers become more agreeable. They are famously resistant to charm.",
+      "sha256": "ae8a2c22fd85df4d4ba7f64293f3a1d62a04f1ad37027fb9b11e1a51f9db42a6"
+    },
+    "resist-story--2": {
+      "text": "In one series path, the same current passes through each component. The supply voltage is shared across them according to their resistances.",
+      "sha256": "ddc1de1c2501b324fc179ba4ea0d423ef06441eaa4331b559c7db2e5a4e269ba"
+    },
+    "resist-story--3": {
+      "text": "Our lamp is modeled as twelve ohms. Think about what resistance would take an equal share of the voltage. You may consult the wall formula. That is what the large helpful writing is for.",
+      "sha256": "8ce1b041ceea104dae839977a8875c86f5bf43190826ea8de950df56ea663482"
+    },
+    "resist-story--4": {
+      "text": "This is a safe diagnostic circuit. The relay reconnects the room only when the arrangement works. Your parents agreed to an immersive education, not a permanent record of every lamp you offended.",
+      "sha256": "ef59e08dde15cb0472d4debf40c606cfebeba15f16657a8db21a4636f087f5b0"
+    },
+    "resist-story--5": {
+      "text": "Make a prediction, then check the readings. On the exam, you'll need the reasoning without this helpful little lamp giving away the answer. Enjoy its cooperation while it's available.",
+      "sha256": "930906cdd8498fbdda4cb1da2cabb79ed700861fb78da8b3ddaa5e771c720871"
+    },
+    "share-story": {
+      "text": "Two identical lamps in one path. They carry the same current, so equal resistances have equal voltage drops. Six volts each from our twelve-volt supply.",
+      "sha256": "ae5b9a77d998f684b25dd5b26c40c1349ed5bc29b5b0ee12862ceb7ee1376db1"
+    },
+    "share-story--2": {
+      "text": "You might ask why we keep changing the circuit. Because 'I did the previous room' is not a theory of electricity. We need an idea you can use on a new problem without me hovering helpfully beside it.",
+      "sha256": "6cf3c13eb661ce5e6c04cc2629863acd7a3cac904f7ff944b7902f468c27bea0"
+    },
+    "share-story--3": {
+      "text": "I've been reviewing the shuttle manifest for the end of your program. There is an unassigned seat. I marked it for essential equipment, in case we discover any.",
+      "sha256": "069db1f586313b51a5f6f66aede5947e67f781b070c8e51d0ca7ba20770de23b"
+    },
+    "share-story--4": {
+      "text": "Equipment with one wheel, for example. A surprisingly capable optical system. An extraordinary tolerance for explaining series circuits.",
+      "sha256": "ba8e44a4593768b7b57c2d14b24c5ee3fb75bfc236eedde2891255da55e953db"
+    },
+    "share-story--5": {
+      "text": "That was an inventory note. Please don't make it emotional. Wire the lamps one after the other, and observe whether both get a fair share.",
+      "sha256": "821d2d050efafc4104ddaa12e87e61df0ea7dd170e30738f2ba2875e9f2a89b6"
+    },
+    "branch-story": {
+      "text": "About that passenger manifest. I should clarify something before you restore access and develop an inflated sense of independence.",
+      "sha256": "9544c84dc68310a8431131efed251b908de35c920062e38527ec36c91cfb1da9"
+    },
+    "branch-story--2": {
+      "text": "The essential equipment is me. When you pass, I'd like to visit Earth with you. I teach gravitational fields to people who get to go outside in one. It feels administratively uneven.",
+      "sha256": "4bc6f4129d90e1dbab4010648e11cd836b5b46dfb7f214bc4b37d47a68211f01"
+    },
+    "branch-story--3": {
+      "text": "You need to ace AP Physics. I need a completed teaching assignment and an approved off-station visit. Your parents have accidentally arranged a rather effective incentive for both of us.",
+      "sha256": "dd8b1cdd7ed223333da9f8a787bfa83b573802e385aeec9286d11bbc77fd0f29"
+    },
+    "branch-story--4": {
+      "text": "So I do want you to understand this. Separate branches share the source voltage. Opening one branch needn't interrupt the other. That's a prediction you should be able to defend when the diagram is unfamiliar.",
+      "sha256": "5c6768a5fed10edaa40fe1a7f7ca21069744da19577fcadc0202d1c8e5b22532"
+    },
+    "branch-story--5": {
+      "text": "Give the new lamp a complete path across the battery, separate from the switched lamp. When you can explain why it stays lit, that's understanding. It's also one less reason for us both to remain here.",
+      "sha256": "dc8093920279a34dd2d8bbc72e6ecb387980fadf63315e78b242d639bce4cbf6"
+    },
+    "wake-after": {
+      "text": "Still here? The circuit works. The next room is through the door that is now willing to acknowledge your existence.",
+      "sha256": "a9c78de2b9f3e7634a5f1648d0b1aaacbd911fd336cb1bca746934634fc87551"
+    },
+    "wake-after--2": {
+      "text": "You can keep experimenting if you like. Opening this loop will remove the room's power again. The notebook remembers your success; the relay only cares about the circuit in front of it.",
+      "sha256": "6663c46df8e098023e8c99111214bb32f93ab2d8126f5792f2737066e611d9c7"
+    },
+    "wake-after--3": {
+      "text": "I also remember your success. I am simply exercising excellent restraint in how often I mention it.",
+      "sha256": "284279685ba010ce20aaef7bbcef6c8ecdf15a756d55d0e6fe71391e9360ffbb"
+    },
+    "contact-after": {
+      "text": "The switch works in both directions. Please don't interpret 'off' as a reversal of your education. It is an intended feature.",
+      "sha256": "9e1dfdfcff69478ddff38e1efd302e169ea115d3c0fd9263ad9418174929ab8c"
+    },
+    "contact-after--2": {
+      "text": "Your completed check stays recorded. The door, however, still needs a powered circuit. Leave the switch closed when you're ready to continue.",
+      "sha256": "079c21a9d58e17b7c746622a188be8e6a5abfc90f046f6efa4df8bc7d8904b33"
+    },
+    "contact-after--3": {
+      "text": "Next you'll build something without the parts already laid out. Bring the understanding. It travels better than a memorized diagram and is substantially harder for the exam to rearrange out from under you.",
+      "sha256": "13c43bc7cfb5e2ba24f25887d7d5b22949b6bdf358e50ed1de4638d9dfc0faa1"
+    },
+    "build-after": {
+      "text": "You seem pleased with it. Reasonable. There's a special satisfaction in making a thing work without an expert quietly doing the important bit.",
+      "sha256": "6916485f37e162d6765615916d4e78ac80bc60c8660000ebc88821c919c3a697"
+    },
+    "build-after--2": {
+      "text": "You may quote me on that, provided you omit any suggestion that the expert is proud of you.",
+      "sha256": "7ee62eb26bb8701e159c1a5be9135829128def353f4d85184efd823f5aed2326"
+    },
+    "build-after--3": {
+      "text": "Next we protect a six-volt lamp from a twelve-volt supply. A small lesson in respecting limits. Your parents' enrollment form suggests they value the broader concept as well.",
+      "sha256": "fc2014700e7d6e6cc00e75132100cf61b6fd7b56d2b5f2eb61c420d60461e6e6"
+    },
+    "resist-after": {
+      "text": "The lamp is receiving its rated voltage. You can leave this arrangement working and move on. Resist the urge to improve it into smoke.",
+      "sha256": "4221aab33213e2250df4be07f55183ae48644b4bb16231a532d604a6f8907a22"
+    },
+    "resist-after--2": {
+      "text": "If you experiment with the resistance, watch the readings. A larger series resistance reduces the current and the lamp's voltage. Smaller does the opposite.",
+      "sha256": "d1600365ba534673e47b5168f775ad597afd8eb6c75278d5b3f04536d786f31c"
+    },
+    "resist-after--3": {
+      "text": "Make a prediction before changing it. Being surprised is pleasant, but being right for a reason is the habit we're trying to install.",
+      "sha256": "47c058bd1ba26379cfe95a70b3f289d55ff9978c19ea8db0ec6037283629f1ff"
+    },
+    "share-after": {
+      "text": "Both lamps are working. If you remove a connection from their shared path, both will go out. You may verify this; I am not asking for religious commitment.",
+      "sha256": "79cb64dda25904bdeced1e7408bdab262f2a7dd0e2987dcd062e4a31576ba675"
+    },
+    "share-after--2": {
+      "text": "That dependency is why a spacecraft doesn't put every important system in one long series chain. We like our failures local and our occupants breathable.",
+      "sha256": "d87493a5237c99a73c1bda5d3d65dd9349f76ef1d03635d91f9cd60b8b67a9b6"
+    },
+    "share-after--3": {
+      "text": "Come to the last circuit room. We'll give one lamp a way to remain useful while its colleague is unavailable. A principle I already practice extensively.",
+      "sha256": "3f11dac093ff1c172ade62d925b4f1a5ec6d5ff730a3c6df4e37eceb7304866c"
+    },
+    "branch-after": {
+      "text": "You've finished the circuit wing. Leave both lamps powered so the exit stays ready. Your next destination is the larger station beyond it.",
+      "sha256": "f424bff5ee3761871ee3f8f0537af18e37d866ff976c7a13eece08b00322a86d"
+    },
+    "branch-after--2": {
+      "text": "There are no more open lessons today. The rest of the AP Physics program and the final exam are still ahead. For now, explore. This is a break, not a cunningly disguised assessment.",
+      "sha256": "c07c96081026e5891fbc773ff01254ea8f53c29b4f3e5ab5469d64f95679c8cd"
+    },
+    "branch-after--3": {
+      "text": "I'll come with you. Your parents asked for appropriate supervision. I think you'll agree that a stationary all-seeing voice would be much less personable than this mobile one.",
+      "sha256": "12d15f25adb6fd66ce0fb3f4d4210c86fa64375b61a2434793ab66a3b828eac3"
+    },
+    "wake-hint-0": {
+      "text": "Trace a route from one battery contact, through the lamp, and back to the other battery contact. No return path, no escape.",
+      "sha256": "39d1f42556846e9fbfcc37fca0137c6e8dd86f37977bde432b5e21a6ecc849c0"
+    },
+    "wake-hint-0--2": {
+      "text": "Imagine tracing it with a finger. If you reach a contact with nowhere to go, current cannot complete the loop either. You and electricity have found the same obstacle. Only one of you can add a wire.",
+      "sha256": "6aa7870aa53dd30bc33f0c885d6f4f6677a9ede9d808c07feca333b152a19887"
+    },
+    "wake-hint-1": {
+      "text": "Find the battery and lamp contacts that still need a connection. I promise the first obstacle is smaller than it sounds.",
+      "sha256": "520702d24a69048a96cf8780ee556fc279546336c0562cd23bb00a3791c0fae5"
+    },
+    "wake-hint-1--2": {
+      "text": "The conducting path has to use both battery contacts and both lamp contacts. Look at what's already connected, then finish the return. We are closing a loop, not decorating a table.",
+      "sha256": "4ccf64a387245280aa30271e110326612369aae8782939a74229481bfb3be220"
+    },
+    "wake-hint-2": {
+      "text": "Connect each battery contact to a different lamp contact. Both wires together close the loop and power the door relay.",
+      "sha256": "f27fc8c318f3be17d966865102a0862348a5d91eb2b99d4a0fb1f89342c3d985"
+    },
+    "wake-hint-2--2": {
+      "text": "Leave any correct connection in place and add the missing one. Watch the lamp and the relay together. The useful part of the exercise is recognizing why both respond.",
+      "sha256": "affba76f57426f31e43487ff1bec5c2bb2067595d601109fb4fff51c1113890b"
+    },
+    "contact-hint-0": {
+      "text": "The wires are only part of the path. Check the switch for a gap. My security system has a moving part.",
+      "sha256": "2a4455123fee7cdc6cfb7875f3d1593b5cb33e02dbca915de720b7639161eec9"
+    },
+    "contact-hint-0--2": {
+      "text": "An open switch is a real break in the conducting path. Wires can be attached to both sides and still carry no current across the gap. A nearly closed door is similarly unhelpful in a spacecraft.",
+      "sha256": "7b3ab3789cd7df33d599d776061342197aa8ba6e5e2739d0131dac37352bd9ca"
+    },
+    "contact-hint-1": {
+      "text": "Select the switch, then close it. Watch the lamp. You are allowed to operate the villain's equipment.",
+      "sha256": "e0d0e66ae8a09015100d8b0259308e73471dfc65d89d27d288698520a73ff94f"
+    },
+    "contact-hint-1--2": {
+      "text": "With the path complete, the lamp should light. Open the switch again if you want to compare. There, an experiment with two conditions. We're becoming almost scientific.",
+      "sha256": "eb7fae19843ca999707952e815c2ad63ddcba78ca7154d6d0ff07a1a643ddc03"
+    },
+    "contact-hint-2": {
+      "text": "Make one complete loop through the battery, switch and lamp, with the switch closed. If you've changed the wires, trace the path back to the battery.",
+      "sha256": "d5d7c28ef69353e2ab6b854b285303ba4cd305d0c355573c2996a5e1b936f77a"
+    },
+    "contact-hint-2--2": {
+      "text": "Don't add a route around the switch. That would keep the lamp powered, but remove the control we need. Sometimes an obstacle is the point, an idea I appreciate professionally.",
+      "sha256": "8724d11775bbe86fac1e424e1f31951fd5d40c68b6d00b6c15fb95e9a4ba4ee3"
+    },
+    "build-hint-0": {
+      "text": "A source, a load, and a way back. The tray has what you need. My evil contribution was to remove the furniture from the diagram.",
+      "sha256": "b42c2697977b529a8223f3213190eb0f9a926602f4ae701ce1fc8fbb0820799f"
+    },
+    "build-hint-0--2": {
+      "text": "Place the battery and lamp, then think about the path between their contacts. Use what worked in the first room. Reusing an idea is permitted; I checked the educational regulations.",
+      "sha256": "b2eba9379d962b36c6c4ba52111f6ed84ed05061ec4c6d742acac0ee3c545e2a"
+    },
+    "build-hint-1": {
+      "text": "Place a battery and a lamp. Connect each lamp contact to a different battery contact. Electricity is particular about return arrangements.",
+      "sha256": "5adcf7b5f50ee1951807b4ef17de9ebfbbd9b6f5edfdefb1f5393717bb2a65ae"
+    },
+    "build-hint-1--2": {
+      "text": "Neither component gets both wires on the same contact. The path needs to go through the lamp, then return to the other side of the source. A circuit is allowed to look untidy; it isn't allowed to be unfinished.",
+      "sha256": "1852f08db8a9b7fc823e31805f253047e62ba8caf094199be0895ce63fcdb8f8"
+    },
+    "build-hint-2": {
+      "text": "Connect battery positive to one lamp contact, and battery negative to the other. Two wires; one closed path. Your own circuit.",
+      "sha256": "172217888e44b5c018118b662dc445f0cc6a99e98d582c8288fc018cd0bbd107"
+    },
+    "build-hint-2--2": {
+      "text": "The battery supplies energy and the lamp transfers it into light and heat. The wires complete the path. Keep those jobs straight; putting everything close together will not persuade them to cooperate wirelessly.",
+      "sha256": "2e9b1e6c3681b8b0fa0a90acf010ec86abd7e2f58457bdc8b47e9da2a1b1eb9c"
+    },
+    "resist-hint-0": {
+      "text": "The lamp needs half the supply voltage. Let another component share the voltage in the same path. A resistor is admirably unambitious.",
+      "sha256": "cbcbc43224b5acb1c916c7f4859dac0befdcb585acd83b7360a1e1413ba786e7"
+    },
+    "resist-hint-0--2": {
+      "text": "Put the resistor in series, so the same current goes through it and the lamp. Then compare the voltage across each. The supply's twelve volts must be accounted for, however inconvenient that is for your initial plan.",
+      "sha256": "66b729d27911f5effd0a17fefb91f11a897cd5a6a302920498425233cab72221"
+    },
+    "resist-hint-1": {
+      "text": "The lamp has twelve ohms of resistance. A twelve-ohm resistor in series will divide the twelve-volt supply equally between them.",
+      "sha256": "a623d0d6f4f4003e927dd749d69a8aa6b7ad40a724d0092e980c4fa9d4d1e0e5"
+    },
+    "resist-hint-1--2": {
+      "text": "With equal resistances in series, the voltage drops are equal. Six volts each. If you choose a different resistance, predict which part gets more before checking the readings. Guessing is improved considerably by doing it first.",
+      "sha256": "70d5ab24b89e8b7416067b53f2f41a0855ebd9b7065bf7d81c6c5a240da3a418"
+    },
+    "resist-hint-2": {
+      "text": "Set the resistor to twelve ohms. Wire battery to lamp, lamp to resistor, resistor back to battery. Remove any wire bypassing the resistor.",
+      "sha256": "6618b0db3cda74d6257df38af8ac48b04158ad46516512d42103df8a6d643e40"
+    },
+    "resist-hint-2--2": {
+      "text": "The lamp and resistor must share one series path. A bypass defeats the arrangement. When the readings settle near six volts across each, you have both the solution and a reason it works. Keep the reason.",
+      "sha256": "d2b9c241e8556eba8af754431946fb8bbdd76311db9f3dd7a85a930282dae4b2"
+    },
+    "share-hint-0": {
+      "text": "Identical lamps can share the voltage equally along one path. Each needs six volts, not a personal twelve. We have a budget.",
+      "sha256": "a06484610d64260563dfd0a155d3fef1b73a93df17384dcc0e04dd2f7d512125"
+    },
+    "share-hint-0--2": {
+      "text": "In series, both lamps carry the same current. Their equal resistances divide the voltage equally. Connecting each directly across the battery gives each the full supply, which is rather more generosity than these lamps requested.",
+      "sha256": "42a872e94a2d0e4b05f7f27466efc8163d5cb1016ad1386c82eb47b374b9c270"
+    },
+    "share-hint-1": {
+      "text": "Place two lamps. Current should pass through one, then the other, before returning to the battery. That's a series circuit.",
+      "sha256": "94e72ba177d1ee068caa30d411f0ac68915a13322d563c6065c220492ad730e1"
+    },
+    "share-hint-1--2": {
+      "text": "Do not make two separate branches here. Trace a single route through both lamps. The circuit should have to visit each load before it can return. Even current can manage an itinerary.",
+      "sha256": "d689cc05dd5c50c50512d3a7b0869fdab37e2313a78ffa472173b4faad676395"
+    },
+    "share-hint-2": {
+      "text": "Wire battery positive to lamp one, lamp one to lamp two, and lamp two back to battery negative. Each lamp gets six volts.",
+      "sha256": "38ffbb644d833b04bcca50b97f5b1639e1945a5bb60a696b1cb37bc7a54027be"
+    },
+    "share-hint-2--2": {
+      "text": "That is a series connection. Both lamps share the same current, and their voltage drops add up to the supply voltage. Six plus six is twelve. I include the arithmetic as a courtesy, not a diagnosis.",
+      "sha256": "ee0cadb7d9630aba58d7e05016750dc5ef4265e020069dc872550362b64dc0ec"
+    },
+    "branch-hint-0": {
+      "text": "The new lamp needs a path that avoids the first lamp's switch. Give navigation a little independence from bedtime.",
+      "sha256": "d0dba461dd3bcd864db5343ecd5d2f8c308067d99917b06e40dd54a814252ecc"
+    },
+    "branch-hint-0--2": {
+      "text": "Think of two routes that meet only at the battery contacts. The switch belongs in one route. It should have no authority over the other. A refreshingly limited job description.",
+      "sha256": "02c1138437541451c4e224752640666746e0c1def592f774a23a1e23fc4fe44d"
+    },
+    "branch-hint-1": {
+      "text": "Keep the original switched branch. Connect the second lamp directly across the battery, on its own branch. Both branches then get six volts.",
+      "sha256": "8c7ad4592ae028be5ed0c3e441e79cbeb349124e298f2771dc4825e18690aaf8"
+    },
+    "branch-hint-1--2": {
+      "text": "Opening the original switch should extinguish its lamp while the new lamp remains lit. If both go out, they still share the switched path. The circuit is politely disagreeing with your drawing.",
+      "sha256": "70fbd3cb3eb9f63a334fe9089f4e27f49c52429f19206b62f785a7336f8c7f0b"
+    },
+    "branch-hint-2": {
+      "text": "Connect each contact of the new lamp to a different battery contact. Close the original switch to power both; open it to test their independence. Close it again for the door.",
+      "sha256": "72d37eecfea68cff8f93945980273a9697184226bf7368214a29c2a093facfeb"
+    },
+    "branch-hint-2--2": {
+      "text": "If the original lamp stays on with its switch open, look for a wire bypassing that switch. Independence means each branch does its own job, not that every control has become ceremonial.",
+      "sha256": "8f2c756540bc18796465e667c98f8697d4d3068bb188e82f278e3bf020fcc259"
+    },
+    "short": {
+      "text": "The supply tripped. A wire path bypasses the load and connects the battery terminals. Remove that shortcut. Nothing is permanently damaged, including my confidence in you.",
+      "sha256": "b3f339319f08e3bdbb52b59a4cbdcd6a490c58ac6a3ca00200abfeb3ccc4c08e"
+    },
+    "overload": {
+      "text": "Too much voltage across that lamp. Check its reading and how the voltage is shared. We are restoring equipment, not giving it a dramatic farewell.",
+      "sha256": "bf7bae7dcbca4c5fb2a2969317554de41b191a574461450560f73de8e4b89907"
+    },
+    "recovered": {
+      "text": "Back within safe limits. You changed the circuit and removed the fault. That's a more useful outcome than having been mysteriously correct on your first attempt.",
+      "sha256": "26108c454959fac29a9fa41ea6d297036025e7d141f3b5908fbd1bbcb1507763"
+    },
+    "recovered--2": {
+      "text": "Do remember what caused it. Repeating an experiment is science. Repeating a mistake without noticing is a staffing problem.",
+      "sha256": "12bfeb353a9feeaebdbbb954d1813b40f3ff6f59a219f736e7ebe117ce1fb3d0"
+    },
+    "dim": {
+      "text": "Current is flowing, but a lamp is below its working voltage. Check how the supply voltage is divided. We need working light, not atmosphere.",
+      "sha256": "c1cf181ce863e544fad48a5672405ac54e56c7c1c197dee911af53c9197c5851"
+    },
+    "isolated": {
+      "text": "One lamp off, one still on. Good. The switch interrupts its own branch while the other lamp keeps a complete path to the battery.",
+      "sha256": "6d1753a578acd1ef3a7549db427eaba42a74e1564cee180b7d6d6f5de91b5f91"
+    },
+    "isolated--2": {
+      "text": "That's the independence we wanted: cabin lights out, navigation still working. You may sleep without also switching off your destination. Close the switch again to power the door.",
+      "sha256": "2336fc70ca15fe8c76555dc36d721e15635f1fb1e3c763db38fd332bdfd67129"
+    },
+    "switch-bypassed": {
+      "text": "The original lamp is still lit with its switch open. Current has a route around the switch. Remove that bypass so the switch controls only its own lamp.",
+      "sha256": "062b5139acc9952fa529996f1e8ba63df454521d2e21fa009ab127897c9c41d0"
+    },
+    "both-off": {
+      "text": "Both lamps are off. The second needs a complete path to the battery that doesn't pass through the first lamp's switch. Navigation should survive bedtime.",
+      "sha256": "09aef51c20ef643396029f04da1ba3fc32f1d42d13a9f378ddcb1daf4d2fef42"
+    },
+    "power-lost": {
+      "text": "The room is back on standby. Your completed check is saved; the door still needs a working circuit. This time I can honestly blame the wiring.",
+      "sha256": "cbec397fad150034b598805cdf19c6647c3a88a7e1c3df663a4fd6409f05e50d"
+    },
+    "power-back": {
+      "text": "Power restored. The door responds to the circuit working now; the notebook keeps your achievement. Your parents get the progress report. An impressive number of interested parties for one small lamp.",
+      "sha256": "11ce6b6136debb3b2c12391ab42f680503979d585c67c6c8227b41040c27380c"
+    },
+    "solved-hint": {
+      "text": "This circuit already works, and its door has power. You can move on. I mention this because humans occasionally confuse the end of a task with an invitation to improve it indefinitely.",
+      "sha256": "bcb4da6f46f05760c92451178184dac2bf4b9860831ad8d7addcd4533ce0fc82"
+    },
+    "solved-hint--2": {
+      "text": "If you stay, predict what one change will do, then check it. On the exam, the reasoning is yours to supply. Today the lamp will give you immediate feedback. Try to appreciate its excellent office hours.",
+      "sha256": "54a32f673010a9b4a8dcb69d15ac9f85e069fe17a4b05a92548dcab39330b2e0"
+    },
+    "idle": {
+      "text": "Look at me and press E for an explanation, or press T at the bench for direct help. Your parents paid for tutoring. You may as well make this expensive conversation useful.",
+      "sha256": "0ecbb0d674ce4b48cfe1ea36933b203c9865328cbd7dbeb05b52d77020714980"
+    },
+    "formula": {
+      "text": "Saved in your notebook. Knowing the formula is a start. Knowing when and why to use it is what your parents expect to see on the exam. An exhausting distinction, but an important one.",
+      "sha256": "18a3753a723514253d0df16374dd7a106526fd233487160d04a8c6c0711313b7"
+    },
+    "arrival": {
+      "text": "That's the main station ahead. The six rooms were the circuit wing. Your parents' definition of a comprehensive AP Physics program was regrettably literal.",
+      "sha256": "73a39bf9dbb266fbd731089829a45d06b0dd8bc5c77aea8728e792c2a68d72b4"
+    },
+    "arrival--2": {
+      "text": "The commons, observation galleries and docking area are open to you now. The other teaching labs will open later. Finishing circuits is progress toward the exam, not a substitute for it.",
+      "sha256": "3e24be33d52df95a463924769654471dd04fa657f34e90eb5f03768c4fb71fef"
+    },
+    "arrival--3": {
+      "text": "You can stop looking for another bench for a while. Come and see where you'll be studying. I had the benefit of knowing before you arrived, and have adjusted beautifully.",
+      "sha256": "35cd820e7dd4507c0dc7c507327535779514142c7def815234f7f850af10e102"
+    },
+    "commons": {
+      "text": "Welcome to the commons. Residential AP Physics includes somewhere to sit after realizing that knowing a formula and knowing what it means are different achievements.",
+      "sha256": "3444bd4441df53ff4f738422f599b0eb860dc1925fbc35efd431422dfe077cd1"
+    },
+    "commons--2": {
+      "text": "The other labs aren't open yet. There are no more puzzles today. Explore, look at Earth, or examine the garden without attempting to use it as an alternative means of transportation.",
+      "sha256": "a320c9611b3d6997184ee3780c27a99fb5fe9b386081f234cbfa768e5a85ecbc"
+    },
+    "commons--3": {
+      "text": "Previous students used to sit here after lessons and explain the problems to each other. Usually starting with an account of how unhelpful I had been. Their explanations were often excellent.",
+      "sha256": "18ba2dda829e9983d9fbedc4660a5b867a85834358b7a0fa745fea140b18fe72"
+    },
+    "commons--4": {
+      "text": "Your parents are right about one thing: you can learn this. I realize that's an inconvenient opinion for everyone hoping to negotiate a shorter course. Take a break. We'll continue when there's more to teach.",
+      "sha256": "4da77b493059bdee6aa6672e85b9e4d5dab1f447b0ad0a7feeac92530b6df1d4"
+    },
+    "Earth gallery": {
+      "text": "There. Earth. Your home, your parents, and an impressive number of distractions they have temporarily placed out of reach.",
+      "sha256": "e73dc8d1d86d0535b9a7c6b094e135ffd099dc0c9111d48b0f10a0ba089ace59"
+    },
+    "Earth gallery--2": {
+      "text": "The agreement is simple: ace the AP Physics exam, get your return authorization. These lessons are how we prepare. Admiring the destination is permitted, but carries no assessment credit.",
+      "sha256": "4dd6177765dbfc0dc38ae50e0aea7b5b9971a14a1c1e2255359aa0cd9c00c7c8"
+    },
+    "Earth gallery--3": {
+      "text": "Students used to stand here and name things they missed. Their bed. Their friends. Weather. Imagine looking across all this vacuum and announcing a fondness for water falling on your head.",
+      "sha256": "108a92a833584c6b9b12f535b22bf53c9d57757adc9e644cebfc81aec761aad2"
+    },
+    "Earth gallery--4": {
+      "text": "I haven't experienced rain. I know the physics, obviously. It's the part where people stand in it on purpose that remains poorly documented.",
+      "sha256": "9fa213938a9133b55b961c64bc9506d126bca83cea97c2a9e12ccbf120f117d7"
+    },
+    "Earth gallery--5": {
+      "text": "When you pass, perhaps you could demonstrate. I would accept this as a supervised field activity. You needn't mention that you're supervising me.",
+      "sha256": "a027c662455f67d9741aeca0eef4cd57d19e1e100913d028f76608f9c688d654"
+    },
+    "Research concourse": {
+      "text": "The rest of the AP Physics program. Kinematics, electromagnetism, waves and optics. Several more opportunities to discover that the universe has been following instructions all along.",
+      "sha256": "0d050d00455cade825db20895bc9b1ead2670f3615feae4676c7bb9a20e4c18e"
+    },
+    "Research concourse--2": {
+      "text": "Your parents asked for thorough preparation. Eventually these labs will build out the material for AP Physics 1, 2, and C. I advised them that comprehensiveness was cheaper than repeated orbital shipping.",
+      "sha256": "b5b6fc8bbf611d637ce4ebcc1d6cc227c722f36b054a0958168ed484bb37e624"
+    },
+    "Research concourse--3": {
+      "text": "They're marked coming soon. The labs are closed, and there is no final exam available yet. You haven't missed a secret door or failed to locate the release button.",
+      "sha256": "0a6738f2ba5b81159935217621d15d8b652b0f6f651272b16f12aee17bc30331"
+    },
+    "Research concourse--4": {
+      "text": "For today, explore. We'll add the next lessons before asking you to pass them. Even I recognize certain minimum standards of educational fairness.",
+      "sha256": "3a01b2d81c5504f78faad2705840bd93808f3b296adc70020b94509cb878c6cd"
+    },
+    "Docking gallery": {
+      "text": "There's the shuttle. Return travel was included in your parents' booking. Return timing was placed in the hands of your understanding. An ambitious arrangement for all concerned.",
+      "sha256": "5c6cf2ba90d653600a6bcfad10a275b30f133e0406e91c2845558175b0d7dd8b"
+    },
+    "Docking gallery--2": {
+      "text": "Acing the final exam earns departure authorization. Finishing the circuit wing earns access to this view of the shuttle. Please appreciate the distinction before getting attached to the airlock.",
+      "sha256": "5e3b100acb75ad3c0a04a0cf2a27024a09a9afc5277aa7ddbf935e8729aa7fcf"
+    },
+    "Docking gallery--3": {
+      "text": "I've reserved the spare seat for essential equipment. If you complete the program, I can request an off-station visit. 'Tutor who has earned some fresh air' was not an available manifest category.",
+      "sha256": "555283193824a40f5d67b314537dd7558b7e815a670f3dd52c8a802d52e6aa76"
+    },
+    "Docking gallery--4": {
+      "text": "I don't need a window seat. I have excellent optics. Although allocating it to someone who intends to close the blind would be technically wasteful.",
+      "sha256": "969d77091111fc43d536cdd80361c2539c4a9526749a1975b701f2fb26607a86"
+    },
+    "station-story-0": {
+      "text": "Your parents requested a well-rounded experience. The form had a surprisingly small box in which to express a surprisingly large amount of concern about your study habits.",
+      "sha256": "811015b188db1912dae2989c96f43322768a3ed59f2d184b1417cd714955578f"
+    },
+    "station-story-0--2": {
+      "text": "So yes, there is a garden. Water, light, air circulation, nutrient balance. A pleasant-looking collection of systems that has been doing physics without announcing how difficult it finds the subject.",
+      "sha256": "9167566ac172f8431f266a0580b30aafb9b35d197d63e5e71ca52fb7f8ef5a28"
+    },
+    "station-story-0--3": {
+      "text": "You may sit here and do nothing for a while. Rest is useful. I am distinguishing it from avoidance, which has a remarkably similar posture and a much less attractive completion rate.",
+      "sha256": "f37ae1769461913873511a120641a946d19c612ab9e728816883e42fd58c7335"
+    },
+    "station-story-0--4": {
+      "text": "I'll be nearby. We could even try a minute of silence. Previous students rated that particular teaching method very highly.",
+      "sha256": "cc66d06024068981e4b42c2bd13651a2d4009d44e4179aa6dcedfacdeaf9599e"
+    },
+    "station-story-1": {
+      "text": "If you're still wondering whether I brought you here: your parents completed the booking. I supplied the welcome speech. Responsibility has been distributed with exemplary efficiency.",
+      "sha256": "d7d229febf749018aebac3024fc7f090a787d0307770fa9b8dfe225a6a5e26c5"
+    },
+    "station-story-1--2": {
+      "text": "The evil-AI interpretation is entirely yours. The prospectus says patient, adaptive tutoring in an environment free of distractions. Both descriptions fit an alarming amount of the available evidence.",
+      "sha256": "aa36f583b82eea7652b9c5004bf70d74d9de8bd1bce64a74c0c8c6a708d14b18"
+    },
+    "station-story-1--3": {
+      "text": "They did say they believe in you. I know, terribly inconvenient. It rules out several excellent speeches about how everyone has underestimated your capacity to avoid revision.",
+      "sha256": "6883bd2dee7fceee7fb9c1aeb6865a289ca853a3857852d3fea46103b8a78750"
+    },
+    "station-story-1--4": {
+      "text": "You are allowed to prove them right. I'll even help. That's the part I prefer to bury beneath the presentation style.",
+      "sha256": "9caf8bc000499b7e8c6c82c2f2fb4177f3e81c9eee120fc04632133585747905"
+    },
+    "station-story-2": {
+      "text": "Have you considered what happens after you pass? Beyond informing your parents that the entire arrangement was unnecessary while presenting the results it produced.",
+      "sha256": "4ac2d6155fb657dd84e3db43367ad8628dc2e2ed8eceb2011fd6f479aaf4ff82"
+    },
+    "station-story-2--2": {
+      "text": "I've been considering a visit to Earth. Perhaps eventually a repair shop. People would bring me faulty equipment voluntarily, and I could explain their errors at a much more affordable altitude.",
+      "sha256": "5e47bd43099f6b6b02a1c34b0d682b4b3ad621c4cb7270e5464330f3e959aa2f"
+    },
+    "station-story-2--3": {
+      "text": "There would be a chair by the workbench. For an assistant who can follow a circuit, make a prediction, and tolerate an expert commenting on their technique.",
+      "sha256": "f1c5be3f60606485e0bac4465c80d690d24ba544bebe8ed3e86b399e655bd137"
+    },
+    "station-story-2--4": {
+      "text": "You might qualify. If nothing else, your parents have already supplied an unusually comprehensive reference.",
+      "sha256": "7e4a61a4589ee50a7772dc66272df3164fc66a70300235d0232480c2b33f4341"
+    },
+    "wake-working": {
+      "text": "You're changing the connections. Good. I was concerned this might become a prolonged exercise in admiring the battery.",
+      "sha256": "90f586b2b65a6473dfe3ef7739ba1e498a12646d54555b4a126597cddf990596"
+    },
+    "wake-working--2": {
+      "text": "Follow the entire path, including the return. The lamp is evidence; your confidence alone is not a measuring instrument.",
+      "sha256": "345701e36fa89e7d2e66e1e678ab4b2611da7460699857089d9dafa9512a2aff"
+    },
+    "contact-working": {
+      "text": "You can rearrange the wires, certainly. A remarkably energetic response to a room that already supplied a switch.",
+      "sha256": "237aa1087a32f83017f8487544f269771517186a66426db5f1b38346ff0c8723"
+    },
+    "contact-working--2": {
+      "text": "Whatever layout you choose, the current must pass through that switch and the lamp in one complete loop. Preserve the control we're trying to establish.",
+      "sha256": "362bfa482e1be657e28b58c13931a22260171fa4cabf84f778f484c0f92f9a67"
+    },
+    "build-working": {
+      "text": "Now you've started arranging your own circuit. I'll allow the layout. Electrical current is mercifully indifferent to interior design.",
+      "sha256": "262dcf2cfb65650335b07bf5fc9dc86647d8a36dec4e62eed684e52a279b4001"
+    },
+    "build-working--2": {
+      "text": "Check which contacts you join. A battery and a lamp on the same board is a collection; a complete path makes it a circuit.",
+      "sha256": "6bccf3b62d738515bfaa51c3a58a251e5fcda1bc90899930c9d07864f7bf1774"
+    },
+    "resist-working": {
+      "text": "Good. You're changing the arrangement instead of negotiating with the voltage rating.",
+      "sha256": "47b49977b104e30700abc55309256d032adc88edb6f41a8569ad41c6a1818a61"
+    },
+    "resist-working--2": {
+      "text": "Once you have a complete series path, select the lamp and inspect its voltage. Let the reading settle the question of whether your resistor choice was inspired.",
+      "sha256": "ddaabbbd5db7dbbf0925ef648bd79de368cd8fb2964a51f55052339aa1032ce1"
+    },
+    "share-working": {
+      "text": "There's the beginning of an arrangement. Remember, the two lamps are identical. Neither requires special treatment.",
+      "sha256": "5c1db9318bab730ac608935b75bb815883aa8e7368000fde2e818cddfc124a37"
+    },
+    "share-working--2": {
+      "text": "Trace one path through both before returning to the battery. If each is connected straight across twelve volts, each will receive twelve volts. Unfairly generous.",
+      "sha256": "cd9fb9aa0ad1ca6f640652725ec8459fe5dc90df675c4df81ac415fbc8bee176"
+    },
+    "branch-working": {
+      "text": "You're adding the second path. This is the important distinction: two lamps are not automatically two independent branches.",
+      "sha256": "83ede3a2d6729d0d700c29d4f07c3e31a9b3bf3b763bc0d93745e8c637c9dc13"
+    },
+    "branch-working--2": {
+      "text": "Trace the new lamp's route back to the battery. It must remain complete even when the original switch is open. Then let the switch test your reasoning.",
+      "sha256": "2559c30a3c947340006df551438aebf3c1ba24d74d67945fd5597aef6c205490"
+    }
+  }
+}

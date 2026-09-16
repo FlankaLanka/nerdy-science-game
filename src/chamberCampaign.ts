@@ -76,7 +76,7 @@ export function campaignReducer(
   if (action.type === "HEARD")
     return state.heard.includes(action.id)
       ? state
-      : { ...state, heard: [...state.heard, action.id].slice(-40) };
+      : { ...state, heard: [...state.heard, action.id].slice(-512) };
   const index = action.room;
   if (
     !Number.isInteger(index) ||
@@ -209,9 +209,9 @@ export function restoreCampaign(raw: string | null): Campaign {
         .filter(
           (id: unknown) =>
             typeof id === "string" &&
-            /^(entry|hint|restore|ending):[a-z-]+$/.test(id),
+            /^(?:(entry|hint|restore|ending):[a-z-]+|tandem:[a-zA-Z0-9: -]{1,90})$/.test(id),
         )
-        .slice(-40);
+        .slice(-512);
     state.sound = data.sound !== false;
     state.reducedMotion = data.reducedMotion === true;
   } catch {
