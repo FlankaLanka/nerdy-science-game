@@ -1,0 +1,14 @@
+.env
+.env.*
+.vercel/
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+art-source/
+artifacts/
+test-results/
+playwright-report/
+docs/screenshots/
+docs/*-check.json
+docs/*-review.json

@@ -74,6 +74,17 @@ Browser tests use Chromium and port 5175. Run `npx playwright install chromium` 
 
 Current work is on `codex/asterion-circuit-chambers`, based on `36eeedc` on `codex/spaceship-dead-orbit`. The prior station and extended curriculum remain in Git history. Nothing is pushed or deployed by these commands.
 
+### Deploy to Vercel
+
+The current game runs entirely in the browser. Vercel builds it with `npm run build` and serves the static `dist/` directory, as configured in `vercel.json`. No environment variables, API keys or backend are required. The older optional coaching routes in `server/` are unused by this version and are not deployed. Saves stay in each browser; local development saves do not transfer to the deployed site.
+
+```sh
+npx vercel login
+npx vercel --prod
+```
+
+The first deployment links this checkout to a Vercel project. Later deployments update that project from the current checkout. The local project link in `.vercel/` is ignored by Git.
+
 ### Sound
 
 Doors have distinct opening and closing sounds with stereo direction and distance falloff. Warm ambient music accompanies exploration and circuit work, with quiet ventilation, tactile controls and brief UI/repair feedback. Walking is silent. Music fades in gently and lowers in menus. Pause → Options → Sound mutes everything. Audio files ship locally and require no API key during play; source prompts and regeneration details are in [asset provenance](docs/assets.md#station-audio).
