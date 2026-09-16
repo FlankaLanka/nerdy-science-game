@@ -45,8 +45,7 @@ test("an out-of-order repair credits its own activity and survives editing and r
   await restored(page, 1);
   let state = await saved(page);
   expect(state.proofs.map(Boolean)).toEqual([false, true, false, false, false, false]);
-  expect(state.heard).toContain("restore:contact");
-  expect(state.heard).not.toContain("restore:wake");
+  await expect(page.locator(".tandem-caption")).toHaveAttribute("data-scene", "contact-restored");
   await bench(page, 1);
   await page.getByRole("button", { name: "Reset circuit", exact: true }).click();
   await expect(page.locator(".circuit-lab")).not.toHaveClass(/restored/);

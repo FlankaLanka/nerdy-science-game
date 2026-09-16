@@ -27,6 +27,16 @@
   margin-left: -.055em;
 }
 
+.title-subtitle {
+  margin: 12px 0 0;
+  color: #526f7c;
+  font-size: clamp(11px, 1vw, 14px);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
 .begin-button {
   display: flex;
   align-items: center;

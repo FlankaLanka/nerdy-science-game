@@ -15,7 +15,7 @@ The open habitat is a fictional extrapolation. Modular functions, environmental 
 
 `scene/stationLayout.ts` owns the footprint, furniture and future bay locations. `scene/mainStation.ts` builds the architecture and props. The main station joins `DECK`, so collision, saved-position validation, room telemetry and the notebook share its actual coordinates. All new spaces require progression stage 6 on restore. Future bays are static, physically closed and absent from the lesson graph.
 
-The map frames the current wing automatically. The HUD names the current gallery. ASTER speaks once when the player enters the commons; resuming elsewhere does not replay the first circuit's greeting. Saves retain the original six-room campaign format.
+The map frames the current wing automatically. The HUD names the current gallery. Tandem accompanies exploration and speaks once when the player enters the commons; resuming elsewhere does not replay the first circuit's greeting. The narrative frames this as the first chapter of a residential AP Physics course paid for by the player’s parents. Passing the eventual exam is the release condition; further labs, the exam, and departure remain unavailable. Saves retain the original six-room campaign format.
 
 Materials and geometry are local. Station fixtures reuse the four nearest-light slots; static geometry uses the existing material/spatial batching. Cached sun-shadow coverage follows the player into the larger habitat. Pressure-shell joints retain distinct face depths, and the surface regression scan includes the expanded footprint.
 

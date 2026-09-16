@@ -14,6 +14,7 @@ export default function TitleScreen({
     <section className="title-screen" aria-labelledby="game-title">
       <div className="title-content">
         <h1 id="game-title">ASTERION</h1>
+        <p className="title-subtitle">An AP Physics Game</p>
         <button className="begin-button" disabled={!ready} onClick={onBegin}>
           <ArrowRight aria-hidden="true" />
           <span>{!ready ? "Loading" : returning ? "Continue" : "Begin"}</span>

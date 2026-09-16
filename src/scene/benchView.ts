@@ -28,10 +28,10 @@ export type BenchControls = {
 /** Reserve space for the small tool shelf while keeping the camera below the ceiling. */
 export function benchFraming(width: number, height: number) {
   const compact = height <= 480 && width > 640;
-  const shortPortrait = width <= 640 && height <= 690;
+  const shortPortrait = width <= 640 && height <= 700;
   const side = width <= 640 ? 10 : 40;
   const availableWidth = width - side * 2 - (compact ? 180 : 0);
-  const top = compact ? 98 : shortPortrait ? 116 : 110;
+  const top = compact ? 98 : shortPortrait ? 160 : 110;
   const bottom = compact ? 24 : width <= 1000 ? 238 : 180;
   const availableHeight = Math.max(90, height - top - bottom);
   const boardWidth = Math.min(availableWidth, availableHeight * 1.8);

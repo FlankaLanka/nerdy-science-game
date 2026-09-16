@@ -552,6 +552,7 @@ export function buildSpaceship(scene: THREE.Scene) {
       activeBench: number | null = null,
       interaction: BenchInteraction | null = null,
       godMode = false,
+      companion: {x:number; z:number} | null = null,
     ) {
       const events: EnvironmentEvent[] = [];
       root.userData.shadowsDirty = !initialized;
@@ -568,10 +569,13 @@ export function buildSpaceship(scene: THREE.Scene) {
           dz = player.z - p.z;
         const across = dx * Math.cos(p.rotation) - dz * Math.sin(p.rotation),
           normal = dx * Math.sin(p.rotation) + dz * Math.cos(p.rotation);
-        const inAperture = Math.abs(normal) < 0.6 && Math.abs(across) < 1.8;
+        const gx = companion ? companion.x-p.x : Infinity, gz = companion ? companion.z-p.z : Infinity;
+        const guideInAperture = !!companion && Math.abs(gx*Math.sin(p.rotation)+gz*Math.cos(p.rotation)) < .7 && Math.abs(gx*Math.cos(p.rotation)-gz*Math.sin(p.rotation)) < 1.8;
+        const playerInAperture = Math.abs(normal) < 0.6 && Math.abs(across) < 1.8;
+        const inAperture = playerInAperture || guideInAperture;
         const target =
-          (godMode || online.has(p.system) || (!initialized && inAperture)) &&
-          Math.hypot(dx, dz) < 5
+          (godMode || online.has(p.system) || (!initialized && playerInAperture)) &&
+          (Math.hypot(dx, dz) < 5 || Math.hypot(gx, gz) < 4)
             ? 1
             : 0;
         const old = door.opening;

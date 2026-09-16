@@ -35,6 +35,16 @@ import TitleScreen from "./TitleScreen";
 import type { NotebookTab } from "./Notebook";
 import { useReducedMotion } from "./useReducedMotion";
 import "./game.css";
+import { useTandem } from "./useTandem";
+import {
+  circuitReaction,
+  conversationLine,
+  hintLine,
+  roomLine,
+  tandemMemoryId,
+  TANDEM_SCRIPTS,
+} from "./tandemDialogue";
+import type { TandemScene } from "./tandemDialogue";
 const World = lazy(() => import("./World"));
 const CircuitLab = lazy(() => import("./CircuitLab"));
 const GOD_MODE_KEY = "signal.asterion.god-mode";
@@ -69,22 +79,87 @@ export default function App() {
   const [formulaNotice, setFormulaNotice] = useState<FormulaId | null>(null);
   const [tab, setTab] = useState<NotebookTab>("parts"),
     [storageFailed, setStorageFailed] = useState(false);
-  const [subtitle, setSubtitle] = useState<{ id: string; text: string } | null>(
-    null,
+  const {
+    cue: subtitle,
+    say,
+    clear: clearTandem,
+    continueConversation,
+  } = useTandem(
+    state.heard,
+    (id) => dispatch({ type: "HEARD", id }),
+    menu !== null || !started || activeFormula !== null,
+    state.sound,
   );
   const world = useRef<WorldHandle>(null),
-    sound = useSound(state.sound, menu !== null || !started);
-  const current = useRef({ state, active, activeFormula, menu, started, sound });
-  current.current = { state, active, activeFormula, menu, started, sound };
-  const subtitleTime = useRef(0),
-    heard = useRef(new Set(state.heard)),
-    transition = useRef<ReturnType<typeof setTimeout> | null>(null);
+    sound = useSound(
+      state.sound,
+      menu !== null || !started || subtitle !== null,
+    );
+  const current = useRef({
+    state,
+    active,
+    activeFormula,
+    room,
+    section,
+    menu,
+    started,
+    sound,
+  });
+  current.current = { state, active, activeFormula, room, section, menu, started, sound };
+  const transition = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const narrativeRoom = useRef(-1),
+    hintDepth = useRef(CHAMBERS.map(() => 0)),
+    stationStory = useRef(0);
+  const talk = useCallback(() => {
+    const c = current.current;
+    if (!c.started || c.menu || c.activeFormula !== null) return;
+    c.sound.unlock();
+    const player = world.current?.position();
+    let index = c.active ?? (player ? roomAt(player.x, player.z) : c.room);
+    // Access corridors still belong to the last puzzle, before the public station.
+    if (index < 0 && c.section !== "Arrival gallery" &&
+        !STATION_DECK.some((deck) => deck.name === c.section)) index = c.room;
+    const context = index < 0 ? `station:${c.section}` : `room:${index}`;
+    if (c.active === null && continueConversation(context)) return;
+    if (index < 0) {
+      say(`station-story-${stationStory.current++ % 3}` as TandemScene, {
+        repeat: true,
+        interrupt: true,
+        conversation: context,
+      });
+      return;
+    }
+    const circuit = c.state.rooms[index],
+      depth = hintDepth.current[index];
+    const line =
+      c.active !== null
+        ? hintLine(index, circuit, depth)
+        : conversationLine(
+            index, circuit, depth,
+            c.state.heard.includes(tandemMemoryId(roomLine(index, "story"))),
+          );
+    // A fault or conversation never spends a step of the requested solution.
+    if (line.includes("-hint-")) hintDepth.current[index] = Math.min(2, depth + 1);
+    say(line, {
+      repeat: true,
+      interrupt: true,
+      conversation: c.active === null ? context : undefined,
+      mood: c.active !== null || line.includes("-hint-") ? "point" : "speak",
+    });
+  }, [say, continueConversation]);
   const completed = completedIds(state),
-    playing = started && active === null && activeFormula === null && menu === null && !cameraMoving;
+    playing =
+      started &&
+      active === null &&
+      activeFormula === null &&
+      menu === null &&
+      !cameraMoving;
   const powered = useMemo(() => poweredIds(state), [state.rooms, state.proofs]);
-  const firstUnpowered = CHAMBERS.findIndex(c => !powered.includes(c.id));
+  const firstUnpowered = CHAMBERS.findIndex((c) => !powered.includes(c.id));
   const fallbackRoom = firstUnpowered < 0 ? 5 : firstUnpowered;
-  const publicStation = section === "Arrival gallery" || STATION_DECK.some((r) => r.name === section);
+  const publicStation =
+    section === "Arrival gallery" ||
+    STATION_DECK.some((r) => r.name === section);
   const reduced = useReducedMotion(state.reducedMotion);
   useEffect(() => {
     if (reduced) setArriving(false);
@@ -105,26 +180,6 @@ export default function App() {
       setStorageFailed(true);
     }
   }, [state]);
-  const speak = useCallback((id: string, text: string) => {
-    if (heard.current.has(id)) return;
-    heard.current.add(id);
-    dispatch({ type: "HEARD", id });
-    subtitleTime.current = Math.max(5500, text.split(" ").length * 340);
-    setSubtitle({ id, text });
-  }, []);
-  useEffect(() => {
-    let previous = performance.now();
-    const timer = setInterval(() => {
-      const now = performance.now(),
-        dt = now - previous;
-      previous = now;
-      if (!document.hidden && !current.current.menu) {
-        subtitleTime.current -= dt;
-        if (subtitleTime.current <= 0) setSubtitle(null);
-      }
-    }, 100);
-    return () => clearInterval(timer);
-  }, []);
   const leaveBench = useCallback(() => {
     if (transition.current) clearTimeout(transition.current);
     transition.current = null;
@@ -136,9 +191,13 @@ export default function App() {
       const c = CHAMBERS[index];
       if (!c) return;
       dispatch({ type: "VISIT", id: c.id });
-      speak(`entry:${c.id}`, c.intro);
+      if (narrativeRoom.current !== index) {
+        clearTandem(false, true);
+        narrativeRoom.current = index;
+        say(roomLine(index, "entry"));
+      }
     },
-    [speak],
+    [say, clearTandem],
   );
   const openBench = useCallback(
     (id: ChamberId) => {
@@ -148,10 +207,14 @@ export default function App() {
       setActive(index);
       setRoom(index);
       dispatch({ type: "VISIT", id });
-      speak(`hint:${id}`, CHAMBERS[index].hint);
+      if (narrativeRoom.current !== index) {
+        clearTandem(false, true);
+        narrativeRoom.current = index;
+        say(roomLine(index, "entry"));
+      }
       current.current.sound.play("soft");
     },
-    [speak],
+    [say, clearTandem],
   );
   const inspectFormula = useCallback((index: number) => {
     if (!CHAMBERS[index]?.formula) return;
@@ -160,13 +223,22 @@ export default function App() {
     setActiveFormula(index);
     current.current.sound.play("soft");
   }, []);
-  const formulaViewed = useCallback((index: number) => {
-    const id = CHAMBERS[index]?.formula;
-    if (current.current.activeFormula !== index || !id || current.current.state.formulas.includes(id)) return;
-    dispatch({ type: "DISCOVER_FORMULA", id });
-    setFormulaNotice(id);
-    current.current.sound.play("discover");
-  }, []);
+  const formulaViewed = useCallback(
+    (index: number) => {
+      const id = CHAMBERS[index]?.formula;
+      if (
+        current.current.activeFormula !== index ||
+        !id ||
+        current.current.state.formulas.includes(id)
+      )
+        return;
+      dispatch({ type: "DISCOVER_FORMULA", id });
+      setFormulaNotice(id);
+      current.current.sound.play("discover");
+      say("formula");
+    },
+    [say],
+  );
   useEffect(() => {
     if (!formulaNotice || menu) return;
     const timer = setTimeout(() => setFormulaNotice(null), 3500);
@@ -197,7 +269,11 @@ export default function App() {
     }
   }, [menu]);
   useEffect(() => {
-    if (active !== null && !powered.includes(CHAMBERS[active].id) && transition.current) {
+    if (
+      active !== null &&
+      !powered.includes(CHAMBERS[active].id) &&
+      transition.current
+    ) {
       clearTimeout(transition.current);
       transition.current = null;
     }
@@ -208,16 +284,68 @@ export default function App() {
     previousProofs.current = state.proofs;
     const index = state.proofs.findIndex((proof, i) => proof && !before[i]);
     if (index < 0) return;
-    const c = CHAMBERS[index];
     current.current.sound.play("success");
-    speak(`restore:${c.id}`, c.restored);
+    say(roomLine(index, "restored"), { interrupt: true, mood: "celebrate" });
     if (current.current.active === index) {
       transition.current = setTimeout(() => {
         setActive(null);
         transition.current = null;
       }, 1600);
     }
-  }, [state.proofs, speak]);
+  }, [state.proofs, say]);
+  const previousCircuits = useRef({ rooms: state.rooms, proofs: state.proofs });
+  useEffect(() => {
+    const before = previousCircuits.current;
+    previousCircuits.current = { rooms: state.rooms, proofs: state.proofs };
+    if (
+      !started ||
+      active === null ||
+      before.rooms[active] === state.rooms[active]
+    )
+      return;
+    if (!before.proofs[active] && state.proofs[active]) return;
+    const line = circuitReaction(
+      active,
+      before.rooms[active],
+      state.rooms[active],
+      !!before.proofs[active],
+    );
+    if (line)
+      say(line, {
+        scope: CHAMBERS[active].id,
+        interrupt: !line.endsWith("-working"),
+        mood: ["short", "overload", "both-off"].includes(line)
+          ? "concern"
+          : line === "isolated"
+            ? "celebrate"
+            : "speak",
+      });
+  }, [state.rooms, state.proofs, started, active, say]);
+  useEffect(() => {
+    if (
+      active === null ||
+      menu ||
+      !started ||
+      powered.includes(CHAMBERS[active].id)
+    )
+      return;
+    const timer = setTimeout(
+      () => say("idle", { scope: CHAMBERS[active].id }),
+      55000,
+    );
+    return () => clearTimeout(timer);
+  }, [active, menu, started, state.rooms, powered, say]);
+  const onSection = useCallback(
+    (next: string) => {
+      setSection(next);
+      if (next === "Arrival gallery" || next === "Station commons" || next in TANDEM_SCRIPTS)
+        clearTandem(false, true);
+      if (next === "Arrival gallery") say("arrival");
+      else if (next === "Station commons") say("commons");
+      else if (next in TANDEM_SCRIPTS) say(next as TandemScene);
+    },
+    [say, clearTandem],
+  );
   useEffect(
     () => () => {
       if (transition.current) clearTimeout(transition.current);
@@ -236,11 +364,27 @@ export default function App() {
       )
         return;
       if (window.document.querySelector("dialog[open]")) return;
+      if (e.code === "KeyT" && current.current.active !== null) {
+        e.preventDefault();
+        talk();
+        return;
+      }
       if (["KeyN", "KeyJ", "Tab", "KeyM"].includes(e.code)) {
         // Close-up controls retain normal keyboard focus navigation.
-        if (e.code === "Tab" && (current.current.active !== null || current.current.activeFormula !== null)) return;
+        if (
+          e.code === "Tab" &&
+          (current.current.active !== null ||
+            current.current.activeFormula !== null)
+        )
+          return;
         e.preventDefault();
-        openNotebook(e.code === "KeyM" ? "map" : current.current.activeFormula !== null ? "formulas" : "parts");
+        openNotebook(
+          e.code === "KeyM"
+            ? "map"
+            : current.current.activeFormula !== null
+              ? "formulas"
+              : "parts",
+        );
       }
       if (e.code === "KeyE" && current.current.activeFormula !== null) {
         e.preventDefault();
@@ -255,7 +399,7 @@ export default function App() {
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [leaveBench, leaveFormula, pause, openNotebook]);
+  }, [leaveBench, leaveFormula, pause, openNotebook, talk]);
   function begin() {
     if (!ready || started) return;
     setArriving(!reduced);
@@ -280,14 +424,17 @@ export default function App() {
     if (action.type === "wire") sound.play("connect");
     else if (action.type === "toggle") sound.play("test");
     else if (action.type === "add") sound.play("place");
-    else if (action.type !== "move" && action.type !== "rotate") sound.play("soft");
+    else if (action.type !== "move" && action.type !== "rotate")
+      sound.play("soft");
   }
   function restart() {
     sound.reset();
     if (transition.current) clearTimeout(transition.current);
     transition.current = null;
-    heard.current.clear();
-    setSubtitle(null);
+    clearTandem(true);
+    narrativeRoom.current = -1;
+    hintDepth.current = CHAMBERS.map(() => 0);
+    stationStory.current = 0;
     dispatch({ type: "NEW_GAME" });
     try {
       localStorage.removeItem(PLAYER_KEY);
@@ -313,6 +460,9 @@ export default function App() {
         <World
           ref={world}
           playing={playing && !failed}
+          tandemMood={subtitle?.mood ?? "listen"}
+          tandemPaused={!started || menu !== null || activeFormula !== null}
+          onTalk={talk}
           preview={!started}
           activeBench={failed ? null : active}
           activeFormula={failed ? null : activeFormula}
@@ -329,13 +479,8 @@ export default function App() {
           sensitivity={1}
           onVisit={openBench}
           onRoom={onRoom}
-          onSection={setSection}
-          onStation={() => {
-            speak(
-              "ending:commons",
-              "Welcome to the main station. Circuits was just the beginning. Take your time; this place is yours to explore.",
-            );
-          }}
+          onSection={onSection}
+          onStation={() => say("commons")}
           onPause={pause}
           onReady={() => setReady(true)}
           onError={() => {
@@ -346,7 +491,9 @@ export default function App() {
             setCameraMoving(false);
             setReady(true);
           }}
-          onEnvironment={(kind, mix) => { if (started && !menu) sound.play(kind, mix); }}
+          onEnvironment={(kind, mix) => {
+            if (started && !menu) sound.play(kind, mix);
+          }}
         />
       </Suspense>
       {!started && (
@@ -357,7 +504,11 @@ export default function App() {
         />
       )}
       {arriving && (
-        <div className="station-arrival" aria-hidden="true" onAnimationEnd={() => setArriving(false)} />
+        <div
+          className="station-arrival"
+          aria-hidden="true"
+          onAnimationEnd={() => setArriving(false)}
+        />
       )}
       {started && active === null && activeFormula === null && (
         <header className="game-chrome">
@@ -365,9 +516,19 @@ export default function App() {
             {!publicStation && (
               <span className="hud-room-number">{CHAMBERS[room].number}</span>
             )}
-            <span className="hud-room-name">{publicStation ? section : CHAMBERS[room]?.name ?? "Wake"}</span>
-            {!publicStation && <i className={powered.includes(CHAMBERS[room].id) ? "powered" : ""} />}
-            {godMode && <span className="dev-indicator" aria-label="God mode enabled">DEV</span>}
+            <span className="hud-room-name">
+              {publicStation ? section : (CHAMBERS[room]?.name ?? "Wake")}
+            </span>
+            {!publicStation && (
+              <i
+                className={powered.includes(CHAMBERS[room].id) ? "powered" : ""}
+              />
+            )}
+            {godMode && (
+              <span className="dev-indicator" aria-label="God mode enabled">
+                DEV
+              </span>
+            )}
           </span>
         </header>
       )}
@@ -389,35 +550,56 @@ export default function App() {
             suspended={menu !== null}
             onAction={action}
             onFault={() => sound.play("fault")}
-            onUndo={() => { dispatch({ type: "UNDO", room: active }); sound.play("soft"); }}
-            onReset={() => { dispatch({ type: "RESET_CIRCUIT", room: active }); sound.play("test"); }}
+            onUndo={() => {
+              dispatch({ type: "UNDO", room: active });
+              sound.play("soft");
+            }}
+            onReset={() => {
+              dispatch({ type: "RESET_CIRCUIT", room: active });
+              sound.play("test");
+            }}
             onBack={leaveBench}
             onNotebook={() => openNotebook()}
+            onAskTandem={talk}
           />
         </Suspense>
       )}
       {started && activeFormula !== null && (
-        <FormulaReader key={activeFormula} index={activeFormula} view={formulaView}
-          suspended={menu !== null} onClose={leaveFormula} onNotebook={() => openNotebook("formulas")} />
+        <FormulaReader
+          key={activeFormula}
+          index={activeFormula}
+          view={formulaView}
+          suspended={menu !== null}
+          onClose={leaveFormula}
+          onNotebook={() => openNotebook("formulas")}
+        />
       )}
       {started && formulaNotice && !menu && (
-        <div className="formula-notice" role="status"><Check aria-hidden="true" />New formula added!</div>
-      )}
-      {started && subtitle && !menu && activeFormula === null && !formulaNotice &&
-        (active === null || subtitle.id !== `hint:${CHAMBERS[active].id}`) && (
-        <div className="narration" role="status">
-          <span>ASTER</span>
-          <p key={subtitle.id}>{subtitle.text}</p>
+        <div className="formula-notice" role="status">
+          <Check aria-hidden="true" />
+          New formula added!
         </div>
       )}
+      {started &&
+        subtitle &&
+        !menu &&
+        activeFormula === null &&
+        !formulaNotice && (
+          <div
+            className={`narration tandem-caption ${active !== null ? "at-bench" : ""}`}
+            role="status"
+            data-line={subtitle.line}
+            data-scene={subtitle.scene}
+            data-beat={subtitle.beat}
+          >
+            <span>TANDEM</span>
+            <p key={subtitle.id}>{subtitle.text}</p>
+          </div>
+        )}
       {started && failed && active === null && (
         <div className="fallback-navigation">
           <p>3D view unavailable. The circuit kit is ready.</p>
-          <button
-            onClick={() =>
-              openBench(CHAMBERS[fallbackRoom].id)
-            }
-          >
+          <button onClick={() => openBench(CHAMBERS[fallbackRoom].id)}>
             Chamber {CHAMBERS[fallbackRoom].number}
             <ChevronRight />
           </button>

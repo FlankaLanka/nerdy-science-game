@@ -25,6 +25,7 @@ type Props = WorldState & {
   onStation: () => void;
   onSection: (section: string) => void;
   onPause: () => void;
+  onTalk: () => void;
   onReady: () => void;
   onError: () => void;
   onEnvironment: (sound: EnvironmentSound, mix: SoundMix) => void;
@@ -74,6 +75,7 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
         telemetry: setHud,
         interact: (id) => latest.current.onVisit(id),
         pause: () => latest.current.onPause(),
+        talk: () => latest.current.onTalk(),
         environment: (sound, mix) => latest.current.onEnvironment(sound, mix),
         benchView: (view) => latest.current.onBenchView(view),
         inspectFormula: (index) => latest.current.onInspectFormula(index),
@@ -111,16 +113,16 @@ export default forwardRef<WorldHandle, Props>(function World(props, ref) {
       {props.playing && hud && (
         <div className="world-hud">
           <span
-            className={`reticle ${hud.focus || hud.formula !== null ? "focused" : ""}`}
+            className={`reticle ${hud.tandem || hud.focus || hud.formula !== null ? "focused" : ""}`}
             aria-hidden="true"
           />
-          {(hud.focus || hud.formula !== null) && (
+          {(hud.tandem || hud.focus || hud.formula !== null) && (
             <button
               className="use-prompt"
               onClick={() => controls.current?.interact()}
-              aria-label={hud.formula !== null ? "Inspect formula screen" : "Use circuit bench"}
+              aria-label={hud.tandem ? "Talk to Tandem" : hud.formula !== null ? "Inspect formula screen" : "Use circuit bench"}
             >
-              <kbd>E</kbd>
+              <kbd>E</kbd>{hud.tandem && <span>Tandem</span>}
             </button>
           )}
           <div

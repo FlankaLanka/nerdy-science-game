@@ -11,9 +11,7 @@ export type Chamber = KitRules & {
   z: number;
   bench: { x: number; z: number };
   color: string;
-  intro: string;
   hint: string;
-  restored: string;
   formula?: FormulaId;
   initial: Circuit;
   bulbs: number;
@@ -51,9 +49,7 @@ export const CHAMBERS: Chamber[] = [
     z: 20,
     bench: { x: -10, z: 19 },
     color: "#bddbcc",
-    intro: "Welcome to Asterion. I'm ASTER. Let's bring the lights back, one circuit at a time.",
     hint: "Join the two open contacts.",
-    restored: "One complete circuit. A bright start. The next room is ready for you.",
     tools: ["wire"],
     limits: { battery: 1, bulb: 1 },
     voltage: 6,
@@ -75,9 +71,7 @@ export const CHAMBERS: Chamber[] = [
     z: 6,
     bench: { x: -10, z: 5 },
     color: "#dcc6a2",
-    intro: "The manual isolator is open. My arms were an optional extra.",
     hint: "Close the switch.",
-    restored: "Contact made. A very small switch with excellent connections.",
     tools: ["wire"],
     limits: { battery: 1, bulb: 1, switch: 1 },
     voltage: 6,
@@ -104,10 +98,7 @@ export const CHAMBERS: Chamber[] = [
     z: -8,
     bench: { x: -10, z: -9 },
     color: "#aacbdc",
-    intro:
-      "A fresh set of parts. This time, you get to design the circuit.",
     hint: "Place a battery and a bulb. Give them a complete loop.",
-    restored: "Your own circuit, from scratch. I knew you had a bright side.",
     tools: ["wire", "battery", "bulb"],
     limits: { battery: 1, bulb: 1 },
     voltage: 6,
@@ -123,10 +114,7 @@ export const CHAMBERS: Chamber[] = [
     z: -8,
     bench: { x: 10, z: -9 },
     color: "#d7bc91",
-    intro: "Twelve volts from this supply. That lamp is rated for six.",
     hint: "Add resistance. Watch what reaches the lamp.",
-    restored:
-      "Six volts at the lamp. The rest across the resistor. Just enough.",
     formula: "ohm",
     tools: ["wire", "resistor"],
     limits: { battery: 1, bulb: 1, resistor: 1 },
@@ -149,9 +137,7 @@ export const CHAMBERS: Chamber[] = [
     z: 6,
     bench: { x: 10, z: 5 },
     color: "#b4cfa4",
-    intro: "Two lamps. One twelve-volt supply. They can share it.",
     hint: "Each lamp needs six volts.",
-    restored: "Two lights in one path. Sharing looks good on them.",
     formula: "series",
     tools: ["wire", "bulb"],
     limits: { battery: 1, bulb: 2 },
@@ -171,11 +157,7 @@ export const CHAMBERS: Chamber[] = [
     z: 20,
     bench: { x: 10, z: 19 },
     color: "#b3cddc",
-    intro:
-      "That switch isolates the first lamp. The second needs its own way home.",
     hint: "Keep the second lamp powered when the first is switched off.",
-    restored:
-      "Two independent paths. Nicely done. Main station access is open.",
     formula: "parallel",
     tools: ["wire", "bulb"],
     limits: { battery: 1, bulb: 2, switch: 1 },

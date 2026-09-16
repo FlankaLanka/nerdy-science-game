@@ -356,3 +356,39 @@ body.rotating-part * { cursor: url("/assets/rotate-cursor.svg") 16 16, crosshair
   .circuit-lab .history-tools { left: 50%; right: auto; bottom: 12px; transform: translateX(-50%); }
   .circuit-lab .history-tools .icon-button { height: 44px; flex-direction: row; gap: 9px; }
 }
+
+/* Tandem's voice sits above the work area; the physical companion stays beside it. */
+.tandem-help { margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 8px 12px; min-height: 40px; color: #e4d8bc; background: #193b48e6; border: 1px solid #9bbec038; border-radius: 6px; font: 12px "Space Grotesk", sans-serif; }
+.tandem-help:hover, .tandem-help:focus-visible { background: #315363; color: #fff4d6; }
+.tandem-help kbd { font: 10px var(--mono); opacity: .65; }
+.lab-header .lab-notebook { margin-left: 0; }
+.narration.tandem-caption { border: 0; border-radius: 8px; background: #142f3bef; padding: 10px 18px; max-width: min(560px,calc(100% - 40px)); }
+.narration.tandem-caption.at-bench { top: 112px; bottom: auto; max-width: min(510px,calc(100% - 36px)); }
+.tandem-caption p { margin: 0; line-height: 1.5; }
+.use-prompt:has(span) { display:flex; align-items:center; gap:9px; width:auto; padding: 8px 14px; }
+.use-prompt span { font:12px "Space Grotesk",sans-serif; }
+@media (max-width:640px) {
+  .tandem-help { padding:7px 9px; font-size:11px; }
+  .tandem-help kbd { display:none; }
+  .narration.tandem-caption.at-bench { top:108px; padding:8px 12px; }
+  .narration.tandem-caption p { font-size:11px; }
+}
+@media (max-height:480px) and (min-width:641px) {
+  .narration.tandem-caption.at-bench { top:auto; bottom:12px; left:20px; transform:none; max-width:330px; padding:8px 12px; }
+  .narration.tandem-caption p {font-size:10px;}
+}
+.circuit-lab .lab-header .tandem-help { color: #f0d9b0; background: #244653; }
+@media (min-width:641px) and (min-height:481px) {
+  .narration.tandem-caption.at-bench { top:24px; right:28px; left:auto; transform:none; max-width:min(510px,calc(100% - 390px)); }
+}
+@media (max-width:640px) and (max-height:700px) {
+  .narration.tandem-caption.at-bench { top:75px; }
+  .circuit-lab:has(~ .tandem-caption.at-bench) .lab-objective { visibility:hidden; }
+}
+@media (max-height:480px) and (min-width:641px) {
+  .narration.tandem-caption.at-bench { top:12px; right:20px; left:auto; bottom:auto; max-width:min(400px,calc(100% - 360px)); }
+}
+.circuit-lab .lab-header .tandem-help:hover,
+.circuit-lab .lab-header .tandem-help:focus-visible { color: #fff0ce; background: #315363; }
+.world-hud .use-prompt:has(span) { color: #e9f0ea; background: #142f3bef; border: 1px solid #9bbec038; border-radius: 6px; top: calc(50% + 100px); }
+.world-hud .use-prompt:has(span):hover { color: #fff0ce; background: #315363; }

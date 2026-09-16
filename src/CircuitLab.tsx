@@ -35,6 +35,7 @@ type Props = {
   onReset: () => void;
   onBack: () => void;
   onNotebook: () => void;
+  onAskTandem: () => void;
 };
 type Point = { x: number; y: number };
 const flatPosition = (p: Point): CSSProperties => ({
@@ -444,6 +445,7 @@ export default function CircuitLab(props: Props) {
             <h1>{chamber.name}</h1>
           </div>
         </div>
+        <button className="tandem-help" onClick={props.onAskTandem} aria-label="Ask Tandem for a hint" title="Ask Tandem · T">Tandem <kbd>T</kbd></button>
         <button className="icon-button lab-notebook" onClick={props.onNotebook} aria-label="Open notebook" title="Notebook · N"><TabletIcon /><kbd aria-hidden="true">N</kbd></button>
       </header>
       <div className="lab-objective" role="status">

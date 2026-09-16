@@ -2,7 +2,7 @@
 
 ## Player experience
 
-The player wakes alone on Asterion. A maintenance intelligence, ASTER, has kept one small reserve running. The player's immediate action is to reconnect a lamp. Its light, a rising equipment hum and a powered door demonstrate the consequence. The same circuit parts recur throughout the station. With each repair, ASTER reveals that independent electrical paths kept it alive while the rest of the station failed. Restoring the final branch opens the main station: a large commons and public galleries to explore. Circuits is the first lesson wing; the closed future laboratories are environmental hints only.
+The player's parents sent them to Asterion's residential AP Physics program until they can ace the exam. Tandem, a humorously condescending AI tutor, guides circuit repairs that open the teaching wing and demonstrate real understanding. Longer conversations connect each puzzle to exam preparation, reveal the tutor's wish to visit Earth, and respond to the player's actions. Finishing circuits opens the main station for exploration; the remaining labs and final exam are not yet implemented. See [Tandem's narrative and behavior](tandem.md).
 
 No scoring, mandatory hypothesis, reflection form, test submission or mission checklist interrupts construction. Circuit behavior is continuous. The notebook is a small reference, not a list of assignments. The world has room numbers and three equations; there is no floor writing or decorative prose.
 

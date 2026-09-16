@@ -162,7 +162,7 @@ test("music starts with play, walking makes no sounds, and mute and restart work
   await expect.poll(async () => (await trace()).starts.some(source => source.loop)).toBe(true);
   await expect.poll(async () => (await trace()).decoded).toBe(7);
   expect((await trace()).contexts).toBe(1);
-  expect(requests).toHaveLength(7);
+  expect(requests.filter(url => !url.includes("/tandem/"))).toHaveLength(7);
   const loops = (await trace()).starts.filter(source => source.loop);
   expect(loops).toHaveLength(2);
   expect(loops.some(source => source.duration > 60)).toBe(true);
@@ -187,7 +187,7 @@ test("music starts with play, walking makes no sounds, and mute and restart work
   await hold(page, "s", 800);
   expect((await trace()).starts.length).toBeGreaterThan(count);
   expect((await trace()).contexts).toBe(1);
-  expect(requests).toHaveLength(7);
+  expect(requests.filter(url => !url.includes("/tandem/"))).toHaveLength(7);
   expect((await trace()).starts.filter(source => source.loop)).toHaveLength(2);
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "New run", exact: true }).click();

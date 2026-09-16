@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { buildTandem } from "./tandem";
+import type { TandemMood } from "../tandemDialogue";
 import { spatialMix } from "../soundscape";
 import type { EnvironmentSound, SoundMix } from "../soundscape";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -35,12 +37,15 @@ import type { FormulaView } from "./formulaView";
 
 export type Telemetry = {
   focus: MissionId | null;
+  tandem: boolean;
   formula: number | null;
   room: number;
   section: string;
 };
 export type WorldState = {
   playing: boolean;
+  tandemMood: TandemMood;
+  tandemPaused: boolean;
   completed: MissionId[];
   powered: MissionId[];
   godMode: boolean;
@@ -59,6 +64,7 @@ type Options = {
   telemetry: (data: Telemetry) => void;
   interact: (id: MissionId) => void;
   pause: () => void;
+  talk: () => void;
   environment: (sound: EnvironmentSound, mix: SoundMix) => void;
   benchView: (view: BenchView | null) => void;
   inspectFormula: (index: number) => void;
@@ -107,7 +113,7 @@ export function renderWorld(o: Options) {
   const canvas = renderer.domElement;
   canvas.setAttribute(
     "aria-label",
-    "First-person view of the research ship Asterion. WASD to move, mouse or arrow keys to look, E to use a circuit bench or inspect a formula screen.",
+    "First-person view of the research ship Asterion. WASD to move, mouse or arrow keys to look, E to use a circuit bench, inspect a formula screen, or talk to Tandem.",
   );
   canvas.setAttribute("role", "img");
   canvas.tabIndex = -1;
@@ -141,6 +147,7 @@ export function renderWorld(o: Options) {
   scene.environment = environment.texture;
   scene.environmentIntensity = 0.2;
   const model = buildSpaceship(scene);
+  const tandem = buildTandem(scene);
   let player = { ...SPAWN };
   try {
     player = restorePlayer(localStorage.getItem(PLAYER_KEY), model.obstacles);
@@ -286,6 +293,7 @@ export function renderWorld(o: Options) {
   }
   function interact() {
     if (!o.state().playing || cameraTravel) return;
+    if (tandem.focused(player, model.obstacles)) { o.talk(); return; }
     const formula = focusedFormula(player, model.obstacles);
     if (formula !== null) {
       clear();
@@ -448,11 +456,12 @@ export function renderWorld(o: Options) {
       circuits = state.circuits;
       revision++;
     }
-    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.preview}:${state.powered.join()}:${state.godMode}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}:${activeBench}:${activeFormula}:${interactionRevision}`;
+    const frameKey = `${width}:${height}:${renderer.getPixelRatio()}:${state.preview}:${state.powered.join()}:${state.godMode}:${state.reducedMotion}:${revision}:${model.root.userData.textureRevision}:${activeBench}:${activeFormula}:${interactionRevision}:${state.tandemMood}:${state.tandemPaused}`;
     if (
       !state.playing &&
       !cameraTravel &&
       (activeBench === null || state.reducedMotion) &&
+      (state.tandemPaused || !tandem.travelling()) &&
       (!state.preview || state.reducedMotion) &&
       ready &&
       stillFrame === frameKey
@@ -484,7 +493,7 @@ export function renderWorld(o: Options) {
         forward,
         dt,
         keys.has("ShiftLeft") || keys.has("ShiftRight"),
-        model.obstacles,
+        tandem.root.visible ? [...model.obstacles, {...tandem.position(), radius:.32}] : model.obstacles,
       );
       walking =
         Math.hypot(player.x - previous.x, player.z - previous.z) > 0.002;
@@ -633,6 +642,13 @@ export function renderWorld(o: Options) {
     camera.updateMatrixWorld();
     publishFormulaView(activeFormula !== null && !cameraTravel && !state.preview
       ? projectFormulaScreen(activeFormula, camera, width, height) : null);
+    const pointedPart = activeBench === null ? undefined : interaction?.circuit.parts.find(part => part.id === interaction?.selected);
+    const pointerTarget = activeBench !== null && pointedPart
+      ? benchWorldPoint(CHAMBERS[activeBench].bench,pointedPart,20)
+      : undefined;
+    const guideMoved = tandem.update(dt, player, model.obstacles, state.powered, activeBench, state.preview, state.tandemPaused, state.reducedMotion, state.tandemMood, pointerTarget);
+    canvas.dataset.tandem = state.preview ? "hidden" : "present";
+    canvas.dataset.tandemMotion = tandem.travelling() ? "moving" : "settled";
     for (const event of model.update(
       dt,
       time,
@@ -645,6 +661,7 @@ export function renderWorld(o: Options) {
       activeBench,
       interaction,
       state.godMode,
+      tandem.root.visible ? tandem.position() : null,
     ))
       o.environment(event.kind, spatialMix(event, player));
     // Preserve local shadow resolution as the player reaches the larger habitat.
@@ -658,7 +675,7 @@ export function renderWorld(o: Options) {
       sun.target.position.set(sx, 0, sz);
       sun.target.updateMatrixWorld(true);
     }
-    renderer.shadowMap.needsUpdate = shadowMoved || !!model.root.userData.shadowsDirty;
+    renderer.shadowMap.needsUpdate = guideMoved || shadowMoved || !!model.root.userData.shadowsDirty;
     composer.render();
     if (!ready) {
       ready = true;
@@ -669,6 +686,7 @@ export function renderWorld(o: Options) {
       lastHud = now;
       o.telemetry({
         focus: state.playing ? availableSite() : null,
+        tandem: state.playing && tandem.focused(player, model.obstacles),
         formula: state.playing ? focusedFormula(player, model.obstacles) : null,
         room: roomAt(player.x, player.z),
         section: deckSection(player.z, player.x),
@@ -733,6 +751,7 @@ export function renderWorld(o: Options) {
     reset() {
       clear();
       player = { ...SPAWN };
+      tandem.reset();
       save();
     },
     dispose() {

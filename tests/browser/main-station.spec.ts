@@ -27,7 +27,9 @@ test("finishing circuits opens an explorable station and preserves the visit on 
     await page.keyboard.up("w");
     await page.keyboard.up("Shift");
   }
-  await expect(page.getByRole("status")).toContainText("Welcome to the main station");
+  await expect(page.locator(".tandem-caption")).toHaveAttribute("data-line", "commons", { timeout: 20000 });
+  // Finish the first reply before saving; the rest of the conversation resumes after reload.
+  await expect(page.locator(".tandem-caption")).toHaveAttribute("data-line", "commons--2", { timeout: 20000 });
   await expect(page.getByRole("button", { name: "Use circuit bench" })).toHaveCount(0);
   await expect(page.locator(".circuit-lab")).toHaveCount(0);
   await expect.poll(async () => (await position(page)).z).toBeGreaterThan(39);
@@ -43,7 +45,7 @@ test("finishing circuits opens an explorable station and preserves the visit on 
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page.locator(".room-marker")).toHaveText("Station commons");
   expect((await position(page)).z).toBeCloseTo(before.z, 1);
-  await expect(page.getByText("Welcome to the main station", { exact: false })).toHaveCount(0);
+  await expect(page.locator('.tandem-caption[data-line="commons"]')).toHaveCount(0);
 });
 
 test("a saved position in the public station cannot bypass the final circuit", async ({ page }) => {
