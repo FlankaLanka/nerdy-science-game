@@ -17,6 +17,7 @@ import type { Chamber } from "./chambers";
 import { PartIcon } from "./PartIcon";
 import { PartPreview } from "./PartPreview";
 import { TabletIcon } from "./TabletIcon";
+import { TandemIcon } from "./TandemIcon";
 import { HistoryIcon } from "./HistoryIcon";
 import { PART_SELECTION_CORNERS, PART_SELECTION_COLORS } from "./partSelection";
 import type { BenchControls, BenchView } from "./scene/benchView";
@@ -445,7 +446,7 @@ export default function CircuitLab(props: Props) {
             <h1>{chamber.name}</h1>
           </div>
         </div>
-        <button className="tandem-help" onClick={props.onAskTandem} aria-label="Ask Tandem for a hint" title="Ask Tandem · T">Tandem <kbd>T</kbd></button>
+        <button className="icon-button tandem-help" onClick={props.onAskTandem} aria-label="Ask Tandem for a hint" aria-keyshortcuts="T" title="Ask Tandem · T"><TandemIcon /><kbd aria-hidden="true">T</kbd></button>
         <button className="icon-button lab-notebook" onClick={props.onNotebook} aria-label="Open notebook" title="Notebook · N"><TabletIcon /><kbd aria-hidden="true">N</kbd></button>
       </header>
       <div className="lab-objective" role="status">

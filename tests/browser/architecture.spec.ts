@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  // Resolve Vite's graphics dependencies before isolated scene imports can
+  // trigger a dependency reload in the middle of a geometry audit.
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: /^(Begin|Continue)$/ })).toBeEnabled();
+});
+
 test("doorway faces remain separated on both approaches and during door travel", async ({
   page,
 }) => {
@@ -122,6 +129,36 @@ test("doorway faces remain separated on both approaches and during door travel",
     return { count: failures.length, samples: failures.slice(0, 20) };
   });
   expect(collisions).toEqual({ count: 0, samples: [] });
+});
+
+test("low wall lights leave both transfer passage entrances clear", async ({ page }) => {
+  await page.goto("/tests/browser/fixture.html");
+  const result = await page.evaluate(async () => {
+    const threeUrl = "/node_modules/.vite/deps/three.js", shipUrl = "/src/scene/spaceship.ts";
+    const THREE = await import(threeUrl) as typeof import("three");
+    const { buildSpaceship } = await import(shipUrl);
+    const model = buildSpaceship(new THREE.Scene());
+    model.root.updateMatrixWorld(true);
+    const hits: { x: number; z: number; color: string }[] = [];
+    for (const side of [-1, 1]) for (const z of [-9.4, -8.7, -8, -7.3, -6.6]) {
+      const ray = new THREE.Raycaster(new THREE.Vector3(side * 5, 0.25, z), new THREE.Vector3(-side, 0, 0), 0, 1.25);
+      for (const hit of ray.intersectObject(model.root, true)) {
+        const material = (hit.object as import("three").Mesh).material as import("three").MeshStandardMaterial;
+        if (!material.transparent) hits.push({ x: hit.point.x, z, color: material.color.getHexString() });
+      }
+    }
+    let wallLights = 0;
+    for (const side of [-1, 1]) for (const z of [-11, -5]) {
+      const ray = new THREE.Raycaster(new THREE.Vector3(side * 5, 0.25, z), new THREE.Vector3(-side, 0, 0), 0, 1.25);
+      if (ray.intersectObject(model.root, true).some(hit => {
+        const material = (hit.object as import("three").Mesh).material as import("three").MeshStandardMaterial;
+        return material.emissive?.getHex() > 0;
+      })) wallLights++;
+    }
+    model.dispose();
+    return { blocked: hits, wallLights };
+  });
+  expect(result).toEqual({ blocked: [], wallLights: 4 });
 });
 
 test("every pressure window opens onto the exterior while the hull blocks escape", async ({

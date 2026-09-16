@@ -508,8 +508,24 @@ export function buildSpaceship(scene: THREE.Scene) {
     }
     // A low strip under the sill carries the restoration response without signage.
     const rail = emission(c.color, 0.15);
-    for (const side of [-1, 1])
-      box(c.x + side * 5.52, 0.25, c.z, 0.025, 0.035, 7, rail);
+    for (const side of [-1, 1]) {
+      // Only mount the strip where a wall exists; neighboring deck openings
+      // must stay clear, including both ends of the sideways transfer passage.
+      const outsideX = c.x + side * 6.01;
+      const start = c.z - 3.5, end = c.z + 3.5;
+      const edges = [...new Set([
+        start, end,
+        ...DECK.filter(r => Math.abs(outsideX - r.x) <= r.width / 2)
+          .flatMap(r => [r.z - r.depth / 2, r.z + r.depth / 2])
+          .filter(z => z > start && z < end),
+      ])].sort((a, b) => a - b);
+      for (let i = 0; i < edges.length - 1; i++) {
+        if (insideDeck(outsideX, (edges[i] + edges[i + 1]) / 2)) continue;
+        const a = edges[i] + (i > 0 ? 0.12 : 0);
+        const b = edges[i + 1] - (i < edges.length - 2 ? 0.12 : 0);
+        if (b > a) box(c.x + side * 5.52, 0.25, (a + b) / 2, 0.025, 0.035, b - a, rail);
+      }
+    }
     return { kit, rail, previous: c.initial };
   });
   const powerLinks = CHAMBERS.map((chamber) => {
